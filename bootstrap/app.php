@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Limite de débit « api » (définie dans AppServiceProvider) sur toutes les routes /api
         $middleware->throttleApi();
+
+        // API seule : pas de page de connexion vers laquelle rediriger, on répond 401 en JSON
+        $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

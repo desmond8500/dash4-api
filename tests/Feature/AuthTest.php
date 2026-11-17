@@ -70,3 +70,9 @@ it('déconnecte en supprimant le jeton utilisé', function () {
 it('refuse l\'accès sans jeton', function () {
     $this->getJson('/api/v1/auth/me')->assertUnauthorized();
 });
+
+it('répond 401 en JSON même sans en-tête Accept (pas de redirection)', function () {
+    $this->get('/api/v1/auth/me')
+        ->assertUnauthorized()
+        ->assertJsonPath('message', 'Unauthenticated.');
+});
