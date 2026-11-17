@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, pdo_sqlite, pdo_mysql, intl, bcmath
+          coverage: none
+
+      - name: Installer les dépendances
+        # Pas encore de composer.lock dans le dépôt : composer résout les versions.
+        run: composer update --no-interaction --prefer-dist --no-progress
+
+      - name: Préparer l'application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Style du code (Pint)
+        run: vendor/bin/pint --test
+        continue-on-error: true
+
+      - name: Tests
+        run: php artisan test
+
+  deploy:
+    name: Déploiement alwaysdata
+    needs: tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+      SSH_USER: ${{ secrets.ALWAYSDATA_SSH_USER }}
+      SSH_KEY: ${{ secrets.ALWAYSDATA_SSH_KEY }}
+      APP_PATH: ${{ secrets.ALWAYSDATA_APP_PATH }}
+
+    steps:
+      - name: Vérifier la configuration
+        id: check
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_KEY" ] || [ -z "$APP_PATH" ]; then
+            echo "Secrets ALWAYSDATA_* absents : déploiement ignoré (voir docs/DEPLOIEMENT.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Déployer
+        if: steps.check.outputs.enabled == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_deploy "$SSH_USER@$SSH_HOST" "bash -se" <<EOF
+          set -e
+          cd "$APP_PATH"
+          git fetch --depth 1 origin main
+          git reset --hard origin/main
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+          php artisan migrate --force
+          php artisan db:seed --class=RolesAndPermissionsSeeder --force
+          php artisan optimize
+          php artisan queue:restart
+          EOF

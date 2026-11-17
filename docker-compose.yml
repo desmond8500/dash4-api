@@ -1,0 +1,23 @@
+# Environnement local de développement (pas utilisé en production).
+# Lancer : docker compose up -d   puis   php artisan serve
+services:
+  mariadb:
+    image: mariadb:11.8
+    environment:
+      MARIADB_DATABASE: dash4
+      MARIADB_USER: dash4
+      MARIADB_PASSWORD: dash4
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025" # interface web : http://localhost:8025
+      - "1025:1025" # SMTP
+
+volumes:
+  mariadb-data:
