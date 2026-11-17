@@ -23,3 +23,9 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Secours si mod_rewrite n'est pas actif (hébergement mutualisé) :
+# toute adresse qui n'est pas un fichier existant est envoyée à Laravel.
+<IfModule !mod_rewrite.c>
+    FallbackResource /index.php
+</IfModule>
