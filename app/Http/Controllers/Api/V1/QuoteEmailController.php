@@ -47,7 +47,10 @@ class QuoteEmailController extends Controller
             'default_signature_id' => EmailSignature::defaultFor($request->user())?->id,
             'signatures' => EmailSignature::query()->availableTo($request->user())
                 ->orderByRaw('user_id is null')->orderByDesc('is_default')->orderBy('name')->get()
-                ->map(fn ($sig) => ['id' => $sig->id, 'name' => $sig->name, 'shared' => $sig->isShared(), 'preview' => $sig->render($request->user())])
+                ->map(fn ($sig) => [
+                    'id' => $sig->id, 'name' => $sig->name, 'shared' => $sig->isShared(), 'preview' => $sig->render($request->user()),
+                    'image_url' => $sig->imageUrl(), 'image_width' => $sig->image_width,
+                ])
                 ->values(),
         ]]);
     }
@@ -76,7 +79,7 @@ class QuoteEmailController extends Controller
         // MAIL_MAILER=log (réglage de départ) n'envoie rien : il écrit l'e-mail dans le journal.
         // On refuse plutôt que d'annoncer un envoi qui n'a pas eu lieu.
         abort_if(
-            in_array(config('mail.default'), ['log', 'array'], true) && ! Mail::getFacadeRoot() instanceof \Illuminate\Support\Testing\Fakes\MailFake,
+            config('mail.default') === 'log' && ! Mail::getFacadeRoot() instanceof \Illuminate\Support\Testing\Fakes\MailFake,
             503,
             "L'envoi des e-mails n'est pas configuré sur le serveur (MAIL_MAILER=".config('mail.default').'). '
                 .'Renseignez les réglages MAIL_… du fichier .env (voir docs/DEPLOIEMENT.md), puis réessayez.',
@@ -97,7 +100,10 @@ class QuoteEmailController extends Controller
         try {
             Mail::to($data['to'])
                 ->cc($data['cc'] ?? [])
-                ->send(new QuoteMail($quote, $data['subject'], $body, $files, $user->email, $user->full_name, $signature !== null));
+                ->send(new QuoteMail(
+                    $quote, $data['subject'], $body, $files, $user->email, $user->full_name, $signature !== null,
+                    $signature?->imageFile(), $signature?->image_width ?? 160,
+                ));
         } catch (Throwable $e) {
             Log::warning('Envoi du devis impossible', ['quote' => $quote->number, 'error' => $e->getMessage()]);
             abort(502, "L'e-mail n'a pas pu être envoyé. Vérifiez les réglages d'envoi des e-mails du serveur (MAIL_…), puis réessayez.");

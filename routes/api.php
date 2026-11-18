@@ -140,6 +140,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('email-signatures', [EmailSignatureController::class, 'store']);
         Route::patch('email-signatures/{signature}', [EmailSignatureController::class, 'update']);
         Route::delete('email-signatures/{signature}', [EmailSignatureController::class, 'destroy']);
+        Route::post('email-signatures/{signature}/image', [EmailSignatureController::class, 'storeImage']);
+        Route::delete('email-signatures/{signature}/image', [EmailSignatureController::class, 'destroyImage']);
 
         Route::get('assignees', AssigneeController::class)->name('assignees');
 

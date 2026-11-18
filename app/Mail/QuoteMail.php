@@ -23,6 +23,9 @@ class QuoteMail extends Mailable
         public ?string $replyToName = null,
         /** Avec une signature, le pied de page automatique de l'entreprise n'est pas ajouté. */
         public bool $hasSignature = false,
+        /** Image de la signature (fichier), intégrée au message. */
+        public ?string $signatureImage = null,
+        public int $signatureImageWidth = 160,
     ) {}
 
     public function envelope(): Envelope
@@ -38,7 +41,13 @@ class QuoteMail extends Mailable
         return new Content(
             view: 'mail.quote',
             text: 'mail.quote_text',
-            with: ['body' => $this->body, 'company' => Company::current(), 'hasSignature' => $this->hasSignature],
+            with: [
+                'body' => $this->body,
+                'company' => Company::current(),
+                'hasSignature' => $this->hasSignature,
+                'signatureImage' => $this->signatureImage,
+                'signatureImageWidth' => $this->signatureImageWidth,
+            ],
         );
     }
 

@@ -8,6 +8,12 @@
         @if ($signature)
             <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #374151;">
                 {!! nl2br(e($signature)) !!}
+                {{-- Image intégrée au message ($message n'existe qu'à l'envoi, pas dans un simple aperçu) --}}
+                @if ($signatureImage && isset($message))
+                    <div style="margin-top: 8px;">
+                        <img src="{{ $message->embed($signatureImage) }}" width="{{ $signatureImageWidth }}" alt="" style="display: block; max-width: 100%; height: auto; border: 0;">
+                    </div>
+                @endif
             </div>
         @elseif (! $hasSignature)
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0 12px;">

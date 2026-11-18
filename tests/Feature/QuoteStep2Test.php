@@ -324,3 +324,38 @@ it('ajoute la signature choisie sous le message envoyé', function () {
     $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['a@b.sn'], 'subject' => 'X', 'message' => 'Y', 'signature_id' => $other->id])
         ->assertStatus(422);
 });
+
+it('ajoute une image (JPEG ou PNG, 1 Mo) à sa signature et l\'intègre à l\'e-mail', function () {
+    Storage::fake('public');
+    Mail::fake();
+    Sanctum::actingAs(userWithRole('sales'));
+    $quote = quoteWithLines();
+    $sig = $this->postJson('/api/v1/email-signatures', ['name' => 'Avec photo', 'body' => '{nom}', 'image_width' => 120])->json('data.id');
+
+    $this->post("/api/v1/email-signatures/{$sig}/image", ['image' => UploadedFile::fake()->image('photo.webp')], ['Accept' => 'application/json'])
+        ->assertJsonPath('errors.image.0', "L'image doit être au format JPEG ou PNG.");
+    $url = $this->post("/api/v1/email-signatures/{$sig}/image", ['image' => UploadedFile::fake()->image('photo.jpg', 300, 300)], ['Accept' => 'application/json'])
+        ->assertOk()->assertJsonPath('data.image_width', 120)->json('data.image_url');
+    expect($url)->toContain('signatures/');
+
+    $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['client@example.sn'], 'subject' => 'X', 'message' => 'Y', 'signature_id' => $sig])->assertOk();
+    Mail::assertSent(QuoteMail::class, fn (QuoteMail $mail) => $mail->signatureImage !== null && $mail->signatureImageWidth === 120);
+
+    $path = EmailSignature::find($sig)->image_path;
+    $this->deleteJson("/api/v1/email-signatures/{$sig}/image")->assertJsonPath('data.image_url', null);
+    Storage::disk('public')->assertMissing($path);
+});
+
+it('intègre vraiment l\'image dans le message envoyé', function () {
+    Storage::fake('public');
+    config(['mail.default' => 'array']);
+    Sanctum::actingAs(userWithRole('sales'));
+    $quote = quoteWithLines();
+    $sig = $this->postJson('/api/v1/email-signatures', ['name' => 'Logo', 'body' => '{nom}'])->json('data.id');
+    $this->post("/api/v1/email-signatures/{$sig}/image", ['image' => UploadedFile::fake()->image('logo.png', 200, 80)], ['Accept' => 'application/json'])->assertOk();
+
+    $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['client@example.sn'], 'subject' => 'X', 'message' => 'Y', 'signature_id' => $sig])->assertOk();
+
+    $sent = app('mailer')->getSymfonyTransport()->messages()->first()->getOriginalMessage();
+    expect($sent->getHtmlBody())->toContain('src="cid:');
+});

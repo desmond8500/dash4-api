@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Signature d'e-mail. Variables remplacées à l'envoi :
  * {nom} {prenom} {fonction} {telephone} {email} {entreprise} {site} {adresse}.
  */
-#[Fillable(['name', 'body', 'is_default'])]
+#[Fillable(['name', 'body', 'is_default', 'image_width'])]
 class EmailSignature extends Model
 {
     public const VARIABLES = [
@@ -25,15 +26,21 @@ class EmailSignature extends Model
         '{adresse}' => 'Adresse de l\'entreprise',
     ];
 
-    protected $attributes = ['is_default' => false];
+    protected $attributes = ['is_default' => false, 'image_width' => 160];
 
     protected function casts(): array
     {
-        return ['is_default' => 'boolean'];
+        return ['is_default' => 'boolean', 'image_width' => 'integer'];
     }
 
     protected static function booted(): void
     {
+        static::deleted(function (EmailSignature $signature) {
+            if ($signature->image_path) {
+                Storage::disk('public')->delete($signature->image_path);
+            }
+        });
+
         // Une seule signature par défaut par propriétaire (l'utilisateur, ou l'entreprise)
         static::saved(function (EmailSignature $signature) {
             if ($signature->is_default) {
@@ -46,6 +53,19 @@ class EmailSignature extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function imageUrl(): ?string
+    {
+        return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
+    }
+
+    /** Chemin du fichier, pour l'intégrer à l'e-mail (pièce jointe intégrée, pas de lien externe). */
+    public function imageFile(): ?string
+    {
+        return $this->image_path && Storage::disk('public')->exists($this->image_path)
+            ? Storage::disk('public')->path($this->image_path)
+            : null;
     }
 
     public function isShared(): bool
