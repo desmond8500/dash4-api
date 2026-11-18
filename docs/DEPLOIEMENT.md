@@ -91,6 +91,12 @@ php artisan storage:link        # une seule fois suffit (logos des clients)
 php artisan optimize
 ```
 
+**Si `composer install` répond « Required package … is not present in the lock file »** : un nouveau paquet a été ajouté à `composer.json` (par exemple `barryvdh/laravel-dompdf` pour les PDF des devis, le 18/11). Le `composer.lock` du serveur n'est pas suivi par git : on y ajoute seulement ce paquet, sans toucher aux autres :
+
+```bash
+composer update nom/du-paquet --with-all-dependencies --no-dev --optimize-autoloader
+```
+
 Vérifier : `git log -1 --oneline` montre le dernier commit de `main`, et `php artisan route:list --path=api/v1` liste les routes attendues.
 
 Le déploiement automatique par SSH n'est pas utilisé (choix du 18/11/2026).
