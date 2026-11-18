@@ -15,6 +15,9 @@ use App\Http\Controllers\Api\V1\NoteController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ProjectLogoController;
+use App\Http\Controllers\Api\V1\QuoteController;
+use App\Http\Controllers\Api\V1\QuoteLineController;
+use App\Http\Controllers\Api\V1\QuoteSectionController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SettingsController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -59,6 +62,21 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::apiResource('projects', ProjectController::class);
         Route::post('projects/{project}/logo', [ProjectLogoController::class, 'store']);
         Route::delete('projects/{project}/logo', [ProjectLogoController::class, 'destroy']);
+
+        // Devis : en-tête, statut, duplication, PDF, copie signée, sections et lignes
+        Route::apiResource('quotes', QuoteController::class);
+        Route::post('quotes/{quote}/status', [QuoteController::class, 'status']);
+        Route::post('quotes/{quote}/duplicate', [QuoteController::class, 'duplicate']);
+        Route::get('quotes/{quote}/pdf', [QuoteController::class, 'pdf'])->name('quotes.pdf');
+        Route::post('quotes/{quote}/signed-copy', [QuoteController::class, 'signedCopy']);
+        Route::post('quotes/{quote}/sections', [QuoteSectionController::class, 'store']);
+        Route::post('quotes/{quote}/sections/order', [QuoteSectionController::class, 'reorder']);
+        Route::patch('quote-sections/{section}', [QuoteSectionController::class, 'update']);
+        Route::delete('quote-sections/{section}', [QuoteSectionController::class, 'destroy']);
+        Route::post('quote-sections/{section}/lines', [QuoteLineController::class, 'store']);
+        Route::post('quote-sections/{section}/lines/order', [QuoteLineController::class, 'reorder']);
+        Route::patch('quote-lines/{line}', [QuoteLineController::class, 'update']);
+        Route::delete('quote-lines/{line}', [QuoteLineController::class, 'destroy']);
 
         // Notes, liens et documents de toute fiche : clients, projets (voir App\Support\Attachable)
         Route::where(['type' => implode('|', array_keys(Attachable::TYPES)), 'id' => '[0-9]+'])->group(function () {

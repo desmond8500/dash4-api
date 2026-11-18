@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Client;
 use App\Models\Project;
+use App\Models\Quote;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
@@ -19,6 +20,7 @@ final class Attachable
     public const TYPES = [
         'clients' => Client::class,
         'projects' => Project::class,
+        'quotes' => Quote::class,
     ];
 
     public static function find(string $type, int $id): Model

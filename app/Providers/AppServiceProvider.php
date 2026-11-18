@@ -10,6 +10,7 @@ use App\Models\Document;
 use App\Models\Link;
 use App\Models\Note;
 use App\Models\Project;
+use App\Models\Quote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
             'contact' => Contact::class,
             'client_request' => ClientRequest::class,
             'project' => Project::class,
+            'quote' => Quote::class,
             'note' => Note::class,
             'link' => Link::class,
             'document' => Document::class,

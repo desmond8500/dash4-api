@@ -71,6 +71,15 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 
 **Taxes (comme Dash3)** : TVA ajoutée au total hors taxes, BRS (retenue à la source, entreprises individuelles) déduite du total, ou sans taxe — `App\Support\TaxCalculator`. **Numérotation** : `DEV-{YYYY}-{####}`, un compteur par type et par année — `App\Support\DocumentNumber`.
 
+| GET POST GET PATCH DELETE | `/api/v1/quotes…` | `quotes.view` / `.view.own` (ses devis : créés, ou de ses projets), `create`, `update` / `.update.own`, `delete` — filtres `search`, `status`, `client_id`, `project_id`, `year` |
+| POST | `/api/v1/quotes/{id}/status` | brouillon → envoyé → accepté / refusé (`quotes.validate`), annulé, rouvert |
+| POST | `/api/v1/quotes/{id}/duplicate` | nouveau brouillon, nouveau numéro |
+| GET | `/api/v1/quotes/{id}/pdf` | `prices.view` — PDF avec logo, banque, signature et cachet (`inline=1` pour l'afficher) |
+| POST | `/api/v1/quotes/{id}/signed-copy` | `quotes.validate` — copie signée par le client, devis accepté |
+| POST PATCH DELETE | `/api/v1/quotes/{id}/sections`, `/quote-sections/{id}`, `/quote-sections/{id}/lines`, `/quote-lines/{id}` ; `…/order` | sections et lignes ; coût et coefficient : `costs.view` |
+
+**Devis** : prix d'une ligne = coût × coefficient (arrondi au franc) ; remise appliquée avant la taxe ; TVA ajoutée, BRS déduite ; taux figés à la création ; section masquée ni imprimée ni comptée ; un devis accepté, refusé ou annulé ne se modifie plus (dupliquer). Montants avec `prices.view`, coûts et marge avec `costs.view`.
+
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.
 
 Toutes les réponses sont en JSON. Les erreurs de validation renvoient `422` avec `errors`.

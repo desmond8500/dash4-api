@@ -6,8 +6,10 @@ use App\Enums\ClientRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ClientRequestResource;
 use App\Http\Resources\ProjectResource;
+use App\Http\Resources\QuoteResource;
 use App\Models\ClientRequest;
 use App\Models\Project;
+use App\Support\QuoteEditing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +17,9 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * POST /api/v1/client-requests/{id}/convert — transforme une demande en projet (TODO §3).
- * La demande passe à « Traitée » et garde le lien vers le projet créé.
- * Tâche, devis et intervention s'ajouteront ici quand ces modules existeront.
+ * POST /api/v1/client-requests/{id}/convert — transforme une demande en projet ou en devis (TODO §3).
+ * La demande passe à « Traitée » et garde le lien vers ce qu'elle est devenue.
+ * Tâche et intervention s'ajouteront ici quand ces modules existeront.
  */
 class ClientRequestConvertController extends Controller
 {
@@ -29,7 +31,7 @@ class ClientRequestConvertController extends Controller
         abort_if($clientRequest->converted_to_type !== null, 422, 'Cette demande a déjà été transformée.');
 
         $data = $request->validate([
-            'type' => ['required', Rule::in(['project'])],
+            'type' => ['required', Rule::in(['project', 'quote'])],
             'name' => ['nullable', 'string', 'max:255'],
             // Obligatoire si la demande n'est pas rattachée à un client (simple nom + téléphone)
             'client_id' => [
@@ -39,22 +41,33 @@ class ClientRequestConvertController extends Controller
             'manager_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('is_active', true)->whereNull('deleted_at')],
         ], [], ['type' => 'type', 'name' => 'nom', 'client_id' => 'client', 'manager_id' => 'chef de projet']);
 
-        abort_unless($user->can('projects.create'), 403, "Vous n'avez pas le droit de créer un projet.");
+        $isQuote = $data['type'] === 'quote';
+        abort_unless(
+            $user->can($isQuote ? 'quotes.create' : 'projects.create'),
+            403,
+            $isQuote ? "Vous n'avez pas le droit de créer un devis." : "Vous n'avez pas le droit de créer un projet.",
+        );
+        $name = $data['name'] ?? Str::limit(Str::squish($clientRequest->body), 80, '…');
+        $clientId = $data['client_id'] ?? $clientRequest->client_id;
 
-        $project = DB::transaction(function () use ($data, $clientRequest, $user) {
-            $project = new Project([
-                'name' => $data['name'] ?? Str::limit(Str::squish($clientRequest->body), 80, '…'),
-                'description' => $clientRequest->body,
-                'client_id' => $data['client_id'] ?? $clientRequest->client_id,
-                'manager_id' => $data['manager_id'] ?? null,
-                'status' => 'planned',
-            ]);
-            $project->created_by = $user->id;
-            $project->save();
+        $created = DB::transaction(function () use ($data, $clientRequest, $user, $isQuote, $name, $clientId) {
+            if ($isQuote) {
+                $created = QuoteEditing::createDraft(['client_id' => $clientId, 'title' => $name, 'notes' => $clientRequest->body], $user);
+            } else {
+                $created = new Project([
+                    'name' => $name,
+                    'description' => $clientRequest->body,
+                    'client_id' => $clientId,
+                    'manager_id' => $data['manager_id'] ?? null,
+                    'status' => 'planned',
+                ]);
+                $created->created_by = $user->id;
+                $created->save();
+            }
 
             $clientRequest->forceFill([
-                'converted_to_type' => $project->getMorphClass(),
-                'converted_to_id' => $project->id,
+                'converted_to_type' => $created->getMorphClass(),
+                'converted_to_id' => $created->id,
             ]);
             if (! $clientRequest->status->isClosed()) {
                 $clientRequest->status = ClientRequestStatus::Done;
@@ -62,13 +75,15 @@ class ClientRequestConvertController extends Controller
             }
             $clientRequest->save();
 
-            return $project;
+            return $created;
         });
 
         return response()->json([
             'data' => [
                 'request' => new ClientRequestResource($clientRequest->refresh()->load(['client:id,name', 'assignee', 'creator', 'processor'])),
-                'project' => new ProjectResource($project->load(['client:id,name', 'manager:id,firstname,lastname'])),
+                ...($isQuote
+                    ? ['quote' => new QuoteResource($created->load(QuoteEditing::FULL))]
+                    : ['project' => new ProjectResource($created->load(['client:id,name', 'manager:id,firstname,lastname']))]),
             ],
         ], 201);
     }
