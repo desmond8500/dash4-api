@@ -16,7 +16,8 @@ final class Settings
         'currency' => 'XOF',
         'vat_rate' => 18,
         'brs_rate' => 5,
-        'default_tax' => 'vat',
+        // Devis et factures sans taxe par défaut (décision du 18/11) ; TVA ou BRS se choisissent sur le document
+        'default_tax' => 'none',
         // {YYYY} année, {YY} année sur 2 chiffres, {MM} mois, {####} numéro (autant de chiffres que de #)
         'numbering' => [
             'quote' => 'DEV-{YYYY}-{####}',
@@ -70,6 +71,6 @@ final class Settings
 
     public static function defaultTax(): TaxMode
     {
-        return TaxMode::tryFrom((string) self::get('default_tax')) ?? TaxMode::Vat;
+        return TaxMode::tryFrom((string) self::get('default_tax')) ?? TaxMode::None;
     }
 }

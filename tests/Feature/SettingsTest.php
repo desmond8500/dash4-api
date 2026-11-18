@@ -7,11 +7,11 @@ use App\Support\TaxCalculator;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 
-it('donne les paramètres par défaut : franc CFA, TVA 18 %, BRS 5 %', function () {
+it('donne les paramètres par défaut : franc CFA, TVA 18 %, BRS 5 %, sans taxe par défaut', function () {
     Sanctum::actingAs(userWithRole('technician'));
 
     $this->getJson('/api/v1/settings')->assertOk()->assertJson(['data' => [
-        'currency' => 'XOF', 'vat_rate' => 18, 'brs_rate' => 5, 'default_tax' => 'vat',
+        'currency' => 'XOF', 'vat_rate' => 18, 'brs_rate' => 5, 'default_tax' => 'none',
         'numbering' => ['quote' => 'DEV-{YYYY}-{####}', 'invoice' => 'FAC-{YYYY}-{####}'],
         'next_numbers' => ['quote' => 'DEV-'.now()->year.'-0001'],
     ]]);

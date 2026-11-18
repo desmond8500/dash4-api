@@ -15,7 +15,8 @@ function newQuote(array $data = []): array
 {
     $client = Client::factory()->create(['name' => 'Hôtel Teranga']);
 
-    return test()->postJson('/api/v1/quotes', ['client_id' => $client->id, 'title' => 'Vidéosurveillance', ...$data])
+    // TVA pour les calculs des tests ; le devis « sans taxe » par défaut a son propre test
+    return test()->postJson('/api/v1/quotes', ['client_id' => $client->id, 'title' => 'Vidéosurveillance', 'tax_mode' => 'vat', ...$data])
         ->assertCreated()->json('data');
 }
 
@@ -32,13 +33,22 @@ it('crée un devis numéroté, avec la taxe et le compte bancaire par défaut et
 
     expect($quote['number'])->toBe('DEV-'.now()->year.'-0001')
         ->and($quote['status']['label'])->toBe('Brouillon')
-        ->and($quote['tax_mode']['value'])->toBe('vat')
         ->and($quote['vat_rate'])->toEqual(18)
         ->and($quote['bank_account_id'])->toBe($bank->id)
         ->and($quote['valid_until'])->toBe(now()->addDays(30)->toDateString())
         ->and($quote['sections'])->toHaveCount(1);
 
     expect(newQuote()['number'])->toBe('DEV-'.now()->year.'-0002');
+});
+
+it('crée les devis sans taxe par défaut', function () {
+    Sanctum::actingAs(userWithRole('sales'));
+    $client = Client::factory()->create();
+
+    $this->postJson('/api/v1/quotes', ['client_id' => $client->id, 'title' => 'Alarme'])
+        ->assertCreated()
+        ->assertJsonPath('data.tax_mode.value', 'none')
+        ->assertJsonPath('data.tax_mode.label', 'Sans taxe');
 });
 
 it('calcule les lignes au coût × coefficient et les totaux avec la TVA', function () {
