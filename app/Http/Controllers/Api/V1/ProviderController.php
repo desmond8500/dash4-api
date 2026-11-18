@@ -76,8 +76,8 @@ class ProviderController extends Controller
             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
             'email' => ['sometimes', 'nullable', 'email', 'max:255'],
             'address' => ['sometimes', 'nullable', 'string', 'max:2000'],
-            'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
-            'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
             'website' => ['sometimes', 'nullable', 'url', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
         ], [], ['name' => 'nom', 'contact_name' => 'contact', 'phone' => 'téléphone', 'website' => 'site web']);
