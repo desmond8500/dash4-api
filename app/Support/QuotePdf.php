@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Company;
 use App\Models\DeliveryNote;
+use App\Models\Invoice;
 use App\Models\Quote;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPdf;
@@ -53,6 +54,20 @@ final class QuotePdf
             ...self::common($company),
             'note' => $note,
             'quote' => $note->quote,
+            'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
+            'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
+        ])->setPaper('a4');
+    }
+
+    public static function invoice(Invoice $invoice): DomPdf
+    {
+        $invoice->load(['client.phones', 'client.emails', 'project', 'quote', 'bankAccount', 'lines', 'payments']);
+        $company = Company::current();
+        $signatureOn = $invoice->show_signature && ($company->signatureSettings()['invoice'] ?? true);
+
+        return Pdf::loadView('pdf.invoice', [
+            ...self::common($company),
+            'invoice' => $invoice,
             'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
             'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
         ])->setPaper('a4');

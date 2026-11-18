@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Client;
+use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Quote;
 use App\Models\User;
@@ -21,6 +22,7 @@ final class Attachable
         'clients' => Client::class,
         'projects' => Project::class,
         'quotes' => Quote::class,
+        'invoices' => Invoice::class,
     ];
 
     public static function find(string $type, int $id): Model

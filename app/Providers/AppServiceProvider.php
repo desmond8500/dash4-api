@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\ClientRequest;
 use App\Models\Contact;
 use App\Models\Document;
+use App\Models\Invoice;
 use App\Models\Link;
 use App\Models\Note;
 use App\Models\Project;
@@ -33,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
             'client_request' => ClientRequest::class,
             'project' => Project::class,
             'quote' => Quote::class,
+            'invoice' => Invoice::class,
             'note' => Note::class,
             'link' => Link::class,
             'document' => Document::class,

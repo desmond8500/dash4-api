@@ -15,6 +15,16 @@ class QuoteEmail extends Model
         return ['to' => 'array', 'cc' => 'array', 'attachments' => 'array', 'sent_at' => 'datetime'];
     }
 
+    public function quote(): BelongsTo
+    {
+        return $this->belongsTo(Quote::class);
+    }
+
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sent_by');

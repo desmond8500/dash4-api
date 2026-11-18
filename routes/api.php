@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DeliveryNoteController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\EmailSignatureController;
+use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\LinkController;
 use App\Http\Controllers\Api\V1\NoteController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -105,6 +106,20 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('quote-sections/{section}/lines/order', [QuoteLineController::class, 'reorder']);
         Route::patch('quote-lines/{line}', [QuoteLineController::class, 'update']);
         Route::delete('quote-lines/{line}', [QuoteLineController::class, 'destroy']);
+
+        // Factures et paiements
+        Route::get('invoices/summary', [InvoiceController::class, 'summary'])->name('invoices.summary');
+        Route::apiResource('invoices', InvoiceController::class);
+        Route::post('invoices/{invoice}/lines', [InvoiceController::class, 'addLine']);
+        Route::patch('invoice-lines/{line}', [InvoiceController::class, 'updateLine']);
+        Route::delete('invoice-lines/{line}', [InvoiceController::class, 'removeLine']);
+        Route::post('invoices/{invoice}/issue', [InvoiceController::class, 'issue']);
+        Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel']);
+        Route::post('invoices/{invoice}/payments', [InvoiceController::class, 'addPayment']);
+        Route::delete('invoice-payments/{payment}', [InvoiceController::class, 'removePayment']);
+        Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
+        Route::get('invoices/{invoice}/email-draft', [InvoiceController::class, 'emailDraft']);
+        Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
 
         // Notes, liens et documents de toute fiche : clients, projets (voir App\Support\Attachable)
         Route::where(['type' => implode('|', array_keys(Attachable::TYPES)), 'id' => '[0-9]+'])->group(function () {

@@ -14,7 +14,7 @@ final class QuoteEditing
     /** Relations chargées pour renvoyer un devis complet. */
     public const FULL = [
         'client:id,name', 'project:id,name,manager_id', 'bankAccount', 'creator:id,firstname,lastname', 'sections.lines',
-        'deposits', 'expenses.document', 'expenses.creator:id,firstname,lastname', 'deliveryNotes.lines', 'emails.sender:id,firstname,lastname',
+        'deposits', 'expenses.document', 'expenses.creator:id,firstname,lastname', 'deliveryNotes.lines', 'emails.sender:id,firstname,lastname', 'invoices',
     ];
 
     /**

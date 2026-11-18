@@ -88,6 +88,14 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 
 | GET POST PATCH DELETE | `/api/v1/email-signatures…` | signatures d'e-mail : les siennes, et celles de l'entreprise (`shared`, `company.update`) ; variables `{nom}` `{prenom}` `{fonction}` `{telephone}` `{email}` `{entreprise}` `{site}` `{adresse}` ; `signature_id` à l'envoi |
 
+| GET POST GET PATCH DELETE | `/api/v1/invoices…` | `invoices.view` / `create` / `update` / `delete` (brouillon seulement) — filtres `status`, `unpaid=1`, `overdue=1`, `client_id`, `quote_id`, `project_id`, `year`, `search` |
+| POST | `/api/v1/invoices` | depuis un devis accepté : `quote_id`, `scope` (`all`, `equipment`, `equipment_accessories`, `labor`, `remainder`), `percent`, `title` ; depuis un acompte prévu : `quote_deposit_id` ; libre : `client_id` |
+| GET | `/api/v1/invoices/summary` | à encaisser, en retard, encaissé ce mois-ci, brouillons |
+| POST PATCH DELETE | `/api/v1/invoices/{id}/lines`, `/invoice-lines/{id}` | lignes d'un brouillon (prix négatif : remise, déduction) |
+| POST | `/api/v1/invoices/{id}/issue`, `/cancel` | `invoices.issue` — numéro `FAC-2026-0001` à l'émission, échéance à 30 jours par défaut |
+| POST DELETE | `/api/v1/invoices/{id}/payments`, `/invoice-payments/{id}` | paiements (virement, chèque, espèces, Wave, Orange Money, Free Money, carte, autre) |
+| GET POST | `/api/v1/invoices/{id}/pdf`, `/email-draft`, `/send` | PDF (« Brouillon » en filigrane) et envoi par e-mail |
+
 **Devis** : prix d'une ligne = coût × coefficient (arrondi au franc) ; remise appliquée avant la taxe ; TVA ajoutée, BRS déduite ; taux figés à la création ; section masquée ni imprimée ni comptée ; un devis accepté, refusé ou annulé ne se modifie plus (dupliquer). Montants avec `prices.view`, coûts et marge avec `costs.view`.
 
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.

@@ -3,19 +3,19 @@
 namespace App\Mail;
 
 use App\Models\Company;
-use App\Models\Quote;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Mail\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 
-/** Devis envoyé au client : message rédigé par l'utilisateur, PDF du devis (et proposition technique) joints. */
+/** Document (devis, facture) envoyé au client : message rédigé par l'utilisateur, PDF joints. */
 class QuoteMail extends Mailable
 {
     /** @param array<int, array{name: string, data: string}> $files */
     public function __construct(
-        public Quote $quote,
+        public Model $document,
         public string $mailSubject,
         public string $body,
         public array $files,

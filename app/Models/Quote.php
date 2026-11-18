@@ -110,6 +110,11 @@ class Quote extends Model
         return $this->hasMany(DeliveryNote::class)->latest('delivered_at')->orderByDesc('id');
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->orderBy('id');
+    }
+
     public function emails(): HasMany
     {
         return $this->hasMany(QuoteEmail::class)->latest('sent_at');

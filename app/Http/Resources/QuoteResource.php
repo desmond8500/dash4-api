@@ -96,6 +96,21 @@ class QuoteResource extends JsonResource
                 'expenses_total' => round((float) $this->expenses->sum('amount'), 2),
                 'real_margin' => (int) round($net - (float) $this->expenses->sum('amount')),
             ]),
+            // Factures du devis et reste à facturer (hors taxes) : prices.view
+            $this->mergeWhen($prices && $this->relationLoaded('invoices'), fn () => [
+                'invoices' => $this->invoices->map(fn ($i) => [
+                    'id' => $i->id,
+                    'number' => $i->number,
+                    'title' => $i->title,
+                    'status' => ['value' => $i->status->value, 'label' => $i->status->label()],
+                    'subtotal' => $i->subtotal,
+                    'total' => $i->total,
+                    'paid_amount' => $i->paid_amount,
+                    'quote_deposit_id' => $i->quote_deposit_id,
+                ])->values(),
+                'invoiced_net' => $invoiced = (int) $this->invoices->where('status.value', '!=', 'cancelled')->sum('subtotal'),
+                'remaining_to_invoice' => max(0, $net - $invoiced),
+            ]),
             'delivery_notes' => $this->whenLoaded('deliveryNotes', fn () => $this->deliveryNotes->map(fn ($n) => [
                 'id' => $n->id,
                 'number' => $n->number,
