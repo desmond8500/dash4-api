@@ -34,7 +34,7 @@ class Company extends Model
 
     public static function current(): self
     {
-        return self::query()->firstOrCreate([], [
+        return self::query()->oldest('id')->first() ?? self::query()->forceCreate([
             'name' => config('app.name', 'Dash4'),
             'country' => 'Sénégal',
             'signature_on' => array_fill_keys(array_keys(self::SIGNATURE_DOCUMENTS), true),
