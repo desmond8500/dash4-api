@@ -23,6 +23,7 @@ class Company extends Model
         'quote' => 'Devis',
         'invoice' => 'Factures',
         'delivery_note' => 'Bons de livraison',
+        'purchase_order' => 'Bons de commande',
         'report' => "Rapports d'intervention",
         'acceptance' => 'Procès-verbaux',
     ];

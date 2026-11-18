@@ -14,6 +14,7 @@ use App\Models\Link;
 use App\Models\Note;
 use App\Models\Project;
 use App\Models\Provider;
+use App\Models\Purchase;
 use App\Models\Quote;
 use App\Models\StockMovement;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -42,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
             'invoice' => Invoice::class,
             'article' => Article::class,
             'provider' => Provider::class,
+            'purchase' => Purchase::class,
             'brand' => Brand::class,
             'delivery_note' => DeliveryNote::class,
             'stock_movement' => StockMovement::class,

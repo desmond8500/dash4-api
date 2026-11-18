@@ -96,6 +96,14 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | POST DELETE | `/api/v1/invoices/{id}/payments`, `/invoice-payments/{id}` | paiements (virement, chèque, espèces, Wave, Orange Money, Free Money, carte, autre) |
 | GET POST | `/api/v1/invoices/{id}/pdf`, `/email-draft`, `/send` | PDF (« Brouillon » en filigrane) et envoi par e-mail |
 
+| GET POST PATCH DELETE | `/api/v1/brands`, `/providers`, `/articles` | `stock.view` (technicien : sans prix ni coût) / `stock.create` / `update` / `delete` — articles : `search`, `barcode`, `low=1`, `category`, `brand_id`, `provider_id` ; `initial_quantity` à la création |
+| GET | `/api/v1/articles/summary`, `/stock-movements` | stock bas, ruptures, valeur du stock (`costs.view`) ; journal des mouvements |
+| POST | `/api/v1/articles/{id}/movements` | `stock.move` — `type` `in` / `out` / `inventory`, `quantity`, `reason`, `project_id`, `client_uuid` |
+| POST DELETE PUT | `/api/v1/articles/{id}/image`, `/dependencies` | image, articles liés |
+| POST | `/api/v1/delivery-notes/{id}/release`, `/restock` | bordereau livré : sortie du stock (tout ou rien) ; annulation |
+| GET POST PATCH DELETE | `/api/v1/purchases…`, `/purchase-lines/{id}` | `purchases.*` — bon de commande `BC-2026-0001`, `low_stock=1` |
+| POST | `/api/v1/purchases/{id}/order`, `/cancel`, `/receive` | commander, annuler, réceptionner (`purchases.receive`, partiel possible, coût mis à jour) |
+
 **Devis** : prix d'une ligne = coût × coefficient (arrondi au franc) ; remise appliquée avant la taxe ; TVA ajoutée, BRS déduite ; taux figés à la création ; section masquée ni imprimée ni comptée ; un devis accepté, refusé ou annulé ne se modifie plus (dupliquer). Montants avec `prices.view`, coûts et marge avec `costs.view`.
 
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.

@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Provider;
+use App\Models\Purchase;
 use App\Models\Quote;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,7 @@ final class Attachable
         'invoices' => Invoice::class,
         'articles' => Article::class,
         'providers' => Provider::class,
+        'purchases' => Purchase::class,
     ];
 
     public static function find(string $type, int $id): Model

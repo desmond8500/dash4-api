@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ProjectLogoController;
 use App\Http\Controllers\Api\V1\ProviderController;
+use App\Http\Controllers\Api\V1\PurchaseController;
 use App\Http\Controllers\Api\V1\QuoteController;
 use App\Http\Controllers\Api\V1\QuoteEmailController;
 use App\Http\Controllers\Api\V1\QuoteLineController;
@@ -121,6 +122,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::put('articles/{article}/dependencies', [ArticleController::class, 'dependencies']);
         Route::post('articles/{article}/movements', [StockMovementController::class, 'store']);
         Route::get('stock-movements', [StockMovementController::class, 'index']);
+        Route::apiResource('purchases', PurchaseController::class);
+        Route::post('purchases/{purchase}/lines', [PurchaseController::class, 'addLine']);
+        Route::patch('purchase-lines/{line}', [PurchaseController::class, 'updateLine']);
+        Route::delete('purchase-lines/{line}', [PurchaseController::class, 'removeLine']);
+        Route::post('purchases/{purchase}/order', [PurchaseController::class, 'order']);
+        Route::post('purchases/{purchase}/cancel', [PurchaseController::class, 'cancel']);
+        Route::post('purchases/{purchase}/receive', [PurchaseController::class, 'receive']);
+        Route::get('purchases/{purchase}/pdf', [PurchaseController::class, 'pdf'])->name('purchases.pdf');
         Route::post('delivery-notes/{note}/release', [DeliveryNoteController::class, 'release']);
         Route::post('delivery-notes/{note}/restock', [DeliveryNoteController::class, 'restock']);
 
