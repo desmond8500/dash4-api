@@ -34,11 +34,19 @@ class Company extends Model
 
     public static function current(): self
     {
-        return self::query()->oldest('id')->first() ?? self::query()->forceCreate([
+        if ($company = self::query()->oldest('id')->first()) {
+            return $company;
+        }
+
+        $company = self::query()->forceCreate([
             'name' => config('app.name', 'Dash4'),
             'country' => 'Sénégal',
             'signature_on' => array_fill_keys(array_keys(self::SIGNATURE_DOCUMENTS), true),
         ]);
+        // Fiche créée en coulisse : les réponses restent des lectures (200), pas des créations (201)
+        $company->wasRecentlyCreated = false;
+
+        return $company;
     }
 
     /** @return array<string, bool> */
