@@ -90,6 +90,7 @@ class QuoteResource extends JsonResource
                     'amount' => $e->amount,
                     'spent_at' => $e->spent_at?->toDateString(),
                     'is_paid' => $e->is_paid,
+                    'status' => ['value' => $e->status->value, 'label' => $e->status->label()],
                     'document' => $e->document ? ['id' => $e->document->id, 'name' => $e->document->name, 'download_path' => "documents/{$e->document->id}/download"] : null,
                     'creator' => AttachmentResources::author($e->creator),
                 ])->values(),

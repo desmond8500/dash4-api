@@ -15,6 +15,11 @@ class PurchaseReception extends Model
         return ['received_at' => 'datetime', 'lines' => 'array'];
     }
 
+    public function purchase(): BelongsTo
+    {
+        return $this->belongsTo(Purchase::class);
+    }
+
     public function receiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by');

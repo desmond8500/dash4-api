@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Article;
 use App\Models\Brand;
 use App\Models\Client;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Project;
 use App\Models\Provider;
@@ -31,6 +32,7 @@ final class Attachable
         'brands' => Brand::class,
         'providers' => Provider::class,
         'purchases' => Purchase::class,
+        'expenses' => Expense::class,
     ];
 
     public static function find(string $type, int $id): Model

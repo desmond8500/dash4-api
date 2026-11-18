@@ -102,7 +102,7 @@ class Quote extends Model
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(QuoteExpense::class)->latest('spent_at')->orderByDesc('id');
+        return $this->hasMany(Expense::class)->where('status', '!=', 'rejected')->latest('spent_at')->orderByDesc('id');
     }
 
     public function deliveryNotes(): HasMany

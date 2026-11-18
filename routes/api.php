@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AccountingController;
 use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\AssigneeController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -14,6 +15,9 @@ use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DeliveryNoteController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\EmailSignatureController;
+use App\Http\Controllers\Api\V1\ExpenseCategoryController;
+use App\Http\Controllers\Api\V1\ExpenseController;
+use App\Http\Controllers\Api\V1\ExpenseSpaceController;
 use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\LinkController;
 use App\Http\Controllers\Api\V1\NoteController;
@@ -32,6 +36,7 @@ use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SettingsController;
 use App\Http\Controllers\Api\V1\StockLogoController;
 use App\Http\Controllers\Api\V1\StockMovementController;
+use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Support\Attachable;
@@ -151,6 +156,21 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}/email-draft', [InvoiceController::class, 'emailDraft']);
         Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
+
+        // Comptabilité : dépenses, caisses, catégories, transactions, bilan
+        Route::get('expenses/summary', [ExpenseController::class, 'summary'])->name('expenses.summary');
+        Route::apiResource('expenses', ExpenseController::class);
+        Route::post('expenses/{expense}/receipt', [ExpenseController::class, 'receipt']);
+        Route::post('expenses/{expense}/approve', [ExpenseController::class, 'approve']);
+        Route::post('expenses/{expense}/reject', [ExpenseController::class, 'reject']);
+        Route::post('expenses/{expense}/reimburse', [ExpenseController::class, 'reimburse']);
+        Route::apiResource('expense-categories', ExpenseCategoryController::class)->except('show')->parameters(['expense-categories' => 'category']);
+        Route::apiResource('expense-spaces', ExpenseSpaceController::class)->parameters(['expense-spaces' => 'space']);
+        Route::post('expense-spaces/{space}/fundings', [ExpenseSpaceController::class, 'fund']);
+        Route::delete('expense-space-fundings/{funding}', [ExpenseSpaceController::class, 'removeFunding']);
+        Route::apiResource('transactions', TransactionController::class)->except('show');
+        Route::get('accounting/summary', [AccountingController::class, 'summary']);
+        Route::get('accounting/ledger', [AccountingController::class, 'ledger']);
 
         // Notes, liens et documents de toute fiche : clients, projets (voir App\Support\Attachable)
         Route::where(['type' => implode('|', array_keys(Attachable::TYPES)), 'id' => '[0-9]+'])->group(function () {

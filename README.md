@@ -104,6 +104,12 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | GET POST PATCH DELETE | `/api/v1/purchases…`, `/purchase-lines/{id}` | `purchases.*` — bon de commande `BC-2026-0001`, `low_stock=1` |
 | POST | `/api/v1/purchases/{id}/order`, `/cancel`, `/receive` | commander, annuler, réceptionner (`purchases.receive`, partiel possible, coût mis à jour) |
 
+| GET POST PATCH DELETE | `/api/v1/expenses…` | `accounting.*` (tout) ou `accounting.*.own` (ses dépenses et ses caisses) — filtres `status`, `mine`, `to_reimburse`, `expense_space_id`, `project_id`, `quote_id`, `from`, `to` ; `file` = justificatif |
+| POST | `/api/v1/expenses/{id}/approve`, `/reject` (`reason`), `/reimburse`, `/receipt` | `accounting.update` — dépense du comptable validée d'office |
+| GET POST PATCH DELETE | `/api/v1/expense-spaces…`, `/expense-spaces/{id}/fundings` | caisses : membres, versements, solde (versé − dépenses non avancées et non refusées) |
+| GET POST PATCH DELETE | `/api/v1/expense-categories`, `/transactions` | catégories ; transactions saisies à la main (`direction` in / out) |
+| GET | `/api/v1/accounting/summary`, `/accounting/ledger` | `accounting.view` — bilan (`from`, `to`, `project_id`) : paiements de factures, dépenses validées, achats reçus (TVA comprise), transactions |
+
 **Devis** : prix d'une ligne = coût × coefficient (arrondi au franc) ; remise appliquée avant la taxe ; TVA ajoutée, BRS déduite ; taux figés à la création ; section masquée ni imprimée ni comptée ; un devis accepté, refusé ou annulé ne se modifie plus (dupliquer). Montants avec `prices.view`, coûts et marge avec `costs.view`.
 
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.

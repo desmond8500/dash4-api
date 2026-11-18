@@ -7,7 +7,8 @@ use App\Http\Resources\QuoteResource;
 use App\Models\Document;
 use App\Models\Quote;
 use App\Models\QuoteDeposit;
-use App\Models\QuoteExpense;
+use App\Enums\ExpenseStatus;
+use App\Models\Expense;
 use App\Support\QuoteEditing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +70,9 @@ class QuoteMoneyController extends Controller
         $data = $this->validateExpense($request, true);
 
         DB::transaction(function () use ($quote, $data, $request) {
-            $expense = new QuoteExpense($data);
+            // Saisie depuis le devis (costs.view) : dépense validée, rattachée au projet du devis
+            $expense = new Expense([...$data, 'amount' => (int) round((float) $data['amount']), 'project_id' => $quote->project_id]);
+            $expense->forceFill(['status' => ExpenseStatus::Approved, 'decided_by' => $request->user()->id, 'decided_at' => now()]);
             $expense->created_by = $request->user()->id;
             if ($request->hasFile('file')) {
                 $expense->document_id = $this->storeReceipt($request, $quote, $data['label'])->id;
@@ -80,14 +83,14 @@ class QuoteMoneyController extends Controller
         return $this->respond($quote);
     }
 
-    public function updateExpense(Request $request, QuoteExpense $expense): QuoteResource
+    public function updateExpense(Request $request, Expense $expense): QuoteResource
     {
-        $quote = $expense->quote;
+        $quote = $expense->quote ?? abort(404, 'Cette dépense n\'est pas liée à un devis.');
         $this->authorize('update', $quote);
         $this->need($request, 'costs.view');
         $data = $this->validateExpense($request, false);
 
-        $expense->fill($data);
+        $expense->fill(isset($data['amount']) ? [...$data, 'amount' => (int) round((float) $data['amount'])] : $data);
         if ($request->hasFile('file')) {
             $expense->document_id = $this->storeReceipt($request, $quote, $expense->label)->id;
         }
@@ -96,9 +99,9 @@ class QuoteMoneyController extends Controller
         return $this->respond($quote);
     }
 
-    public function destroyExpense(Request $request, QuoteExpense $expense): QuoteResource
+    public function destroyExpense(Request $request, Expense $expense): QuoteResource
     {
-        $quote = $expense->quote;
+        $quote = $expense->quote ?? abort(404, 'Cette dépense n\'est pas liée à un devis.');
         $this->authorize('update', $quote);
         $this->need($request, 'costs.view');
         $expense->delete();

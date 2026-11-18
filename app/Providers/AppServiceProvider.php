@@ -9,6 +9,7 @@ use App\Models\ClientRequest;
 use App\Models\Contact;
 use App\Models\DeliveryNote;
 use App\Models\Document;
+use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Link;
 use App\Models\Note;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
             'article' => Article::class,
             'provider' => Provider::class,
             'purchase' => Purchase::class,
+            'expense' => Expense::class,
             'brand' => Brand::class,
             'delivery_note' => DeliveryNote::class,
             'stock_movement' => StockMovement::class,
