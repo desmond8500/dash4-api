@@ -1,0 +1,7 @@
+{
+    "Unauthenticated.": "Session expirée ou absente. Reconnectez-vous.",
+    "This action is unauthorized.": "Vous n'avez pas le droit de faire cette action.",
+    "Too Many Attempts.": "Trop de tentatives. Réessayez dans une minute.",
+    "Not Found": "Élément introuvable.",
+    "The given data was invalid.": "Certains champs sont invalides."
+}

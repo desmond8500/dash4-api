@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ClientController;
+use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -28,5 +30,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
         Route::apiResource('users', UserController::class)->except('destroy');
+
+        Route::apiResource('clients', ClientController::class);
+        Route::apiResource('contacts', ContactController::class);
     });
 });

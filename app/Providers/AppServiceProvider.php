@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use App\Models\Client;
+use App\Models\Contact;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -17,6 +20,12 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Noms courts stockés dans les relations polymorphes (téléphones, e-mails, notes…)
+        Relation::morphMap([
+            'client' => Client::class,
+            'contact' => Contact::class,
+        ]);
+
         // En développement : erreur si on essaie d'enregistrer un attribut non autorisé
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
 

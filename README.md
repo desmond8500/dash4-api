@@ -19,7 +19,9 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 - Règle **technicien** : jamais de prix, de coûts, de banque… même si un rôle les lui donne (`User::hasPermissionTo`)
 - Gestion des utilisateurs : seul un administrateur gère les administrateurs, personne ne modifie ses propres rôles, il reste toujours un administrateur actif
 - Comptes désactivés : jetons supprimés, accès refusé immédiatement
-- Journal d'audit (spatie/laravel-activitylog) : connexions, modifications des utilisateurs et des rôles
+- Journal d'audit (spatie/laravel-activitylog) : connexions, modifications des utilisateurs, des rôles, des clients et des contacts
+- **Clients et contacts** : téléphones et e-mails multiples, anti-doublon `client_uuid`, synchronisation incrémentale
+- Messages de validation en français (`lang/fr`)
 - CI GitHub Actions (tests PHP 8.4 et 8.5) et déploiement automatique sur alwaysdata
 
 ## Routes
@@ -35,6 +37,14 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | POST | `/api/v1/users` | `users.manage` |
 | GET | `/api/v1/users/{id}` | `users.view` ou soi-même |
 | PATCH | `/api/v1/users/{id}` | `users.manage` — désactiver : `is_active: false` |
+| GET | `/api/v1/clients` | `clients.view` — filtres `search`, `type`, `status`, `favorite`, tri `sort=-updated_at` |
+| POST | `/api/v1/clients` | `clients.create` — `phones[]`, `emails[]`, `client_uuid` (anti-doublon mobile) |
+| GET | `/api/v1/clients/{id}` | `clients.view` — avec contacts, téléphones, e-mails |
+| PATCH | `/api/v1/clients/{id}` | `clients.update` — `phones` / `emails` envoyés remplacent les listes |
+| DELETE | `/api/v1/clients/{id}` | `clients.delete` — corbeille |
+| GET POST GET PATCH DELETE | `/api/v1/contacts…` | mêmes droits que les clients — filtres `search`, `client_id` |
+
+**Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.
 
 Toutes les réponses sont en JSON. Les erreurs de validation renvoient `422` avec `errors`.
 
