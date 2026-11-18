@@ -137,3 +137,25 @@ it('gère les articles liés', function () {
     $this->putJson("/api/v1/articles/{$camera->id}/dependencies", ['items' => [['article_id' => $camera->id, 'quantity' => 1]]])
         ->assertJsonPath('errors', fn ($e) => str_contains(json_encode($e, JSON_UNESCAPED_UNICODE), 'lui-même'));
 });
+
+it('donne un logo, des liens et des documents aux marques, un logo et une position aux fournisseurs', function () {
+    Illuminate\Support\Facades\Storage::fake('public');
+    Sanctum::actingAs(userWithRole('storekeeper'));
+    $brand = $this->postJson('/api/v1/brands', ['name' => 'Dahua'])->json('data');
+    Article::factory()->count(2)->create(['brand_id' => $brand['id']]);
+
+    $logo = Illuminate\Http\UploadedFile::fake()->image('logo.png', 200, 80);
+    $this->post("/api/v1/brands/{$brand['id']}/logo", ['logo' => $logo], ['Accept' => 'application/json'])
+        ->assertOk()->assertJsonPath('data.logo_url', fn ($url) => str_contains($url, 'brands/logos/'));
+    $this->postJson("/api/v1/brands/{$brand['id']}/links", ['url' => 'https://www.dahuasecurity.com', 'label' => 'Site'])->assertCreated();
+    $this->getJson("/api/v1/brands/{$brand['id']}")->assertJsonPath('data.articles_count', 2);
+    $this->getJson("/api/v1/articles?brand_id={$brand['id']}")->assertJsonCount(2, 'data');
+
+    $provider = $this->postJson('/api/v1/providers', ['name' => 'Sénégal Sécurité', 'latitude' => 14.7167, 'longitude' => -17.4677])
+        ->assertCreated()->json('data');
+    expect($provider)->toMatchArray(['latitude' => 14.7167, 'longitude' => -17.4677]);
+    $this->postJson('/api/v1/providers', ['name' => 'X', 'latitude' => 14.7])->assertJsonValidationErrors('longitude');
+    $this->post("/api/v1/providers/{$provider['id']}/logo", ['logo' => Illuminate\Http\UploadedFile::fake()->image('l.jpg')], ['Accept' => 'application/json'])
+        ->assertOk()->assertJsonPath('data.purchases_count', 0);
+    $this->deleteJson("/api/v1/providers/{$provider['id']}/logo")->assertJsonPath('data.logo_url', null);
+});

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Article;
+use App\Models\Brand;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Project;
@@ -27,6 +28,7 @@ final class Attachable
         'quotes' => Quote::class,
         'invoices' => Invoice::class,
         'articles' => Article::class,
+        'brands' => Brand::class,
         'providers' => Provider::class,
         'purchases' => Purchase::class,
     ];

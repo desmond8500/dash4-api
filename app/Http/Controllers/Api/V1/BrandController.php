@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /** Marques des articles. Une marque avec des articles ne se supprime pas. */
@@ -19,6 +20,14 @@ class BrandController extends Controller
             ->orderBy('name')->get();
 
         return response()->json(['data' => $brands->map(fn (Brand $b) => $this->present($b))]);
+    }
+
+    /** GET /api/v1/brands/{id} — ses articles : GET /api/v1/articles?brand_id=… */
+    public function show(Brand $brand): JsonResponse
+    {
+        $this->authorize('view', $brand);
+
+        return response()->json(['data' => $this->present($brand->loadCount('articles'))]);
     }
 
     public function store(Request $request): JsonResponse
@@ -62,7 +71,12 @@ class BrandController extends Controller
             'name' => $brand->name,
             'description' => $brand->description,
             'website' => $brand->website,
+            'logo_url' => $brand->logo_path ? Storage::disk('public')->url($brand->logo_path) : null,
             'articles_count' => $brand->articles_count ?? 0,
+            'can' => [
+                'update' => (bool) request()->user()?->can('update', $brand),
+                'delete' => (bool) request()->user()?->can('delete', $brand),
+            ],
         ];
     }
 }

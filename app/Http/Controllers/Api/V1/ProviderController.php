@@ -7,6 +7,7 @@ use App\Models\Provider;
 use App\Support\SyncQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /** Fournisseurs (Dash3 : providers). */
 class ProviderController extends Controller
@@ -33,7 +34,7 @@ class ProviderController extends Controller
     {
         $this->authorize('view', $provider);
 
-        return response()->json(['data' => $this->present($provider->loadCount('articles'))]);
+        return response()->json(['data' => $this->present($provider->loadCount(['articles', 'purchases']))]);
     }
 
     public function store(Request $request): JsonResponse
@@ -75,6 +76,8 @@ class ProviderController extends Controller
             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
             'email' => ['sometimes', 'nullable', 'email', 'max:255'],
             'address' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
+            'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
             'website' => ['sometimes', 'nullable', 'url', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
         ], [], ['name' => 'nom', 'contact_name' => 'contact', 'phone' => 'téléphone', 'website' => 'site web']);
@@ -84,7 +87,15 @@ class ProviderController extends Controller
     {
         return [
             ...$p->only(['id', 'client_uuid', 'name', 'contact_name', 'phone', 'email', 'address', 'website', 'description']),
+            'latitude' => $p->latitude !== null ? (float) $p->latitude : null,
+            'longitude' => $p->longitude !== null ? (float) $p->longitude : null,
+            'logo_url' => $p->logo_path ? Storage::disk('public')->url($p->logo_path) : null,
             'articles_count' => $p->articles_count ?? 0,
+            'purchases_count' => $p->purchases_count ?? null,
+            'can' => [
+                'update' => (bool) request()->user()?->can('update', $p),
+                'delete' => (bool) request()->user()?->can('delete', $p),
+            ],
             'updated_at' => $p->updated_at?->toIso8601String(),
             'deleted_at' => $p->deleted_at?->toIso8601String(),
         ];

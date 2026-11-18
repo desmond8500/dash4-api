@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\QuoteSectionController;
 use App\Http\Controllers\Api\V1\QuoteTemplateController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SettingsController;
+use App\Http\Controllers\Api\V1\StockLogoController;
 use App\Http\Controllers\Api\V1\StockMovementController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -113,8 +114,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('quote-lines/{line}', [QuoteLineController::class, 'destroy']);
 
         // Stock : marques, fournisseurs, articles, mouvements
-        Route::apiResource('brands', BrandController::class)->except('show');
+        Route::apiResource('brands', BrandController::class);
+        Route::post('brands/{brand}/logo', [StockLogoController::class, 'storeBrand']);
+        Route::delete('brands/{brand}/logo', [StockLogoController::class, 'destroyBrand']);
         Route::apiResource('providers', ProviderController::class);
+        Route::post('providers/{provider}/logo', [StockLogoController::class, 'storeProvider']);
+        Route::delete('providers/{provider}/logo', [StockLogoController::class, 'destroyProvider']);
         Route::get('articles/summary', [ArticleController::class, 'summary'])->name('articles.summary');
         Route::apiResource('articles', ArticleController::class);
         Route::post('articles/{article}/image', [ArticleController::class, 'storeImage']);

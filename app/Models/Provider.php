@@ -12,7 +12,7 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /** Fournisseur (Dash3 : providers). */
-#[Fillable(['client_uuid', 'name', 'contact_name', 'phone', 'email', 'address', 'website', 'description'])]
+#[Fillable(['client_uuid', 'name', 'contact_name', 'phone', 'email', 'address', 'latitude', 'longitude', 'website', 'description'])]
 class Provider extends Model
 {
     use HasAttachments, HasFactory, LogsActivity, SoftDeletes;
@@ -20,6 +20,11 @@ class Provider extends Model
     public function articles(): HasMany
     {
         return $this->hasMany(Article::class);
+    }
+
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
     }
 
     public function getActivitylogOptions(): LogOptions
