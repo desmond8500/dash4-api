@@ -55,6 +55,13 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 
 **Relance des demandes clients** : `php artisan client-requests:remind`, lancé toutes les heures par le planificateur (`schedule:run`), notifie une fois les demandes encore « Nouvelle » après 2 jours (`CLIENT_REQUESTS_OVERDUE_DAYS`) et les dates de rappel arrivées.
 
+| GET POST GET PATCH DELETE | `/api/v1/projects…` | `projects.view` (tous) ou `.view.own` (ses projets) ; `update` ou `update.own` — filtres `search`, `status`, `active=1`, `client_id`, `manager=me`, `favorite=1`, `include=notes,links` |
+| POST DELETE | `/api/v1/projects/{id}/logo` | comme le logo d'un client |
+| POST | `/api/v1/client-requests/{id}/convert` | `client_requests.convert` + `projects.create` — `type: project` ; la demande passe à « Traitée » |
+| GET POST | `/api/v1/{clients\|projects}/{id}/notes`, `/links`, `/documents` | droits de la fiche : la voir pour lire, la modifier pour ajouter |
+| PATCH DELETE | `/api/v1/notes/{id}`, `/api/v1/links/{id}` ; DELETE `/api/v1/documents/{id}` | l'auteur, ou qui peut supprimer la fiche |
+| GET | `/api/v1/documents/{id}/download` | fichier privé, téléchargé avec le jeton (20 Mo ; pas d'exécutable, HTML ni SVG) |
+
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.
 
 Toutes les réponses sont en JSON. Les erreurs de validation renvoient `422` avec `errors`.

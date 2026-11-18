@@ -44,6 +44,16 @@ return [
     'uploaded' => 'Le fichier :attribute n\'a pas pu être envoyé.',
     'uuid' => 'Le champ :attribute doit être un identifiant UUID valide.',
 
+    'after_or_equal' => 'Le champ :attribute doit être une date postérieure ou égale au :date.',
+    'between' => [
+        'numeric' => 'Le champ :attribute doit être compris entre :min et :max.',
+        'string' => 'Le champ :attribute doit contenir entre :min et :max caractères.',
+    ],
+    'extensions' => 'Le fichier :attribute doit avoir une de ces extensions : :values.',
+    'required_if' => 'Le champ :attribute est obligatoire.',
+    'required_with' => 'Le champ :attribute est obligatoire quand :values est présent.',
+    'url' => 'Le champ :attribute doit être une adresse web valide (http ou https).',
+
     'attributes' => [
         'address' => 'adresse',
         'description' => 'description',
@@ -51,6 +61,8 @@ return [
         'firstname' => 'prénom',
         'job_title' => 'fonction',
         'logo' => 'logo',
+        'latitude' => 'latitude',
+        'longitude' => 'longitude',
         'lastname' => 'nom',
         'name' => 'nom',
         'password' => 'mot de passe',

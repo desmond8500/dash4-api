@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ClientStatus;
 use App\Enums\ClientType;
+use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\HasPhonesAndEmails;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +19,7 @@ use Spatie\Activitylog\Support\LogOptions;
 #[Fillable(['client_uuid', 'name', 'type', 'status', 'description', 'address', 'is_favorite'])]
 class Client extends Model
 {
-    use HasFactory, HasPhonesAndEmails, LogsActivity, SoftDeletes;
+    use HasAttachments, HasFactory, HasPhonesAndEmails, LogsActivity, SoftDeletes;
 
     /** Valeurs par défaut (les mêmes que la base), connues dès la création du modèle. */
     protected $attributes = [
@@ -39,6 +40,11 @@ class Client extends Model
     public function contacts(): HasMany
     {
         return $this->hasMany(Contact::class)->orderBy('lastname')->orderBy('firstname');
+    }
+
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
     }
 
     public function creator(): BelongsTo

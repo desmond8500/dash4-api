@@ -6,6 +6,10 @@ use Illuminate\Cache\RateLimiting\Limit;
 use App\Models\Client;
 use App\Models\ClientRequest;
 use App\Models\Contact;
+use App\Models\Document;
+use App\Models\Link;
+use App\Models\Note;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
@@ -26,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
             'client' => Client::class,
             'contact' => Contact::class,
             'client_request' => ClientRequest::class,
+            'project' => Project::class,
+            'note' => Note::class,
+            'link' => Link::class,
+            'document' => Document::class,
         ]);
 
         // En développement : erreur si on essaie d'enregistrer un attribut non autorisé
