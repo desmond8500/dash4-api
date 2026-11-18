@@ -21,6 +21,8 @@ class QuoteMail extends Mailable
         public array $files,
         public ?string $replyToAddress = null,
         public ?string $replyToName = null,
+        /** Avec une signature, le pied de page automatique de l'entreprise n'est pas ajouté. */
+        public bool $hasSignature = false,
     ) {}
 
     public function envelope(): Envelope
@@ -36,7 +38,7 @@ class QuoteMail extends Mailable
         return new Content(
             view: 'mail.quote',
             text: 'mail.quote_text',
-            with: ['body' => $this->body, 'company' => Company::current()],
+            with: ['body' => $this->body, 'company' => Company::current(), 'hasSignature' => $this->hasSignature],
         );
     }
 

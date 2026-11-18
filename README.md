@@ -86,6 +86,8 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | POST PATCH DELETE GET | `/api/v1/quotes/{id}/delivery-notes`, `/delivery-notes/{id}`, `/delivery-notes/{id}/pdf` | bordereaux de livraison ou de travaux `BL-2026-0001`, sans prix |
 | GET POST | `/api/v1/quotes/{id}/email-draft`, `/api/v1/quotes/{id}/send` | envoi par e-mail avec le PDF (et la proposition), historique ; réglages `MAIL_*` du serveur |
 
+| GET POST PATCH DELETE | `/api/v1/email-signatures…` | signatures d'e-mail : les siennes, et celles de l'entreprise (`shared`, `company.update`) ; variables `{nom}` `{prenom}` `{fonction}` `{telephone}` `{email}` `{entreprise}` `{site}` `{adresse}` ; `signature_id` à l'envoi |
+
 **Devis** : prix d'une ligne = coût × coefficient (arrondi au franc) ; remise appliquée avant la taxe ; TVA ajoutée, BRS déduite ; taux figés à la création ; section masquée ni imprimée ni comptée ; un devis accepté, refusé ou annulé ne se modifie plus (dupliquer). Montants avec `prices.view`, coûts et marge avec `costs.view`.
 
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.

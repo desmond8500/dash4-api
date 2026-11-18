@@ -2,7 +2,9 @@
 
 use App\Mail\QuoteMail;
 use App\Models\Client;
+use App\Models\Company;
 use App\Models\Contact;
+use App\Models\EmailSignature;
 use App\Models\Project;
 use App\Models\QuoteTemplate;
 use Illuminate\Http\UploadedFile;
@@ -258,4 +260,67 @@ it('refuse d\'annoncer un envoi quand les e-mails ne sont pas configurés (MAIL_
         ->assertJsonPath('message', fn ($m) => str_contains($m, "L'envoi des e-mails n'est pas configuré sur le serveur (MAIL_MAILER=log)"));
 
     $this->getJson("/api/v1/quotes/{$quote['id']}")->assertJsonCount(0, 'data.emails')->assertJsonPath('data.status.value', 'draft');
+});
+
+// --- Signatures d'e-mail -------------------------------------------------------------
+
+it('gère ses signatures, une seule par défaut, avec les variables remplies', function () {
+    Company::current()->update(['name' => 'Yonkou SARL', 'website' => 'https://yonkou.info']);
+    $sales = userWithRole('sales', ['firstname' => 'Moussa', 'lastname' => 'Diop', 'job_title' => 'Commercial', 'phone' => '77 000 00 00']);
+    Sanctum::actingAs($sales);
+
+    $a = $this->postJson('/api/v1/email-signatures', ['name' => 'Complète', 'body' => "Cordialement,\n{nom}\n{fonction} — {entreprise}\n{telephone}\n{site}", 'is_default' => true])
+        ->assertCreated()
+        ->assertJsonPath('data.preview', "Cordialement,\nMoussa Diop\nCommercial — Yonkou SARL\n77 000 00 00\nhttps://yonkou.info")
+        ->json('data.id');
+    $b = $this->postJson('/api/v1/email-signatures', ['name' => 'Courte', 'body' => '{prenom}', 'is_default' => true])->json('data.id');
+
+    expect(EmailSignature::find($a)->is_default)->toBeFalse()->and(EmailSignature::find($b)->is_default)->toBeTrue();
+    $this->getJson('/api/v1/email-signatures')->assertJsonCount(2, 'data')->assertJsonPath('meta.default_id', $b);
+});
+
+it('retire les lignes des variables non renseignées', function () {
+    $user = userWithRole('sales', ['firstname' => 'Awa', 'lastname' => 'Ndiaye', 'job_title' => null, 'phone' => null]);
+    Company::current()->update(['phone' => null]);
+    $signature = new EmailSignature(['name' => 'x', 'body' => "{nom}\n{fonction}\n{telephone}\n{entreprise}"]);
+
+    expect($signature->render($user))->toBe("Awa Ndiaye\n".Company::current()->name);
+});
+
+it('partage des signatures d\'entreprise (company.update) et cache celles des autres', function () {
+    Sanctum::actingAs(userWithRole('sales'));
+    $this->postJson('/api/v1/email-signatures', ['name' => 'Commune', 'body' => 'X', 'shared' => true])->assertForbidden();
+    $mine = $this->postJson('/api/v1/email-signatures', ['name' => 'Perso', 'body' => 'Y'])->json('data.id');
+
+    Sanctum::actingAs(userWithRole('accountant'));
+    $shared = $this->postJson('/api/v1/email-signatures', ['name' => 'Commune', 'body' => '{entreprise}', 'shared' => true, 'is_default' => true])
+        ->assertCreated()->assertJsonPath('data.shared', true)->json('data.id');
+    $this->patchJson("/api/v1/email-signatures/{$mine}", ['name' => 'Piratée'])->assertNotFound();
+
+    // Un autre utilisateur voit la commune, et l'a par défaut s'il n'a pas la sienne
+    Sanctum::actingAs(userWithRole('manager'));
+    $this->getJson('/api/v1/email-signatures')->assertJsonCount(1, 'data')->assertJsonPath('meta.default_id', $shared)
+        ->assertJsonPath('data.0.can_edit', false);
+    $this->deleteJson("/api/v1/email-signatures/{$shared}")->assertForbidden();
+});
+
+it('ajoute la signature choisie sous le message envoyé', function () {
+    Mail::fake();
+    $sales = userWithRole('sales', ['firstname' => 'Moussa', 'lastname' => 'Diop']);
+    Sanctum::actingAs($sales);
+    $quote = quoteWithLines();
+    $sig = $this->postJson('/api/v1/email-signatures', ['name' => 'Moi', 'body' => "Cordialement,\n{nom}", 'is_default' => true])->json('data.id');
+
+    $draft = $this->getJson("/api/v1/quotes/{$quote['id']}/email-draft")->assertJsonPath('data.default_signature_id', $sig)->json('data');
+    expect($draft['message'])->not->toContain('Moussa Diop')->and($draft['signatures'][0]['preview'])->toBe("Cordialement,\nMoussa Diop");
+
+    $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['client@example.sn'], 'subject' => 'Devis', 'message' => 'Bonjour,', 'signature_id' => $sig])
+        ->assertOk();
+
+    Mail::assertSent(QuoteMail::class, fn (QuoteMail $mail) => $mail->body === "Bonjour,\n\n-- \nCordialement,\nMoussa Diop" && $mail->hasSignature);
+
+    // Pas la signature d'un autre
+    $other = EmailSignature::query()->forceCreate(['user_id' => userWithRole('sales')->id, 'name' => 'Autre', 'body' => 'Z']);
+    $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['a@b.sn'], 'subject' => 'X', 'message' => 'Y', 'signature_id' => $other->id])
+        ->assertStatus(422);
 });

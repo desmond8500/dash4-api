@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DeliveryNoteController;
 use App\Http\Controllers\Api\V1\DocumentController;
+use App\Http\Controllers\Api\V1\EmailSignatureController;
 use App\Http\Controllers\Api\V1\LinkController;
 use App\Http\Controllers\Api\V1\NoteController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -134,6 +135,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('settings', [SettingsController::class, 'show']);
         Route::patch('settings', [SettingsController::class, 'update']);
         Route::get('settings/numbering-preview', [SettingsController::class, 'numberingPreview']);
+
+        Route::get('email-signatures', [EmailSignatureController::class, 'index']);
+        Route::post('email-signatures', [EmailSignatureController::class, 'store']);
+        Route::patch('email-signatures/{signature}', [EmailSignatureController::class, 'update']);
+        Route::delete('email-signatures/{signature}', [EmailSignatureController::class, 'destroy']);
 
         Route::get('assignees', AssigneeController::class)->name('assignees');
 

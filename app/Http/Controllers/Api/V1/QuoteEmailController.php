@@ -6,7 +6,7 @@ use App\Enums\QuoteStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\QuoteResource;
 use App\Mail\QuoteMail;
-use App\Models\Company;
+use App\Models\EmailSignature;
 use App\Models\Quote;
 use App\Models\QuoteEmail;
 use App\Support\QuoteEditing;
@@ -28,7 +28,6 @@ class QuoteEmailController extends Controller
     {
         $this->authorize('export', $quote);
         $quote->load(['client.emails', 'client.contacts.emails']);
-        $company = Company::current();
 
         $suggestions = collect($quote->client?->emails ?? [])
             ->map(fn ($e) => ['email' => $e->address, 'name' => $quote->client->name, 'label' => $e->label])
@@ -42,8 +41,14 @@ class QuoteEmailController extends Controller
         return response()->json(['data' => [
             'suggestions' => $suggestions,
             'subject' => "Devis {$quote->number} — {$quote->title}",
+            // Sans signature : la signature choisie à l'envoi (signature_id) est ajoutée sous le message
             'message' => "Bonjour,\n\nVeuillez trouver ci-joint notre devis {$quote->number} pour « {$quote->title} ».\n\n"
-                ."Nous restons à votre disposition pour toute question.\n\nCordialement,\n{$request->user()->full_name}\n{$company->name}",
+                .'Nous restons à votre disposition pour toute question.',
+            'default_signature_id' => EmailSignature::defaultFor($request->user())?->id,
+            'signatures' => EmailSignature::query()->availableTo($request->user())
+                ->orderByRaw('user_id is null')->orderByDesc('is_default')->orderBy('name')->get()
+                ->map(fn ($sig) => ['id' => $sig->id, 'name' => $sig->name, 'shared' => $sig->isShared(), 'preview' => $sig->render($request->user())])
+                ->values(),
         ]]);
     }
 
@@ -63,6 +68,7 @@ class QuoteEmailController extends Controller
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:10000'],
             'attach_proposal' => ['sometimes', 'boolean'],
+            'signature_id' => ['sometimes', 'nullable', 'integer'],
         ], ['to.required' => 'Indiquez au moins un destinataire.'], [
             'to' => 'destinataires', 'to.*' => 'destinataire', 'cc' => 'copie', 'cc.*' => 'copie', 'subject' => 'objet', 'message' => 'message',
         ]);
@@ -82,10 +88,16 @@ class QuoteEmailController extends Controller
         }
 
         $user = $request->user();
+        $signature = isset($data['signature_id'])
+            ? EmailSignature::query()->availableTo($user)->whereKey($data['signature_id'])->first()
+            : null;
+        abort_if(isset($data['signature_id']) && ! $signature, 422, 'Signature introuvable.');
+        $body = $data['message'].($signature ? "\n\n-- \n".$signature->render($user) : '');
+
         try {
             Mail::to($data['to'])
                 ->cc($data['cc'] ?? [])
-                ->send(new QuoteMail($quote, $data['subject'], $data['message'], $files, $user->email, $user->full_name));
+                ->send(new QuoteMail($quote, $data['subject'], $body, $files, $user->email, $user->full_name, $signature !== null));
         } catch (Throwable $e) {
             Log::warning('Envoi du devis impossible', ['quote' => $quote->number, 'error' => $e->getMessage()]);
             abort(502, "L'e-mail n'a pas pu être envoyé. Vérifiez les réglages d'envoi des e-mails du serveur (MAIL_…), puis réessayez.");
@@ -95,11 +107,12 @@ class QuoteEmailController extends Controller
             'to' => $data['to'],
             'cc' => $data['cc'] ?? [],
             'subject' => $data['subject'],
-            'message' => $data['message'],
+            'message' => $body,
             'attachments' => array_column($files, 'name'),
             'sent_at' => now(),
         ]);
         $email->sent_by = $user->id;
+        $email->email_signature_id = $signature?->id;
         $quote->emails()->save($email);
 
         if ($quote->status === QuoteStatus::Draft) {
