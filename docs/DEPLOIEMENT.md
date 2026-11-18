@@ -71,10 +71,10 @@ Vérifier : `https://api.dash4.yonkou.info/api/v1/health` doit répondre `{"stat
 ## 4. Tâches de fond
 
 - **Tâche planifiée** (*Avancé > Tâches planifiées*), toutes les minutes :
-  `cd $HOME/dash4-api && php artisan schedule:run`
+  `cd /home/smi/www/projets/dash4-api && php artisan schedule:run`
 - **File d'attente** (PDF, e-mails) — au choix :
-  - *Avancé > Services* : commande `php $HOME/dash4-api/artisan queue:work --sleep=3 --tries=3 --max-time=3600` (relancée automatiquement par alwaysdata) ;
-  - ou une tâche planifiée toutes les minutes : `cd $HOME/dash4-api && php artisan queue:work --stop-when-empty`.
+  - *Avancé > Services* : commande `php /home/smi/www/projets/dash4-api/artisan queue:work --sleep=3 --tries=3 --max-time=3600` (relancée automatiquement par alwaysdata) ;
+  - ou une tâche planifiée toutes les minutes : `cd /home/smi/www/projets/dash4-api && php artisan queue:work --stop-when-empty`.
 
 ## 5. Mettre à jour l'API (à chaque nouvelle version)
 

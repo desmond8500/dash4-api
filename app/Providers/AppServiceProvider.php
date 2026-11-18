@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use App\Models\Client;
+use App\Models\ClientRequest;
 use App\Models\Contact;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         Relation::morphMap([
             'client' => Client::class,
             'contact' => Contact::class,
+            'client_request' => ClientRequest::class,
         ]);
 
         // En développement : erreur si on essaie d'enregistrer un attribut non autorisé

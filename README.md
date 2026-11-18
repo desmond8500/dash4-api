@@ -45,6 +45,16 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | POST DELETE | `/api/v1/clients/{id}/logo` | `clients.update` — envoi multipart, champ `logo` (JPEG, PNG, WebP, 2 Mo) ; réponse : `logo_url` |
 | GET POST GET PATCH DELETE | `/api/v1/contacts…` | mêmes droits que les clients — filtres `search`, `client_id` |
 
+| GET | `/api/v1/client-requests` | `client_requests.view` (tout) ou `.view.own` (les siennes) — filtres `open=1`, `status=new,in_progress`, `assigned=me\|none`, `client_id`, `priority`, `source`, `overdue=1`, `search` |
+| GET | `/api/v1/client-requests/summary` | compteurs : à traiter, nouvelles, en retard, confiées à moi, rappels arrivés |
+| POST | `/api/v1/client-requests` | `client_requests.create` — seul `body` est obligatoire ; un technicien ne fixe ni statut, ni personne en charge, ni rappel |
+| PATCH | `/api/v1/client-requests/{id}` | `client_requests.update` — statut, priorité, `assigned_to`, `remind_at`… |
+| DELETE | `/api/v1/client-requests/{id}` | `client_requests.delete` — corbeille |
+| GET | `/api/v1/assignees` | personnes actives à qui confier une demande (nom seulement) |
+| GET POST | `/api/v1/notifications`, `/notifications/{id}/read`, `/notifications/read-all` | notifications de l'utilisateur connecté (relances des demandes) |
+
+**Relance des demandes clients** : `php artisan client-requests:remind`, lancé toutes les heures par le planificateur (`schedule:run`), notifie une fois les demandes encore « Nouvelle » après 2 jours (`CLIENT_REQUESTS_OVERDUE_DAYS`) et les dates de rappel arrivées.
+
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.
 
 Toutes les réponses sont en JSON. Les erreurs de validation renvoient `422` avec `errors`.

@@ -18,4 +18,12 @@ return [
     */
     'token_lifetime_minutes' => (int) env('TOKEN_LIFETIME_MINUTES', 43200),
 
+    /*
+    | Demandes clients : une demande encore « Nouvelle » après ce nombre de jours
+    | est en retard et une relance est envoyée (TODO §3).
+    */
+    'client_requests' => [
+        'overdue_days' => (int) env('CLIENT_REQUESTS_OVERDUE_DAYS', 2),
+    ],
+
 ];

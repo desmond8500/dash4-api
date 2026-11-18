@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AssigneeController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\ClientLogoController;
+use App\Http\Controllers\Api\V1\ClientRequestController;
 use App\Http\Controllers\Api\V1\ContactController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -36,5 +39,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('clients/{client}/logo', [ClientLogoController::class, 'store']);
         Route::delete('clients/{client}/logo', [ClientLogoController::class, 'destroy']);
         Route::apiResource('contacts', ContactController::class);
+
+        Route::get('client-requests/summary', [ClientRequestController::class, 'summary'])->name('client-requests.summary');
+        Route::apiResource('client-requests', ClientRequestController::class)
+            ->parameters(['client-requests' => 'clientRequest']);
+
+        Route::get('assignees', AssigneeController::class)->name('assignees');
+
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+        Route::post('notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
     });
 });
