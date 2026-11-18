@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\Api\V1\AssigneeController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BankAccountController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\ClientLogoController;
 use App\Http\Controllers\Api\V1\ClientRequestController;
 use App\Http\Controllers\Api\V1\ClientRequestConvertController;
+use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use App\Http\Controllers\Api\V1\LinkController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ProjectLogoController;
 use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\SettingsController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Support\Attachable;
@@ -72,6 +75,20 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('links/{link}', [LinkController::class, 'destroy']);
         Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
         Route::delete('documents/{document}', [DocumentController::class, 'destroy']);
+
+        // Entreprise, banque, signature et paramètres
+        Route::get('company', [CompanyController::class, 'show']);
+        Route::patch('company', [CompanyController::class, 'update']);
+        Route::post('company/logo', [CompanyController::class, 'storeLogo']);
+        Route::delete('company/logo', [CompanyController::class, 'destroyLogo']);
+        Route::get('company/{kind}', [CompanyController::class, 'showImage'])->whereIn('kind', ['signature', 'stamp']);
+        Route::post('company/{kind}', [CompanyController::class, 'storeImage'])->whereIn('kind', ['signature', 'stamp']);
+        Route::delete('company/{kind}', [CompanyController::class, 'destroyImage'])->whereIn('kind', ['signature', 'stamp']);
+        Route::apiResource('bank-accounts', BankAccountController::class)->except('show')
+            ->parameters(['bank-accounts' => 'bankAccount']);
+        Route::get('settings', [SettingsController::class, 'show']);
+        Route::patch('settings', [SettingsController::class, 'update']);
+        Route::get('settings/numbering-preview', [SettingsController::class, 'numberingPreview']);
 
         Route::get('assignees', AssigneeController::class)->name('assignees');
 

@@ -62,6 +62,15 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | PATCH DELETE | `/api/v1/notes/{id}`, `/api/v1/links/{id}` ; DELETE `/api/v1/documents/{id}` | l'auteur, ou qui peut supprimer la fiche |
 | GET | `/api/v1/documents/{id}/download` | fichier privé, téléchargé avec le jeton (20 Mo ; pas d'exécutable, HTML ni SVG) |
 
+| GET PATCH | `/api/v1/company` | `company.view` / `company.update` ; `signature_on` : `signature.manage` |
+| POST DELETE | `/api/v1/company/logo` | `company.update` |
+| GET POST DELETE | `/api/v1/company/{signature\|stamp}` | `signature.manage` — PNG privé, administrateurs prévenus |
+| GET POST PATCH DELETE | `/api/v1/bank-accounts` | `bank.view` / `bank.manage` — numéros chiffrés, un seul compte par défaut, administrateurs prévenus |
+| GET PATCH | `/api/v1/settings` | lecture : tout compte ; `settings.update` — devise (XOF), TVA 18 %, BRS 5 %, taxe par défaut, numérotation |
+| GET | `/api/v1/settings/numbering-preview` | prochain numéro d'un type de document |
+
+**Taxes (comme Dash3)** : TVA ajoutée au total hors taxes, BRS (retenue à la source, entreprises individuelles) déduite du total, ou sans taxe — `App\Support\TaxCalculator`. **Numérotation** : `DEV-{YYYY}-{####}`, un compteur par type et par année — `App\Support\DocumentNumber`.
+
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.
 
 Toutes les réponses sont en JSON. Les erreurs de validation renvoient `422` avec `errors`.
