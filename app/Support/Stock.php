@@ -45,7 +45,7 @@ final class Stock
                 'unit_cost' => $options['unit_cost'] ?? null,
                 'reason' => $options['reason'] ?? null,
                 'source_type' => isset($options['source']) ? $options['source']->getMorphClass() : null,
-                'source_id' => $options['source']?->getKey(),
+                'source_id' => ($options['source'] ?? null)?->getKey(),
                 'project_id' => $options['project_id'] ?? null,
                 'created_by' => $by?->id,
                 'moved_at' => $options['moved_at'] ?? now(),
