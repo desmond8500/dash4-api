@@ -3,11 +3,12 @@
 <head><meta charset="utf-8"></head>
 <body style="font-family: Arial, sans-serif; font-size: 14px; color: #1f2937; line-height: 1.5;">
     <div style="max-width: 640px;">
-        @php [$message, $signature] = array_pad(explode("\n-- \n", $body, 2), 2, null); @endphp
-        {!! nl2br(e($message)) !!}
-        @if ($signature)
+        {{-- $message est réservé par Laravel (objet du message, pour intégrer l'image) --}}
+        @php [$messageText, $signatureText] = array_pad(explode("\n-- \n", $body, 2), 2, null); @endphp
+        {!! nl2br(e($messageText)) !!}
+        @if ($signatureText)
             <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #374151;">
-                {!! nl2br(e($signature)) !!}
+                {!! nl2br(e($signatureText)) !!}
                 {{-- Image intégrée au message ($message n'existe qu'à l'envoi, pas dans un simple aperçu) --}}
                 @if ($signatureImage && isset($message))
                     <div style="margin-top: 8px;">
