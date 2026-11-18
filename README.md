@@ -42,6 +42,7 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | GET | `/api/v1/clients/{id}` | `clients.view` — avec contacts, téléphones, e-mails |
 | PATCH | `/api/v1/clients/{id}` | `clients.update` — `phones` / `emails` envoyés remplacent les listes |
 | DELETE | `/api/v1/clients/{id}` | `clients.delete` — corbeille |
+| POST DELETE | `/api/v1/clients/{id}/logo` | `clients.update` — envoi multipart, champ `logo` (JPEG, PNG, WebP, 2 Mo) ; réponse : `logo_url` |
 | GET POST GET PATCH DELETE | `/api/v1/contacts…` | mêmes droits que les clients — filtres `search`, `client_id` |
 
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.

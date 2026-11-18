@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ClientController;
+use App\Http\Controllers\Api\V1\ClientLogoController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -32,6 +33,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::apiResource('users', UserController::class)->except('destroy');
 
         Route::apiResource('clients', ClientController::class);
+        Route::post('clients/{client}/logo', [ClientLogoController::class, 'store']);
+        Route::delete('clients/{client}/logo', [ClientLogoController::class, 'destroy']);
         Route::apiResource('contacts', ContactController::class);
     });
 });

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 /** @mixin \App\Models\Client */
 class ClientResource extends JsonResource
@@ -21,6 +22,7 @@ class ClientResource extends JsonResource
             'description' => $this->description,
             'address' => $this->address,
             'is_favorite' => $this->is_favorite,
+            'logo_url' => $this->logo_path ? Storage::disk('public')->url($this->logo_path) : null,
             'contacts_count' => $this->whenCounted('contacts'),
             'contacts' => ContactResource::collection($this->whenLoaded('contacts')),
             ...$this->phoneEmailFields(),
