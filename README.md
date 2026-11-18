@@ -78,6 +78,14 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | POST | `/api/v1/quotes/{id}/signed-copy` | `quotes.validate` — copie signée par le client, devis accepté |
 | POST PATCH DELETE | `/api/v1/quotes/{id}/sections`, `/quote-sections/{id}`, `/quote-sections/{id}/lines`, `/quote-lines/{id}` ; `…/order` | sections et lignes ; coût et coefficient : `costs.view` |
 
+| GET POST PATCH DELETE | `/api/v1/quote-systems`, `/api/v1/quote-templates…` | modèles de devis rangés par système ; gestion : `quotes.update` + `costs.view` |
+| POST | `/api/v1/quote-sections/{id}/save-as-template`, `/api/v1/quotes/{id}/insert-template` | section → modèle ; modèle → devis (nouvelle section ou section existante) |
+| GET | `/api/v1/quotes/{id}/proposal-pdf` | proposition technique (texte `proposal` par section, `proposal_options` du devis) |
+| POST PATCH DELETE | `/api/v1/quotes/{id}/deposits`, `/quote-deposits/{id}` | acomptes en montant ou `percent` — `prices.view` |
+| POST DELETE | `/api/v1/quotes/{id}/expenses`, `/quote-expenses/{id}` (POST pour modifier, multipart) | dépenses réelles avec justificatif — `costs.view` |
+| POST PATCH DELETE GET | `/api/v1/quotes/{id}/delivery-notes`, `/delivery-notes/{id}`, `/delivery-notes/{id}/pdf` | bordereaux de livraison ou de travaux `BL-2026-0001`, sans prix |
+| GET POST | `/api/v1/quotes/{id}/email-draft`, `/api/v1/quotes/{id}/send` | envoi par e-mail avec le PDF (et la proposition), historique ; réglages `MAIL_*` du serveur |
+
 **Devis** : prix d'une ligne = coût × coefficient (arrondi au franc) ; remise appliquée avant la taxe ; TVA ajoutée, BRS déduite ; taux figés à la création ; section masquée ni imprimée ni comptée ; un devis accepté, refusé ou annulé ne se modifie plus (dupliquer). Montants avec `prices.view`, coûts et marge avec `costs.view`.
 
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.

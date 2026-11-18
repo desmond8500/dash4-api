@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\DB;
 final class QuoteEditing
 {
     /** Relations chargées pour renvoyer un devis complet. */
-    public const FULL = ['client:id,name', 'project:id,name,manager_id', 'bankAccount', 'creator:id,firstname,lastname', 'sections.lines'];
+    public const FULL = [
+        'client:id,name', 'project:id,name,manager_id', 'bankAccount', 'creator:id,firstname,lastname', 'sections.lines',
+        'deposits', 'expenses.document', 'expenses.creator:id,firstname,lastname', 'deliveryNotes.lines', 'emails.sender:id,firstname,lastname',
+    ];
 
     /**
      * Nouveau devis en brouillon : numéro, taxe et taux en vigueur, validité de 30 jours,

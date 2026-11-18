@@ -20,7 +20,7 @@ use Spatie\Activitylog\Support\LogOptions;
 #[Fillable([
     'client_uuid', 'client_id', 'project_id', 'title', 'introduction', 'payment_terms', 'notes',
     'issued_at', 'valid_until', 'tax_mode', 'vat_rate', 'brs_rate', 'discount_rate',
-    'bank_account_id', 'show_signature', 'is_favorite',
+    'bank_account_id', 'show_signature', 'is_favorite', 'proposal_options',
 ])]
 class Quote extends Model
 {
@@ -57,6 +57,7 @@ class Quote extends Model
             'tax_amount' => 'integer',
             'total' => 'integer',
             'show_signature' => 'boolean',
+            'proposal_options' => 'array',
             'is_favorite' => 'boolean',
             'sent_at' => 'datetime',
             'decided_at' => 'datetime',
@@ -92,6 +93,44 @@ class Quote extends Model
     public function lines(): HasManyThrough
     {
         return $this->hasManyThrough(QuoteLine::class, QuoteSection::class);
+    }
+
+    public function deposits(): HasMany
+    {
+        return $this->hasMany(QuoteDeposit::class)->orderBy('due_date')->orderBy('id');
+    }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(QuoteExpense::class)->latest('spent_at')->orderByDesc('id');
+    }
+
+    public function deliveryNotes(): HasMany
+    {
+        return $this->hasMany(DeliveryNote::class)->latest('delivered_at')->orderByDesc('id');
+    }
+
+    public function emails(): HasMany
+    {
+        return $this->hasMany(QuoteEmail::class)->latest('sent_at');
+    }
+
+    /** Options de la proposition technique (ce qui apparaît sur son PDF). */
+    public const PROPOSAL_DEFAULTS = [
+        'show_logo' => true,
+        'show_client' => true,
+        'client_label' => null,
+        'show_project' => true,
+        'show_introduction' => true,
+        'show_lines' => true,
+        'show_prices' => false,
+        'show_footer' => true,
+    ];
+
+    /** @return array<string, mixed> */
+    public function proposalOptions(): array
+    {
+        return array_replace(self::PROPOSAL_DEFAULTS, array_intersect_key($this->proposal_options ?? [], self::PROPOSAL_DEFAULTS));
     }
 
     public function signedDocument(): BelongsTo

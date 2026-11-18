@@ -100,3 +100,20 @@ composer update nom/du-paquet --with-all-dependencies --no-dev --optimize-autolo
 Vérifier : `git log -1 --oneline` montre le dernier commit de `main`, et `php artisan route:list --path=api/v1` liste les routes attendues.
 
 Le déploiement automatique par SSH n'est pas utilisé (choix du 18/11/2026).
+
+## 6. Envoi des e-mails (devis)
+
+L'envoi d'un devis par e-mail part tout de suite (pas de file d'attente). Dans le `.env` du serveur, avec une adresse créée dans l'interface alwaysdata (E-mails → Adresses) :
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=smtp-smi.alwaysdata.net
+MAIL_PORT=465
+MAIL_SCHEME=smtps
+MAIL_USERNAME=devis@yonkou.info
+MAIL_PASSWORD=(mot de passe de cette adresse)
+MAIL_FROM_ADDRESS=devis@yonkou.info
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Puis `php artisan optimize`. Les réponses du client arrivent à l'utilisateur qui a envoyé le devis (adresse de réponse).

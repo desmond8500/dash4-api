@@ -6,19 +6,16 @@ use App\Enums\QuoteStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\QuoteForm;
 use App\Http\Resources\QuoteResource;
-use App\Models\Company;
 use App\Models\Document;
 use App\Models\Quote;
 use App\Support\DocumentNumber;
 use App\Support\QuoteEditing;
-use App\Support\Settings;
+use App\Support\QuotePdf;
 use App\Support\SyncQuery;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -82,9 +79,13 @@ class QuoteController extends Controller
         $this->authorize('update', $quote);
         $data = $request->validated();
 
-        // Favori : toujours possible ; le reste seulement sur un brouillon ou un devis envoyé
-        if (array_diff(array_keys($data), ['is_favorite']) !== []) {
+        // Favori, notes internes et proposition technique : toujours possibles ;
+        // le reste seulement sur un brouillon ou un devis envoyé
+        if (array_diff(array_keys($data), ['is_favorite', 'notes', 'proposal_options']) !== []) {
             QuoteEditing::ensureEditable($quote);
+        }
+        if (isset($data['proposal_options'])) {
+            $data['proposal_options'] = array_replace($quote->proposalOptions(), $data['proposal_options']);
         }
 
         $quote->update($data);
@@ -161,20 +162,22 @@ class QuoteController extends Controller
     public function pdf(Request $request, Quote $quote): Response
     {
         $this->authorize('export', $quote);
-        $quote->load(['client.phones', 'client.emails', 'project', 'bankAccount', 'sections' => fn ($q) => $q->where('is_visible', true), 'sections.lines']);
-        $company = Company::current();
-        $signatureOn = $quote->show_signature && ($company->signatureSettings()['quote'] ?? true);
-
-        $pdf = Pdf::loadView('pdf.quote', [
-            'quote' => $quote,
-            'company' => $company,
-            'currency' => Settings::get('currency'),
-            'logo' => self::dataUri('public', $company->logo_path),
-            'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
-            'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
-        ])->setPaper('a4');
-
+        $pdf = QuotePdf::quote($quote);
         $filename = $quote->number.'.pdf';
+
+        return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
+    }
+
+    /** GET /api/v1/quotes/{id}/proposal-pdf — proposition technique. */
+    public function proposalPdf(Request $request, Quote $quote): Response
+    {
+        $this->authorize('view', $quote);
+        $options = $quote->proposalOptions();
+        if ($options['show_prices']) {
+            $this->authorize('export', $quote);
+        }
+        $pdf = QuotePdf::proposal($quote);
+        $filename = 'Proposition technique '.$quote->number.'.pdf';
 
         return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
     }
@@ -218,16 +221,5 @@ class QuoteController extends Controller
         $quote->delete();
 
         return response()->json(['message' => 'Devis supprimé.']);
-    }
-
-    /** Image intégrée au PDF (data URI) : rien n'est chargé depuis l'extérieur. */
-    private static function dataUri(string $disk, ?string $path): ?string
-    {
-        if (! $path || ! Storage::disk($disk)->exists($path)) {
-            return null;
-        }
-        $mime = Storage::disk($disk)->mimeType($path) ?: 'image/png';
-
-        return 'data:'.$mime.';base64,'.base64_encode(Storage::disk($disk)->get($path));
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\V1;
 
 use App\Enums\TaxMode;
 use App\Models\Project;
+use App\Models\Quote;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,16 @@ class QuoteForm extends FormRequest
             'bank_account_id' => ['sometimes', 'nullable', 'integer', Rule::exists('bank_accounts', 'id')->whereNull('deleted_at')],
             'show_signature' => ['sometimes', 'boolean'],
             'is_favorite' => ['sometimes', 'boolean'],
+            // Proposition technique : ce qui apparaît sur son PDF
+            'proposal_options' => ['sometimes', 'array:'.implode(',', array_keys(Quote::PROPOSAL_DEFAULTS))],
+            'proposal_options.client_label' => ['nullable', 'string', 'max:255'],
+            'proposal_options.show_logo' => ['sometimes', 'boolean'],
+            'proposal_options.show_client' => ['sometimes', 'boolean'],
+            'proposal_options.show_project' => ['sometimes', 'boolean'],
+            'proposal_options.show_introduction' => ['sometimes', 'boolean'],
+            'proposal_options.show_lines' => ['sometimes', 'boolean'],
+            'proposal_options.show_prices' => ['sometimes', 'boolean'],
+            'proposal_options.show_footer' => ['sometimes', 'boolean'],
         ];
     }
 

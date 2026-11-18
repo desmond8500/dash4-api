@@ -10,57 +10,10 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <title>{{ $quote->number }}</title>
-<style>
-    @page { margin: 28mm 14mm 22mm 14mm; }
-    body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1f2937; }
-    header { position: fixed; top: -22mm; left: 0; right: 0; height: 20mm; }
-    footer { position: fixed; bottom: -16mm; left: 0; right: 0; height: 14mm; font-size: 8px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 2mm; }
-    footer .page:after { content: counter(page) " / " counter(pages); }
-    .logo { max-height: 18mm; max-width: 60mm; }
-    .company { text-align: right; font-size: 9px; color: #4b5563; }
-    .company strong { font-size: 11px; color: #111827; }
-    h1 { font-size: 18px; margin: 0 0 2mm; color: #111827; }
-    .muted { color: #6b7280; }
-    .pre { white-space: pre-line; }
-    table { width: 100%; border-collapse: collapse; }
-    .meta td { vertical-align: top; padding: 0; }
-    .box { border: 1px solid #e5e7eb; border-radius: 4px; padding: 3mm; }
-    .lines { margin-top: 5mm; }
-    .lines th { background: #f3f4f6; text-align: left; padding: 2mm; font-size: 9px; text-transform: uppercase; color: #374151; }
-    .lines td { padding: 1.6mm 2mm; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-    .lines .section td { background: #eef2ff; font-weight: bold; color: #1e3a8a; border-bottom: none; }
-    .lines .subtotal td { font-weight: bold; text-align: right; border-bottom: 1px solid #d1d5db; }
-    .num { text-align: right; white-space: nowrap; }
-    .center { text-align: center; }
-    .ref { font-size: 8.5px; color: #6b7280; }
-    .zero td { color: #9ca3af; }
-    .totals td { padding: 1.4mm 2mm; }
-    .totals .grand td { font-size: 12px; font-weight: bold; background: #111827; color: #fff; }
-    .signs img { max-height: 30mm; max-width: 45mm; margin: 0 2mm; }
-    .avoid-break { page-break-inside: avoid; }
-</style>
+@include('pdf.partials.styles')
 </head>
 <body>
-<header>
-    <table><tr>
-        <td style="width:50%">@if ($logo)<img class="logo" src="{{ $logo }}" alt="">@else<strong style="font-size:14px">{{ $company->name }}</strong>@endif</td>
-        <td class="company">
-            <strong>{{ $company->name }}</strong>@if ($company->legal_form) — {{ $company->legal_form }}@endif<br>
-            @if ($company->address){{ $company->address }}@if ($company->city), {{ $company->city }}@endif<br>@endif
-            @if ($company->phone){{ $company->phone }}@endif @if ($company->email) · {{ $company->email }}@endif
-        </td>
-    </tr></table>
-</header>
-
-<footer>
-    {{ $company->name }}
-    @if ($company->ninea) · NINEA {{ $company->ninea }}@endif
-    @if ($company->rccm) · RCCM {{ $company->rccm }}@endif
-    @if ($company->share_capital) · Capital {{ $company->share_capital }}@endif
-    @if ($quote->bankAccount)<br>{{ $quote->bankAccount->bank_name }} · {{ $quote->bankAccount->account_number }}@if ($quote->bankAccount->iban) · IBAN {{ $quote->bankAccount->iban }}@endif @if ($quote->bankAccount->bic) · BIC {{ $quote->bankAccount->bic }}@endif @endif
-    @if ($company->legal_mentions)<br>{{ $company->legal_mentions }}@endif
-    <div class="page">Page </div>
-</footer>
+@include('pdf.partials.header_footer', ['bank' => $quote->bankAccount])
 
 <table class="meta"><tr>
     <td style="width:55%">
@@ -131,6 +84,27 @@
         </table>
     </td>
 </tr></table>
+
+@if ($quote->deposits->isNotEmpty())
+<div class="avoid-break" style="margin-top:5mm">
+    <strong>Acomptes</strong>
+    <table class="lines" style="margin-top:2mm">
+        <thead><tr><th>Libellé</th><th style="width:20%">Échéance</th><th style="width:15%">État</th><th class="num" style="width:20%">Montant</th></tr></thead>
+        @foreach ($quote->deposits as $deposit)
+            <tr>
+                <td>{{ $deposit->label }}@if ($deposit->description)<div class="ref">{{ $deposit->description }}</div>@endif</td>
+                <td>{{ $date($deposit->due_date) ?: '—' }}</td>
+                <td>{{ $deposit->is_paid ? 'Reçu le '.$date($deposit->paid_at) : 'À régler' }}</td>
+                <td class="num">{{ $money($deposit->amount) }} {{ $symbol }}</td>
+            </tr>
+        @endforeach
+        @php $paid = $quote->deposits->where('is_paid', true)->sum('amount'); @endphp
+        @if ($paid > 0)
+            <tr class="subtotal"><td colspan="3">Reste à payer</td><td class="num">{{ $money($quote->total - $paid) }} {{ $symbol }}</td></tr>
+        @endif
+    </table>
+</div>
+@endif
 
 @if ($quote->payment_terms)<div class="avoid-break" style="margin-top:5mm"><strong>Modalités de paiement</strong><div class="pre">{{ $quote->payment_terms }}</div></div>@endif
 

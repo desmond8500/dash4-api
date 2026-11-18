@@ -31,12 +31,17 @@ class QuoteSectionController extends Controller
     {
         $quote = $section->quote;
         $this->authorize('update', $quote);
-        QuoteEditing::ensureEditable($quote);
-
-        $section->update($request->validate([
+        $data = $request->validate([
             'title' => ['sometimes', 'string', 'max:255'],
             'is_visible' => ['sometimes', 'boolean'],
-        ], [], ['title' => 'titre de la section']));
+            // Texte de la proposition technique pour cette section (modifiable même sur un devis accepté)
+            'proposal' => ['sometimes', 'nullable', 'string', 'max:20000'],
+        ], [], ['title' => 'titre de la section', 'proposal' => 'proposition technique']);
+        if (array_diff(array_keys($data), ['proposal']) !== []) {
+            QuoteEditing::ensureEditable($quote);
+        }
+
+        $section->update($data);
         if ($section->wasChanged('is_visible')) {
             $quote->recalculate();
         }
