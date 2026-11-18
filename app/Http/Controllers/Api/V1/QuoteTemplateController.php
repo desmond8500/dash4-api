@@ -83,7 +83,7 @@ class QuoteTemplateController extends Controller
         $data = $this->validateTemplate($request, true);
 
         $template = DB::transaction(function () use ($data, $request) {
-            $template = new QuoteTemplate($data);
+            $template = new QuoteTemplate(array_diff_key($data, ['lines' => true]));
             $template->created_by = $request->user()->id;
             $template->save();
             $this->replaceLines($template, $data['lines'] ?? []);
@@ -101,7 +101,7 @@ class QuoteTemplateController extends Controller
         $data = $this->validateTemplate($request, false);
 
         DB::transaction(function () use ($template, $data) {
-            $template->update($data);
+            $template->update(array_diff_key($data, ['lines' => true]));
             if (array_key_exists('lines', $data)) {
                 $this->replaceLines($template, $data['lines']);
             }
