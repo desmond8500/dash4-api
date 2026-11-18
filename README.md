@@ -22,7 +22,7 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 - Journal d'audit (spatie/laravel-activitylog) : connexions, modifications des utilisateurs, des rôles, des clients et des contacts
 - **Clients et contacts** : téléphones et e-mails multiples, anti-doublon `client_uuid`, synchronisation incrémentale
 - Messages de validation en français (`lang/fr`)
-- CI GitHub Actions (tests PHP 8.4 et 8.5) et déploiement automatique sur alwaysdata
+- CI GitHub Actions (tests PHP 8.4 et 8.5) ; mise à jour du serveur alwaysdata à la main, voir `docs/DEPLOIEMENT.md`
 
 ## Routes
 

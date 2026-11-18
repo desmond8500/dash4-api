@@ -1,7 +1,7 @@
 # Déploiement de l'API sur alwaysdata
 
 Cible : `https://api.dash4.yonkou.info`, hébergement mutualisé alwaysdata.
-Le déploiement se fait automatiquement par GitHub Actions à chaque push sur `main`, une fois les étapes ci-dessous faites **une seule fois**.
+Mise à jour **manuelle** en SSH (voir section 5) ; les étapes 1 à 4 ne se font qu'une seule fois.
 
 ---
 
@@ -76,19 +76,21 @@ Vérifier : `https://api.dash4.yonkou.info/api/v1/health` doit répondre `{"stat
   - *Avancé > Services* : commande `php $HOME/dash4-api/artisan queue:work --sleep=3 --tries=3 --max-time=3600` (relancée automatiquement par alwaysdata) ;
   - ou une tâche planifiée toutes les minutes : `cd $HOME/dash4-api && php artisan queue:work --stop-when-empty`.
 
-## 5. Déploiement automatique (GitHub Actions)
+## 5. Mettre à jour l'API (à chaque nouvelle version)
 
-1. Sur votre poste : `ssh-keygen -t ed25519 -f dash4_deploy -N ""`.
-2. Ajouter le contenu de `dash4_deploy.pub` à `~/.ssh/authorized_keys` sur alwaysdata.
-3. Sur GitHub, *Settings > Secrets and variables > Actions* du dépôt `dash4-api`, créer :
+En SSH sur alwaysdata :
 
-| Secret | Valeur |
-|---|---|
-| `ALWAYSDATA_SSH_HOST` | `ssh-<compte>.alwaysdata.net` |
-| `ALWAYSDATA_SSH_USER` | `<compte>` |
-| `ALWAYSDATA_SSH_KEY` | contenu de `dash4_deploy` (clé privée) |
-| `ALWAYSDATA_APP_PATH` | `/home/<compte>/dash4-api` |
+```bash
+cd /home/smi/www/projets/dash4-api
+git pull
+composer install --no-dev --optimize-autoloader
+php artisan optimize:clear      # oublie l'ancienne liste des routes et la config en cache
+php artisan migrate --force
+php artisan db:seed --class=RolesAndPermissionsSeeder --force
+php artisan storage:link        # une seule fois suffit (logos des clients)
+php artisan optimize
+```
 
-À chaque push sur `main`, si les tests passent : mise à jour du code, `composer install`, migrations, mise à jour des profils et des permissions, cache.
+Vérifier : `git log -1 --oneline` montre le dernier commit de `main`, et `php artisan route:list --path=api/v1` liste les routes attendues.
 
-Tant que ces secrets n'existent pas, l'étape de déploiement est simplement ignorée.
+Le déploiement automatique par SSH n'est pas utilisé (choix du 18/11/2026).
