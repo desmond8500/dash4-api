@@ -20,6 +20,13 @@ class Client extends Model
 {
     use HasFactory, HasPhonesAndEmails, LogsActivity, SoftDeletes;
 
+    /** Valeurs par défaut (les mêmes que la base), connues dès la création du modèle. */
+    protected $attributes = [
+        'type' => 'company',
+        'status' => 'active',
+        'is_favorite' => false,
+    ];
+
     protected function casts(): array
     {
         return [
