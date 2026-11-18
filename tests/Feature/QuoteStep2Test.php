@@ -8,6 +8,7 @@ use App\Models\EmailSignature;
 use App\Models\Project;
 use App\Models\QuoteTemplate;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -348,13 +349,17 @@ it('ajoute une image (JPEG ou PNG, 1 Mo) à sa signature et l\'intègre à l\'e-
 
 it('intègre vraiment l\'image dans le message envoyé', function () {
     Storage::fake('public');
-    config(['mail.default' => 'array']);
+    config(['mail.default' => 'array', 'mail.from' => ['address' => 'devis@yonkou.info', 'name' => 'Dash4']]);
+    Log::spy();
     Sanctum::actingAs(userWithRole('sales'));
     $quote = quoteWithLines();
     $sig = $this->postJson('/api/v1/email-signatures', ['name' => 'Logo', 'body' => '{nom}'])->json('data.id');
     $this->post("/api/v1/email-signatures/{$sig}/image", ['image' => UploadedFile::fake()->image('logo.png', 200, 80)], ['Accept' => 'application/json'])->assertOk();
 
-    $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['client@example.sn'], 'subject' => 'X', 'message' => 'Y', 'signature_id' => $sig])->assertOk();
+    $response = $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['client@example.sn'], 'subject' => 'X', 'message' => 'Y', 'signature_id' => $sig]);
+    // En cas d'échec, l'erreur réelle de l'envoi est dans le journal
+    Log::shouldNotHaveReceived('warning');
+    $response->assertOk();
 
     $sent = app('mailer')->getSymfonyTransport()->messages()->first()->getOriginalMessage();
     expect($sent->getHtmlBody())->toContain('src="cid:');
