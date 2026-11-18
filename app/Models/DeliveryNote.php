@@ -21,7 +21,7 @@ class DeliveryNote extends Model
 
     protected function casts(): array
     {
-        return ['type' => DeliveryNoteType::class, 'delivered_at' => 'date', 'show_logo' => 'boolean'];
+        return ['type' => DeliveryNoteType::class, 'delivered_at' => 'date', 'show_logo' => 'boolean', 'stock_released_at' => 'datetime'];
     }
 
     public function quote(): BelongsTo

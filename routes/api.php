@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ArticleController;
 use App\Http\Controllers\Api\V1\AssigneeController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BankAccountController;
+use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\ClientLogoController;
 use App\Http\Controllers\Api\V1\ClientRequestController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\Api\V1\NoteController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\ProjectLogoController;
+use App\Http\Controllers\Api\V1\ProviderController;
 use App\Http\Controllers\Api\V1\QuoteController;
 use App\Http\Controllers\Api\V1\QuoteEmailController;
 use App\Http\Controllers\Api\V1\QuoteLineController;
@@ -26,6 +29,7 @@ use App\Http\Controllers\Api\V1\QuoteSectionController;
 use App\Http\Controllers\Api\V1\QuoteTemplateController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SettingsController;
+use App\Http\Controllers\Api\V1\StockMovementController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Support\Attachable;
@@ -106,6 +110,19 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('quote-sections/{section}/lines/order', [QuoteLineController::class, 'reorder']);
         Route::patch('quote-lines/{line}', [QuoteLineController::class, 'update']);
         Route::delete('quote-lines/{line}', [QuoteLineController::class, 'destroy']);
+
+        // Stock : marques, fournisseurs, articles, mouvements
+        Route::apiResource('brands', BrandController::class)->except('show');
+        Route::apiResource('providers', ProviderController::class);
+        Route::get('articles/summary', [ArticleController::class, 'summary'])->name('articles.summary');
+        Route::apiResource('articles', ArticleController::class);
+        Route::post('articles/{article}/image', [ArticleController::class, 'storeImage']);
+        Route::delete('articles/{article}/image', [ArticleController::class, 'destroyImage']);
+        Route::put('articles/{article}/dependencies', [ArticleController::class, 'dependencies']);
+        Route::post('articles/{article}/movements', [StockMovementController::class, 'store']);
+        Route::get('stock-movements', [StockMovementController::class, 'index']);
+        Route::post('delivery-notes/{note}/release', [DeliveryNoteController::class, 'release']);
+        Route::post('delivery-notes/{note}/restock', [DeliveryNoteController::class, 'restock']);
 
         // Factures et paiements
         Route::get('invoices/summary', [InvoiceController::class, 'summary'])->name('invoices.summary');

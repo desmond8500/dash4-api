@@ -120,7 +120,8 @@ class QuoteResource extends JsonResource
                 'done' => $n->done,
                 'todo' => $n->todo,
                 'show_logo' => $n->show_logo,
-                'lines' => $n->lines->map(fn ($l) => $l->only(['id', 'designation', 'reference', 'unit', 'quantity']))->values(),
+                'stock_released_at' => $n->stock_released_at?->toIso8601String(),
+                'lines' => $n->lines->map(fn ($l) => $l->only(['id', 'article_id', 'designation', 'reference', 'unit', 'quantity']))->values(),
             ])->values()),
             'emails' => $this->whenLoaded('emails', fn () => $this->emails->map(fn ($m) => [
                 'id' => $m->id,

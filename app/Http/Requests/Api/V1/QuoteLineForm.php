@@ -18,7 +18,8 @@ class QuoteLineForm extends FormRequest
         $creating = $this->isMethod('post');
 
         return [
-            'designation' => [$creating ? 'required' : 'sometimes', 'string', 'max:255'],
+            'article_id' => ['sometimes', 'nullable', 'integer', Rule::exists('articles', 'id')->whereNull('deleted_at')],
+            'designation' => [$creating ? 'required_without:article_id' : 'sometimes', 'string', 'max:255'],
             'reference' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'comment' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'category' => ['sometimes', new Enum(QuoteLineCategory::class)],
@@ -40,7 +41,7 @@ class QuoteLineForm extends FormRequest
         return [
             'designation' => 'désignation', 'reference' => 'référence', 'quantity' => 'quantité',
             'unit_cost' => 'coût unitaire', 'coefficient' => 'coefficient', 'category' => 'catégorie',
-            'unit' => 'unité', 'quote_section_id' => 'section',
+            'unit' => 'unité', 'quote_section_id' => 'section', 'article_id' => 'article',
         ];
     }
 }

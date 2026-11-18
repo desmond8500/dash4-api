@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\QuoteLineForm;
 use App\Http\Resources\QuoteResource;
+use App\Models\Article;
 use App\Models\Quote;
 use App\Models\QuoteLine;
 use App\Models\QuoteSection;
@@ -23,6 +24,7 @@ class QuoteLineController extends Controller
         $data = $request->validated();
         QuoteEditing::ensureCanEditPrices($request->user(), $data);
         unset($data['quote_section_id']);
+        $data = $this->withArticle($data, true);
 
         $section->lines()->create([...$data, 'position' => $data['position'] ?? (int) $section->lines()->max('position') + 1]);
         $quote->recalculate();
@@ -41,6 +43,9 @@ class QuoteLineController extends Controller
         if (isset($data['quote_section_id'])) {
             $line->quote_section_id = $data['quote_section_id'];
             unset($data['quote_section_id']);
+        }
+        if (! empty($data['article_id']) && $data['article_id'] !== $line->article_id) {
+            $data = $this->withArticle($data, false);
         }
         $line->fill($data)->save();
         $quote->recalculate();
@@ -76,6 +81,28 @@ class QuoteLineController extends Controller
         }
 
         return $this->respond($quote);
+    }
+
+    /**
+     * Article du stock choisi : désignation, référence, unité, catégorie, coût et coefficient
+     * de l'article, sauf ce qui est envoyé (à la création) ; coût et coefficient repris à chaque changement d'article.
+     */
+    private function withArticle(array $data, bool $creating): array
+    {
+        if (empty($data['article_id'])) {
+            return $data;
+        }
+        $article = Article::findOrFail($data['article_id']);
+        $fromArticle = [
+            'designation' => $article->designation,
+            'reference' => $article->reference,
+            'unit' => $article->unit,
+            'category' => $article->category,
+            'unit_cost' => $article->unit_cost,
+            'coefficient' => $article->coefficient,
+        ];
+
+        return $creating ? [...$fromArticle, ...$data] : [...$data, 'unit_cost' => $article->unit_cost, 'coefficient' => $article->coefficient];
     }
 
     private function respond(Quote $quote): QuoteResource

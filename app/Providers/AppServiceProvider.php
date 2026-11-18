@@ -2,16 +2,21 @@
 
 namespace App\Providers;
 
-use Illuminate\Cache\RateLimiting\Limit;
+use App\Models\Article;
+use App\Models\Brand;
 use App\Models\Client;
 use App\Models\ClientRequest;
 use App\Models\Contact;
+use App\Models\DeliveryNote;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Link;
 use App\Models\Note;
 use App\Models\Project;
+use App\Models\Provider;
 use App\Models\Quote;
+use App\Models\StockMovement;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
@@ -35,6 +40,11 @@ class AppServiceProvider extends ServiceProvider
             'project' => Project::class,
             'quote' => Quote::class,
             'invoice' => Invoice::class,
+            'article' => Article::class,
+            'provider' => Provider::class,
+            'brand' => Brand::class,
+            'delivery_note' => DeliveryNote::class,
+            'stock_movement' => StockMovement::class,
             'note' => Note::class,
             'link' => Link::class,
             'document' => Document::class,
