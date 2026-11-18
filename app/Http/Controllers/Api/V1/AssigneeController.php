@@ -8,7 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * GET /api/v1/assignees — personnes à qui confier une demande ou une tâche :
+ * GET /api/v1/assignees — personnes à qui confier une demande ou une tâche, ou membres d'une caisse :
  * comptes actifs, nom et type de compte seulement (sans la permission users.view).
  */
 class AssigneeController extends Controller
@@ -16,7 +16,7 @@ class AssigneeController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         abort_unless(
-            $request->user()->canAny(['client_requests.update', 'tasks.assign', 'users.view']),
+            $request->user()->canAny(['client_requests.update', 'tasks.assign', 'users.view', 'accounting.update']),
             403,
             "Vous n'avez pas le droit de faire cette action.",
         );

@@ -138,3 +138,8 @@ it('reprend les dépenses du devis dans les dépenses', function () {
     $expense->forceFill(['status' => 'rejected'])->save();
     $this->getJson("/api/v1/quotes/{$quote['id']}")->assertJsonPath('data.expenses_total', 0);
 });
+
+it('laisse le comptable choisir les membres d\'une caisse parmi les comptes actifs', function () {
+    Sanctum::actingAs(userWithRole('accountant'));
+    $this->getJson('/api/v1/assignees')->assertOk();
+});
