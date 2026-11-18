@@ -67,6 +67,15 @@ class QuoteEmailController extends Controller
             'to' => 'destinataires', 'to.*' => 'destinataire', 'cc' => 'copie', 'cc.*' => 'copie', 'subject' => 'objet', 'message' => 'message',
         ]);
 
+        // MAIL_MAILER=log (réglage de départ) n'envoie rien : il écrit l'e-mail dans le journal.
+        // On refuse plutôt que d'annoncer un envoi qui n'a pas eu lieu.
+        abort_if(
+            in_array(config('mail.default'), ['log', 'array'], true) && ! Mail::getFacadeRoot() instanceof \Illuminate\Support\Testing\Fakes\MailFake,
+            503,
+            "L'envoi des e-mails n'est pas configuré sur le serveur (MAIL_MAILER=".config('mail.default').'). '
+                .'Renseignez les réglages MAIL_… du fichier .env (voir docs/DEPLOIEMENT.md), puis réessayez.',
+        );
+
         $files = [['name' => $quote->number.'.pdf', 'data' => QuotePdf::quote($quote)->output()]];
         if ($request->boolean('attach_proposal')) {
             $files[] = ['name' => 'Proposition technique '.$quote->number.'.pdf', 'data' => QuotePdf::proposal($quote)->output()];

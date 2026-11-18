@@ -247,3 +247,15 @@ it('réserve l\'envoi à qui peut modifier et exporter le devis', function () {
     $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['a@b.sn'], 'subject' => 'X', 'message' => 'Y'])->assertForbidden();
     Mail::assertNothingSent();
 });
+
+it('refuse d\'annoncer un envoi quand les e-mails ne sont pas configurés (MAIL_MAILER=log)', function () {
+    config(['mail.default' => 'log']);
+    Sanctum::actingAs(userWithRole('sales'));
+    $quote = quoteWithLines();
+
+    $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['to' => ['client@example.sn'], 'subject' => 'X', 'message' => 'Y'])
+        ->assertStatus(503)
+        ->assertJsonPath('message', fn ($m) => str_contains($m, "L'envoi des e-mails n'est pas configuré sur le serveur (MAIL_MAILER=log)"));
+
+    $this->getJson("/api/v1/quotes/{$quote['id']}")->assertJsonCount(0, 'data.emails')->assertJsonPath('data.status.value', 'draft');
+});
