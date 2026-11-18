@@ -38,7 +38,7 @@ class EmailSignatureController extends Controller
             $this->allowShared($request);
         }
 
-        $signature = new EmailSignature($data);
+        $signature = new EmailSignature(array_diff_key($data, ['shared' => true]));
         $signature->user_id = $shared ? null : $request->user()->id;
         $signature->save();
 
