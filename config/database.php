@@ -64,6 +64,20 @@ return [
             ]) : [],
         ],
 
+        // Base de Dash3, lue seulement par la reprise (php artisan dash3:import)
+        'dash3' => [
+            'driver' => env('DASH3_DB_DRIVER', 'mariadb'),
+            'host' => env('DASH3_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('DASH3_DB_PORT', env('DB_PORT', '3306')),
+            'database' => env('DASH3_DB_DATABASE', 'smi_dash3'),
+            'username' => env('DASH3_DB_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('DASH3_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_general_ci',
+            'prefix' => '',
+            'strict' => false,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
