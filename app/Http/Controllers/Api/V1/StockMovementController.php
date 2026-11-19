@@ -74,7 +74,7 @@ class StockMovementController extends Controller
     private function respond(Article $article, int $status): JsonResponse
     {
         return (new ArticleResource($article->refresh()->load([
-            'brand:id,name', 'provider:id,name', 'dependencies',
+            'brand:id,name', 'provider:id,name', 'storageLocation:id,name,code', 'dependencies',
             'movements' => fn ($q) => $q->limit(50)->with(['source', 'project:id,name', 'creator:id,firstname,lastname']),
         ])))->response()->setStatusCode($status);
     }

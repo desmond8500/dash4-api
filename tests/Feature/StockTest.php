@@ -159,3 +159,23 @@ it('donne un logo, des liens et des documents aux marques, un logo et une positi
         ->assertOk()->assertJsonPath('data.purchases_count', 0);
     $this->deleteJson("/api/v1/providers/{$provider['id']}/logo")->assertJsonPath('data.logo_url', null);
 });
+
+it('range les articles par emplacement', function () {
+    Sanctum::actingAs(userWithRole('storekeeper'));
+    $shelf = $this->postJson('/api/v1/storage-locations', ['name' => 'Étagère A — rayon 2', 'code' => 'A2'])->assertCreated()->json('data');
+    $this->postJson('/api/v1/storage-locations', ['name' => 'Étagère A — rayon 2'])->assertJsonPath('errors.name.0', 'Cet emplacement existe déjà.');
+
+    $camera = $this->postJson('/api/v1/articles', ['designation' => 'Caméra dôme', 'storage_location_id' => $shelf['id'], 'initial_quantity' => 6])->json('data');
+    $this->postJson('/api/v1/articles', ['designation' => 'Câble', 'storage_location_id' => $shelf['id'], 'initial_quantity' => 2.5]);
+    Article::factory()->create(['designation' => 'Ailleurs']);
+
+    expect($camera['storage_location']['name'])->toBe('Étagère A — rayon 2')->and($camera['location'])->toBe('Étagère A — rayon 2');
+    $this->getJson("/api/v1/storage-locations/{$shelf['id']}")->assertJsonPath('data.articles_count', 2)->assertJsonPath('data.units', 8.5);
+    $this->getJson("/api/v1/articles?storage_location_id={$shelf['id']}")->assertJsonCount(2, 'data');
+    $this->getJson('/api/v1/articles?search=rayon 2')->assertJsonCount(2, 'data');
+    $this->deleteJson("/api/v1/storage-locations/{$shelf['id']}")->assertStatus(422);
+
+    Sanctum::actingAs(userWithRole('technician'));
+    $this->getJson('/api/v1/storage-locations')->assertOk();
+    $this->postJson('/api/v1/storage-locations', ['name' => 'X'])->assertForbidden();
+});

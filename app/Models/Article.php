@@ -21,7 +21,7 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 #[Fillable([
     'client_uuid', 'designation', 'reference', 'barcode', 'description', 'category', 'unit', 'brand_id', 'provider_id',
-    'unit_cost', 'coefficient', 'min_quantity', 'location', 'weight', 'is_active',
+    'unit_cost', 'coefficient', 'min_quantity', 'storage_location_id', 'weight', 'is_active',
 ])]
 class Article extends Model
 {
@@ -56,6 +56,11 @@ class Article extends Model
     public function provider(): BelongsTo
     {
         return $this->belongsTo(Provider::class)->withTrashed();
+    }
+
+    public function storageLocation(): BelongsTo
+    {
+        return $this->belongsTo(StorageLocation::class)->withTrashed();
     }
 
     public function dependencies(): BelongsToMany

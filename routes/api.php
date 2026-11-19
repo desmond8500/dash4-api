@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SettingsController;
 use App\Http\Controllers\Api\V1\StockLogoController;
 use App\Http\Controllers\Api\V1\StockMovementController;
+use App\Http\Controllers\Api\V1\StorageLocationController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -126,6 +127,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::apiResource('providers', ProviderController::class);
         Route::post('providers/{provider}/logo', [StockLogoController::class, 'storeProvider']);
         Route::delete('providers/{provider}/logo', [StockLogoController::class, 'destroyProvider']);
+        Route::apiResource('storage-locations', StorageLocationController::class)->parameters(['storage-locations' => 'location']);
         Route::get('articles/summary', [ArticleController::class, 'summary'])->name('articles.summary');
         Route::apiResource('articles', ArticleController::class);
         Route::post('articles/{article}/image', [ArticleController::class, 'storeImage']);

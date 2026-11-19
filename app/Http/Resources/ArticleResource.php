@@ -29,7 +29,10 @@ class ArticleResource extends JsonResource
             'quantity' => $this->quantity,
             'min_quantity' => $this->min_quantity,
             'is_low' => $this->isLow(),
-            'location' => $this->location,
+            'storage_location_id' => $this->storage_location_id,
+            'storage_location' => $this->whenLoaded('storageLocation', fn () => $this->storageLocation ? ['id' => $this->storageLocation->id, 'name' => $this->storageLocation->name, 'code' => $this->storageLocation->code] : null),
+            // Nom de l'emplacement, pour l'affichage et la recherche
+            'location' => $this->relationLoaded('storageLocation') ? $this->storageLocation?->name : null,
             'weight' => $this->weight,
             'image_url' => $this->image_path ? Storage::disk('public')->url($this->image_path) : null,
             'is_active' => $this->is_active,

@@ -27,15 +27,17 @@ class ArticleController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Article::class);
-        $query = Article::query()->with(['brand:id,name', 'provider:id,name'])
+        $query = Article::query()->with(['brand:id,name', 'provider:id,name', 'storageLocation:id,name,code'])
             ->when($request->filled('search'), function ($q) use ($request) {
                 $term = '%'.$request->string('search').'%';
                 $q->where(fn ($w) => $w->where('designation', 'like', $term)->orWhere('reference', 'like', $term)
-                    ->orWhere('barcode', 'like', $term)->orWhereHas('brand', fn ($b) => $b->where('name', 'like', $term)));
+                    ->orWhere('barcode', 'like', $term)->orWhereHas('brand', fn ($b) => $b->where('name', 'like', $term))
+                    ->orWhereHas('storageLocation', fn ($l) => $l->where('name', 'like', $term)));
             })
             ->when($request->filled('barcode'), fn ($q) => $q->where(fn ($w) => $w->where('barcode', $request->string('barcode'))->orWhere('reference', $request->string('barcode'))))
             ->when($request->filled('brand_id'), fn ($q) => $q->where('brand_id', $request->integer('brand_id')))
             ->when($request->filled('provider_id'), fn ($q) => $q->where('provider_id', $request->integer('provider_id')))
+            ->when($request->filled('storage_location_id'), fn ($q) => $q->where('storage_location_id', $request->integer('storage_location_id')))
             ->when($request->filled('category'), fn ($q) => $q->whereIn('category', explode(',', (string) $request->string('category'))))
             ->when($request->boolean('low'), fn ($q) => $q->low())
             ->when(! SyncQuery::isSync($request) && $request->input('active', '1') !== 'all', fn ($q) => $q->where('is_active', $request->boolean('active', true)))
@@ -174,21 +176,21 @@ class ArticleController extends Controller
             'unit_cost' => ['sometimes', 'numeric', 'min:0', 'max:999999999999'],
             'coefficient' => ['sometimes', 'numeric', 'min:0', 'max:1000'],
             'min_quantity' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999'],
-            'location' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'storage_location_id' => ['sometimes', 'nullable', 'integer', Rule::exists('storage_locations', 'id')->whereNull('deleted_at')],
             'weight' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999'],
             'is_active' => ['sometimes', 'boolean'],
             'initial_quantity' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999'],
         ], ['barcode.unique' => 'Ce code-barres est déjà celui d\'un autre article.'], [
             'designation' => 'désignation', 'reference' => 'référence', 'barcode' => 'code-barres', 'category' => 'catégorie',
             'brand_id' => 'marque', 'provider_id' => 'fournisseur', 'unit_cost' => 'coût', 'min_quantity' => 'seuil',
-            'location' => 'emplacement', 'weight' => 'poids', 'initial_quantity' => 'quantité de départ',
+            'storage_location_id' => 'emplacement', 'weight' => 'poids', 'initial_quantity' => 'quantité de départ',
         ]);
     }
 
     private function full(Article $article): ArticleResource
     {
         return new ArticleResource($article->refresh()->load([
-            'brand:id,name', 'provider:id,name', 'dependencies',
+            'brand:id,name', 'provider:id,name', 'storageLocation:id,name,code', 'dependencies',
             'movements' => fn ($q) => $q->limit(50)->with(['source', 'project:id,name', 'creator:id,firstname,lastname']),
         ]));
     }
