@@ -4,7 +4,11 @@ namespace App\Support;
 
 use App\Models\Article;
 use App\Models\Brand;
+use App\Models\Building;
 use App\Models\Client;
+use App\Models\Equipment;
+use App\Models\InstalledSystem;
+use App\Models\ReceptionReport;
 use App\Models\Comment;
 use App\Models\ClientRequest;
 use App\Models\Expense;
@@ -45,12 +49,16 @@ final class Attachable
         'journal-sections' => JournalSection::class,
         'tech-shares' => TechShare::class,
         'comments' => Comment::class,
+        'buildings' => Building::class,
+        'installed-systems' => InstalledSystem::class,
+        'equipment' => Equipment::class,
+        'reception-reports' => ReceptionReport::class,
     ];
 
     /** Fiches qui ont un fil de commentaires (pas les sections de journal, ni les commentaires eux-mêmes). */
     public const COMMENTABLE = [
         'clients', 'projects', 'quotes', 'invoices', 'articles', 'brands', 'providers', 'purchases', 'expenses',
-        'tasks', 'client-requests', 'journals', 'tech-shares',
+        'tasks', 'client-requests', 'journals', 'tech-shares', 'installed-systems', 'equipment', 'reception-reports',
     ];
 
     /** Nom de la fiche dans l'URL (« projects »…) à partir du modèle. */

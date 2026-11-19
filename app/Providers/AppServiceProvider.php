@@ -4,7 +4,12 @@ namespace App\Providers;
 
 use App\Models\Article;
 use App\Models\Brand;
+use App\Models\Building;
 use App\Models\Client;
+use App\Models\Equipment;
+use App\Models\InstalledSystem;
+use App\Models\ReceptionReport;
+use App\Policies\SitePartPolicy;
 use App\Models\Comment;
 use App\Models\ClientRequest;
 use App\Models\Contact;
@@ -27,6 +32,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,6 +45,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Suivi de chantier : droits du chantier du projet
+        foreach ([Building::class, InstalledSystem::class, Equipment::class, ReceptionReport::class] as $model) {
+            Gate::policy($model, SitePartPolicy::class);
+        }
+
         // Noms courts stockés dans les relations polymorphes (téléphones, e-mails, notes…)
         Relation::morphMap([
             'client' => Client::class,
@@ -60,6 +71,10 @@ class AppServiceProvider extends ServiceProvider
             'stock_movement' => StockMovement::class,
             'note' => Note::class,
             'comment' => Comment::class,
+            'building' => Building::class,
+            'installed_system' => InstalledSystem::class,
+            'equipment' => Equipment::class,
+            'reception_report' => ReceptionReport::class,
             'link' => Link::class,
             'document' => Document::class,
         ]);

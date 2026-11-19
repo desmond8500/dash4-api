@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -54,6 +55,21 @@ class Project extends Model
     }
 
     /** « Ses projets » : ceux dont on est chef de projet ou qu'on a créés. */
+    public function buildings(): HasMany
+    {
+        return $this->hasMany(Building::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function installedSystems(): HasMany
+    {
+        return $this->hasMany(InstalledSystem::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function receptionReports(): HasMany
+    {
+        return $this->hasMany(ReceptionReport::class)->latest('date')->orderByDesc('id');
+    }
+
     public function isOwnedBy(User $user): bool
     {
         return $this->manager_id === $user->id || $this->created_by === $user->id;

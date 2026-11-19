@@ -7,6 +7,7 @@ use App\Models\DeliveryNote;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Journal;
+use App\Models\ReceptionReport;
 use App\Models\Purchase;
 use App\Models\Quote;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -115,6 +116,23 @@ final class QuotePdf
             'journal' => $journal,
             'photos' => $photos,
             'sectionPhotos' => $sectionPhotos,
+        ])->setPaper('a4');
+    }
+
+    /** Procès-verbal de réception : parties et logos, systèmes réceptionnés, réserves, signatures. */
+    public static function receptionReport(ReceptionReport $report): DomPdf
+    {
+        $report->load(['project.client', 'quote', 'systems.equipment', 'systems.building']);
+        $company = Company::current();
+        $signatureOn = $company->signatureSettings()['acceptance'] ?? true;
+        $logos = collect(ReceptionReport::PARTIES)->mapWithKeys(fn ($label, $key) => [$key => self::dataUri('public', $report->{"{$key}_logo_path"})]);
+
+        return Pdf::loadView('pdf.reception_report', [
+            ...self::common($company),
+            'report' => $report,
+            'logos' => $logos,
+            'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
+            'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
         ])->setPaper('a4');
     }
 
