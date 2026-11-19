@@ -25,7 +25,7 @@
 
 <h2>Durée</h2>
 <p>
-    Le contrat prend effet le {{ $contract->start_date->format('d/m/Y') }}@if ($contract->end_date) et se termine le {{ $contract->end_date->format('d/m/Y') }}@else pour une durée indéterminée@endif.
+    Le contrat prend effet le {{ $contract->start_date->format('d/m/Y') }}@if ($contract->end_date) et se termine le {{ $contract->end_date->format('d/m/Y') }}@else pour une durée indéterminée @endif.
     @if ($contract->end_date && $contract->tacit_renewal) Il est reconduit tacitement pour une durée identique, sauf résiliation {{ $contract->notice_days }} jours avant l'échéance.@endif
 </p>
 
