@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\ClientRequestLinks;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,6 +23,9 @@ class ClientRequestResource extends JsonResource
                 : null),
             'contact_name' => $this->contact_name,
             'contact_phone' => $this->contact_phone,
+            'contact_email' => $this->contact_email,
+            'links' => $this->whenLoaded('links', fn () => $this->links->map(fn ($l) => ClientRequestLinks::present($l))->filter()->values()),
+            'inbound_email_id' => $this->whenLoaded('inboundEmail', fn () => $this->inboundEmail?->id),
             'source' => ['value' => $this->source->value, 'label' => $this->source->label()],
             'status' => ['value' => $this->status->value, 'label' => $this->status->label()],
             'priority' => ['value' => $this->priority->value, 'label' => $this->priority->label()],

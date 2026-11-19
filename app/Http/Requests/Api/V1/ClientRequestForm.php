@@ -25,6 +25,7 @@ class ClientRequestForm extends FormRequest
             'client_id' => ['sometimes', 'nullable', 'integer', Rule::exists('clients', 'id')->whereNull('deleted_at')],
             'contact_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'contact_phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'contact_email' => ['sometimes', 'nullable', 'email', 'max:255'],
             'source' => ['sometimes', new Enum(ClientRequestSource::class)],
             'status' => ['sometimes', new Enum(ClientRequestStatus::class)],
             'priority' => ['sometimes', new Enum(Priority::class)],

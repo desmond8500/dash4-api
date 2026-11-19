@@ -26,4 +26,19 @@ return [
         'overdue_days' => (int) env('CLIENT_REQUESTS_OVERDUE_DAYS', 2),
     ],
 
+    /*
+    | Boîte mail des demandes, relevée en IMAP toutes les 5 minutes (php artisan inbox:fetch).
+    | alwaysdata : INBOX_HOST=imap.alwaysdata.com, INBOX_PORT=993, INBOX_ENCRYPTION=ssl,
+    | INBOX_USERNAME = adresse complète. Vide : pas de relevé.
+    */
+    'inbox' => [
+        'host' => env('INBOX_HOST'),
+        'port' => (int) env('INBOX_PORT', 993),
+        'encryption' => env('INBOX_ENCRYPTION', 'ssl'),
+        'username' => env('INBOX_USERNAME'),
+        'password' => env('INBOX_PASSWORD'),
+        'folder' => env('INBOX_FOLDER', 'INBOX'),
+        'address' => env('INBOX_ADDRESS'),
+    ],
+
 ];

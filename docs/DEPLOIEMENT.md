@@ -117,3 +117,20 @@ MAIL_FROM_NAME="${APP_NAME}"
 ```
 
 Puis `php artisan optimize`. Les réponses du client arrivent à l'utilisateur qui a envoyé le devis (adresse de réponse).
+
+## 7. Boîte mail des demandes (réception)
+
+Dash4 relève une adresse dédiée (par exemple `demandes@yonkou.info`) toutes les 5 minutes, par la tâche planifiée
+`schedule:run` déjà en place. Créer l'adresse dans l'administration alwaysdata (Adresses e-mail), puis dans le `.env` :
+
+```
+INBOX_HOST=imap.alwaysdata.com
+INBOX_PORT=993
+INBOX_ENCRYPTION=ssl
+INBOX_USERNAME=demandes@yonkou.info
+INBOX_PASSWORD=le mot de passe de cette adresse
+INBOX_ADDRESS=demandes@yonkou.info
+```
+
+Puis `php artisan optimize:clear && php artisan optimize`, et un essai : `php artisan inbox:fetch`.
+Les messages relevés sont marqués « lus » sur le serveur de mail ; ils restent dans la boîte.

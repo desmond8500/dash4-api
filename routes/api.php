@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\ClientLogoController;
 use App\Http\Controllers\Api\V1\ClientRequestController;
 use App\Http\Controllers\Api\V1\ClientRequestConvertController;
+use App\Http\Controllers\Api\V1\ClientRequestLinkController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DeliveryNoteController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Api\V1\EmailSignatureController;
 use App\Http\Controllers\Api\V1\ExpenseCategoryController;
 use App\Http\Controllers\Api\V1\ExpenseController;
 use App\Http\Controllers\Api\V1\ExpenseSpaceController;
+use App\Http\Controllers\Api\V1\InboundEmailController;
 use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\LinkController;
 use App\Http\Controllers\Api\V1\NoteController;
@@ -159,6 +161,17 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}/email-draft', [InvoiceController::class, 'emailDraft']);
         Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
+
+        // Boîte mail des demandes ; liens d'une demande vers d'autres fiches
+        Route::get('inbound-emails', [InboundEmailController::class, 'index']);
+        Route::post('inbound-emails/fetch', [InboundEmailController::class, 'fetch']);
+        Route::get('inbound-emails/{email}', [InboundEmailController::class, 'show']);
+        Route::post('inbound-emails/{email}/convert', [InboundEmailController::class, 'convert']);
+        Route::post('inbound-emails/{email}/ignore', [InboundEmailController::class, 'ignore']);
+        Route::get('inbound-emails/{email}/attachments/{index}', [InboundEmailController::class, 'attachment'])->whereNumber('index');
+        Route::get('client-request-link-candidates', [ClientRequestLinkController::class, 'candidates']);
+        Route::post('client-requests/{clientRequest}/links', [ClientRequestLinkController::class, 'store']);
+        Route::delete('client-request-links/{link}', [ClientRequestLinkController::class, 'destroy']);
 
         // Tâches et planning
         Route::get('tasks/summary', [TaskController::class, 'summary'])->name('tasks.summary');

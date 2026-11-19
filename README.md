@@ -110,6 +110,10 @@ Le cahier des charges, le modèle de données, les profils et le périmètre son
 | GET POST PATCH DELETE | `/api/v1/expense-categories`, `/transactions` | catégories ; transactions saisies à la main (`direction` in / out) |
 | GET | `/api/v1/accounting/summary`, `/accounting/ledger` | `accounting.view` — bilan (`from`, `to`, `project_id`) : paiements de factures, dépenses validées, achats reçus (TVA comprise), transactions |
 
+| GET POST PATCH DELETE | `/api/v1/storage-locations` | emplacements du stock (nombre d'articles et de pièces) ; articles : `storage_location_id` |
+| GET POST | `/api/v1/inbound-emails`, `/fetch`, `/{id}/convert`, `/{id}/ignore`, `/{id}/attachments/{n}` | `client_requests.update` — boîte mail des demandes (IMAP, `INBOX_*` dans le .env, relevée toutes les 5 minutes) |
+| GET POST DELETE | `/api/v1/client-request-link-candidates`, `/client-requests/{id}/links`, `/client-request-links/{id}` | lier une demande à des tâches, factures, bordereaux, devis, projets |
+
 **Devis** : prix d'une ligne = coût × coefficient (arrondi au franc) ; remise appliquée avant la taxe ; TVA ajoutée, BRS déduite ; taux figés à la création ; section masquée ni imprimée ni comptée ; un devis accepté, refusé ou annulé ne se modifie plus (dupliquer). Montants avec `prices.view`, coûts et marge avec `costs.view`.
 
 **Synchronisation mobile** : toute liste accepte `updated_since` (date ISO) et renvoie alors seulement les fiches modifiées depuis, **suppressions comprises** (`deleted_at` rempli), jusqu'à 500 par page. `meta.server_time` est la valeur à renvoyer à la synchro suivante.

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ClientRequestSource;
 use App\Enums\ClientRequestStatus;
 use App\Enums\Priority;
+use App\Models\Concerns\HasAttachments;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,12 +16,12 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 #[Fillable([
-    'client_uuid', 'body', 'client_id', 'contact_name', 'contact_phone',
+    'client_uuid', 'body', 'client_id', 'contact_name', 'contact_phone', 'contact_email',
     'source', 'status', 'priority', 'assigned_to', 'remind_at',
 ])]
 class ClientRequest extends Model
 {
-    use HasFactory, LogsActivity, SoftDeletes;
+    use HasAttachments, HasFactory, LogsActivity, SoftDeletes;
 
     protected $attributes = [
         'source' => 'phone',
@@ -129,5 +130,15 @@ class ClientRequest extends Model
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('client_requests');
+    }
+
+    public function links(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ClientRequestLink::class)->latest('id');
+    }
+
+    public function inboundEmail(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(InboundEmail::class);
     }
 }

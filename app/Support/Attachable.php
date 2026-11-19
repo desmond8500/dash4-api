@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Article;
 use App\Models\Brand;
 use App\Models\Client;
+use App\Models\ClientRequest;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Project;
@@ -35,6 +36,7 @@ final class Attachable
         'purchases' => Purchase::class,
         'expenses' => Expense::class,
         'tasks' => Task::class,
+        'client-requests' => ClientRequest::class,
     ];
 
     public static function find(string $type, int $id): Model

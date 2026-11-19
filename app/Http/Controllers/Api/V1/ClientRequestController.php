@@ -15,7 +15,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ClientRequestController extends Controller
 {
-    private const RELATIONS = ['client:id,name', 'assignee:id,firstname,lastname', 'creator:id,firstname,lastname', 'processor:id,firstname,lastname'];
+    public const RELATIONS = ['client:id,name', 'assignee:id,firstname,lastname', 'creator:id,firstname,lastname', 'processor:id,firstname,lastname', 'links.linkable', 'inboundEmail:id,client_request_id'];
 
     /** Champs que seul un compte qui traite les demandes peut fixer (pas un technicien). */
     private const MANAGEMENT_FIELDS = ['status', 'assigned_to', 'remind_at'];

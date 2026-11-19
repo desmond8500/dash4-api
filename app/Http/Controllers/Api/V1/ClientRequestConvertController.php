@@ -85,6 +85,10 @@ class ClientRequestConvertController extends Controller
                 'converted_to_type' => $created->getMorphClass(),
                 'converted_to_id' => $created->id,
             ]);
+            $clientRequest->links()->firstOrCreate(
+                ['linkable_type' => $created->getMorphClass(), 'linkable_id' => $created->id],
+                ['created_by' => $user->id],
+            );
             if (! $clientRequest->status->isClosed()) {
                 $clientRequest->status = ClientRequestStatus::Done;
                 $clientRequest->processed_by = $user->id;
@@ -96,7 +100,7 @@ class ClientRequestConvertController extends Controller
 
         return response()->json([
             'data' => [
-                'request' => new ClientRequestResource($clientRequest->refresh()->load(['client:id,name', 'assignee', 'creator', 'processor'])),
+                'request' => new ClientRequestResource($clientRequest->refresh()->load(ClientRequestController::RELATIONS)),
                 ...match (true) {
                     $isTask => ['task' => new TaskResource($created->load(TaskController::FULL))],
                     $isQuote => ['quote' => new QuoteResource($created->load(QuoteEditing::FULL))],
