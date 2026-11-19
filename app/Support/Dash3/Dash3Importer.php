@@ -145,17 +145,19 @@ class Dash3Importer
     private function importBrands(): void
     {
         // Le nom d'une marque est unique dans Dash4 : les doublons de Dash3 sont fusionnés
-        $byName = DB::table('brands')->get(['id', 'name'])->mapWithKeys(fn ($b) => [mb_strtolower(trim($b->name)) => $b->id])->all();
+        // (comparaison sans casse ni accents, comme la collation de MariaDB)
+        $key = fn (string $name) => mb_strtolower(Str::ascii(trim($name)));
+        $byName = DB::table('brands')->get(['id', 'name'])->mapWithKeys(fn ($b) => [$key($b->name) => $b->id])->all();
         foreach ($this->rows('brands') as $r) {
             $name = $this->text($r->name, 255) ?? "Marque {$r->id}";
-            $key = mb_strtolower($name);
-            if ($existing = $this->id('brands', $r->id)) {
+            $nameKey = $key($name);
+            if ($this->id('brands', $r->id)) {
                 $this->count('brands', 'existing');
 
                 continue;
             }
-            if (isset($byName[$key])) {
-                $this->maps['brands'][$r->id] = $byName[$key];
+            if (isset($byName[$nameKey])) {
+                $this->maps['brands'][$r->id] = $byName[$nameKey];
                 $this->count('brands', 'existing');
 
                 continue;
@@ -167,7 +169,7 @@ class Dash3Importer
                 'legacy_id' => $r->id,
                 ...$this->stamps($r),
             ]);
-            $byName[$key] = $id;
+            $byName[$nameKey] = $id;
             $this->maps['brands'][$r->id] = $id;
             $this->count('brands', 'created');
         }
