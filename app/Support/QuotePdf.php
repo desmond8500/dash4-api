@@ -4,7 +4,9 @@ namespace App\Support;
 
 use App\Models\Company;
 use App\Models\DeliveryNote;
+use App\Models\Document;
 use App\Models\Invoice;
+use App\Models\Journal;
 use App\Models\Purchase;
 use App\Models\Quote;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -85,6 +87,24 @@ final class QuotePdf
             'purchase' => $purchase,
             'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
             'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
+        ])->setPaper('a4');
+    }
+
+    /** Rapport d'intervention : sections, intervenants et photos (12 au plus). */
+    public static function journal(Journal $journal): DomPdf
+    {
+        $journal->load(['project', 'client', 'task', 'sections', 'participants.user', 'participants.contact', 'creator', 'documents']);
+        $photos = $journal->documents
+            ->filter(fn ($d) => in_array($d->mime_type, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true))
+            ->take(12)
+            ->map(fn ($d) => ['name' => $d->name, 'src' => self::dataUri(Document::DISK, $d->path)])
+            ->filter(fn ($p) => $p['src'] !== null)
+            ->values();
+
+        return Pdf::loadView('pdf.journal', [
+            ...self::common(Company::current()),
+            'journal' => $journal,
+            'photos' => $photos,
         ])->setPaper('a4');
     }
 

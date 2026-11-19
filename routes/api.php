@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\ExpenseController;
 use App\Http\Controllers\Api\V1\ExpenseSpaceController;
 use App\Http\Controllers\Api\V1\InboundEmailController;
 use App\Http\Controllers\Api\V1\InvoiceController;
+use App\Http\Controllers\Api\V1\JournalController;
 use App\Http\Controllers\Api\V1\LinkController;
 use App\Http\Controllers\Api\V1\NoteController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -161,6 +162,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}/email-draft', [InvoiceController::class, 'emailDraft']);
         Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
+
+        // Journaux d'intervention
+        Route::apiResource('journals', JournalController::class);
+        Route::get('journals/{journal}/pdf', [JournalController::class, 'pdf'])->name('journals.pdf');
 
         // Boîte mail des demandes ; liens d'une demande vers d'autres fiches
         Route::get('inbound-emails', [InboundEmailController::class, 'index']);

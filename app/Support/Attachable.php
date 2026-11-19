@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\ClientRequest;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\Journal;
 use App\Models\Project;
 use App\Models\Provider;
 use App\Models\Purchase;
@@ -37,6 +38,7 @@ final class Attachable
         'expenses' => Expense::class,
         'tasks' => Task::class,
         'client-requests' => ClientRequest::class,
+        'journals' => Journal::class,
     ];
 
     public static function find(string $type, int $id): Model
