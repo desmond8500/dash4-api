@@ -7,7 +7,11 @@ use App\Models\DeliveryNote;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\Journal;
+use App\Models\Plan;
+use App\Models\Project;
 use App\Models\ReceptionReport;
+use App\Models\Room;
+use App\Models\Sheet;
 use App\Models\Purchase;
 use App\Models\Quote;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -133,6 +137,48 @@ final class QuotePdf
             'logos' => $logos,
             'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
             'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
+        ])->setPaper('a4');
+    }
+
+    /** Fiche technique : en-tête, contact et tableau des zones. */
+    public static function sheet(Sheet $sheet): DomPdf
+    {
+        $sheet->load(['project.client', 'building', 'installedSystem', 'zones']);
+        $rooms = Room::query()->whereIn('id', $sheet->zones->pluck('room_id')->filter())->with('level')->get()->keyBy('id');
+
+        return Pdf::loadView('pdf.sheet', [...self::common(Company::current()), 'sheet' => $sheet, 'rooms' => $rooms])->setPaper('a4');
+    }
+
+    /**
+     * Dossier des ouvrages exécutés (DOE) : bâtiments, systèmes et équipements (caractéristiques,
+     * emplacement, n° de série), plans (images jointes, PDF listés), fiches, PV et documents.
+     */
+    public static function doe(Project $project): DomPdf
+    {
+        $project->load([
+            'client', 'manager', 'buildings.levels.rooms',
+            'installedSystems.building', 'installedSystems.equipment.article', 'installedSystems.documents',
+            'installedSystems.equipment.documents', 'plans.building', 'plans.level', 'plans.markers',
+            'sheets.zones', 'receptionReports',
+        ]);
+        $places = [];
+        foreach ($project->buildings as $b) {
+            foreach ($b->levels as $l) {
+                $places["l{$l->id}"] = "{$b->name} › {$l->name}";
+                foreach ($l->rooms as $r) {
+                    $places["r{$r->id}"] = "{$b->name} › {$l->name} › {$r->name}";
+                }
+            }
+        }
+        // Plans en image joints au dossier (5 Mo au plus chacun, 12 plans au plus)
+        $planImages = $project->plans->where('kind', 'image')->filter(fn ($p) => $p->size <= 5 * 1024 * 1024)->take(12)
+            ->mapWithKeys(fn ($p) => [$p->id => self::dataUri(Plan::DISK, $p->path)])->filter();
+
+        return Pdf::loadView('pdf.doe', [
+            ...self::common(Company::current()),
+            'project' => $project,
+            'places' => $places,
+            'planImages' => $planImages,
         ])->setPaper('a4');
     }
 

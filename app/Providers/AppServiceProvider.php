@@ -8,7 +8,10 @@ use App\Models\Building;
 use App\Models\Client;
 use App\Models\Equipment;
 use App\Models\InstalledSystem;
+use App\Models\Plan;
+use App\Models\Quantity;
 use App\Models\ReceptionReport;
+use App\Models\Sheet;
 use App\Policies\SitePartPolicy;
 use App\Models\Comment;
 use App\Models\ClientRequest;
@@ -46,7 +49,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Suivi de chantier : droits du chantier du projet
-        foreach ([Building::class, InstalledSystem::class, Equipment::class, ReceptionReport::class] as $model) {
+        foreach ([Building::class, InstalledSystem::class, Equipment::class, ReceptionReport::class, Plan::class, Quantity::class, Sheet::class] as $model) {
             Gate::policy($model, SitePartPolicy::class);
         }
 
@@ -75,6 +78,7 @@ class AppServiceProvider extends ServiceProvider
             'installed_system' => InstalledSystem::class,
             'equipment' => Equipment::class,
             'reception_report' => ReceptionReport::class,
+            'sheet' => Sheet::class,
             'link' => Link::class,
             'document' => Document::class,
         ]);

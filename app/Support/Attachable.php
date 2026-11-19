@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Equipment;
 use App\Models\InstalledSystem;
 use App\Models\ReceptionReport;
+use App\Models\Sheet;
 use App\Models\Comment;
 use App\Models\ClientRequest;
 use App\Models\Expense;
@@ -53,6 +54,7 @@ final class Attachable
         'installed-systems' => InstalledSystem::class,
         'equipment' => Equipment::class,
         'reception-reports' => ReceptionReport::class,
+        'sheets' => Sheet::class,
     ];
 
     /** Fiches qui ont un fil de commentaires (pas les sections de journal, ni les commentaires eux-mêmes). */

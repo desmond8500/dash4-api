@@ -5,6 +5,9 @@ namespace App\Policies;
 use App\Models\Building;
 use App\Models\Equipment;
 use App\Models\InstalledSystem;
+use App\Models\Plan;
+use App\Models\Quantity;
+use App\Models\Sheet;
 use App\Models\Project;
 use App\Models\ReceptionReport;
 use App\Models\User;
@@ -19,7 +22,8 @@ class SitePartPolicy
     public static function projectOf(Model $part): ?Project
     {
         return match (true) {
-            $part instanceof Building, $part instanceof InstalledSystem, $part instanceof ReceptionReport => $part->project,
+            $part instanceof Building, $part instanceof InstalledSystem, $part instanceof ReceptionReport,
+            $part instanceof Plan, $part instanceof Quantity, $part instanceof Sheet => $part->project,
             $part instanceof Equipment => $part->installedSystem?->project,
             default => null,
         };

@@ -65,6 +65,21 @@ class Project extends Model
         return $this->hasMany(InstalledSystem::class)->orderBy('position')->orderBy('id');
     }
 
+    public function plans(): HasMany
+    {
+        return $this->hasMany(Plan::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function quantities(): HasMany
+    {
+        return $this->hasMany(Quantity::class)->latest()->orderByDesc('id');
+    }
+
+    public function sheets(): HasMany
+    {
+        return $this->hasMany(Sheet::class)->latest()->orderByDesc('id');
+    }
+
     public function receptionReports(): HasMany
     {
         return $this->hasMany(ReceptionReport::class)->latest('date')->orderByDesc('id');
