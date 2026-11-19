@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\ExpenseCategoryController;
 use App\Http\Controllers\Api\V1\ExpenseController;
 use App\Http\Controllers\Api\V1\ExpenseSpaceController;
 use App\Http\Controllers\Api\V1\InboundEmailController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DoeController;
 use App\Http\Controllers\Api\V1\InstalledSystemController;
 use App\Http\Controllers\Api\V1\PlanController;
@@ -146,6 +147,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('sheets/{sheet}', [SheetController::class, 'destroy']);
         Route::get('sheets/{sheet}/pdf', [SheetController::class, 'pdf']);
         Route::get('projects/{project}/doe', DoeController::class);
+
+        Route::get('dashboard', [DashboardController::class, 'show']);
+        Route::put('dashboard/layout', [DashboardController::class, 'layout']);
 
         // Badges
         Route::get('badge-templates', [BadgeController::class, 'templates']);
