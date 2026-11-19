@@ -65,7 +65,7 @@ it('fait expirer une information liée à la fin de la tâche', function () {
     expect($share['expires_at'])->toBeNull();
     $this->postJson('/api/v1/tech-shares', ['title' => 'X', 'expires_with_task' => true, 'recipients' => [$tech->id]])->assertStatus(422);
 
-    $task->update(['status' => 'done']);
+    $task->forceFill(['status' => 'done'])->save();
     $this->artisan('tech-shares:expire')->assertSuccessful();
     expect(TechShare::find($share['id'])->content)->toBeNull();
 });
