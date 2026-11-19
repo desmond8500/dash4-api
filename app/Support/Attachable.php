@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Article;
 use App\Models\Brand;
 use App\Models\Client;
+use App\Models\Comment;
 use App\Models\ClientRequest;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -43,7 +44,35 @@ final class Attachable
         'journals' => Journal::class,
         'journal-sections' => JournalSection::class,
         'tech-shares' => TechShare::class,
+        'comments' => Comment::class,
     ];
+
+    /** Fiches qui ont un fil de commentaires (pas les sections de journal, ni les commentaires eux-mêmes). */
+    public const COMMENTABLE = [
+        'clients', 'projects', 'quotes', 'invoices', 'articles', 'brands', 'providers', 'purchases', 'expenses',
+        'tasks', 'client-requests', 'journals', 'tech-shares',
+    ];
+
+    /** Nom de la fiche dans l'URL (« projects »…) à partir du modèle. */
+    public static function typeOf(Model $model): ?string
+    {
+        $key = array_search($model::class, self::TYPES, true);
+
+        return $key === false ? null : $key;
+    }
+
+    /** Libellé court de la fiche, pour les notifications. */
+    public static function label(Model $model): string
+    {
+        return (string) ($model->getAttribute('title') ?? $model->getAttribute('name') ?? $model->getAttribute('number')
+            ?? $model->getAttribute('subject') ?? $model->getAttribute('label') ?? ('#'.$model->getKey()));
+    }
+
+    /** Supprimer un commentaire : son auteur, ou qui peut supprimer la fiche. */
+    public static function canDeleteComment(User $user, Comment $comment, Model $parent): bool
+    {
+        return $comment->created_by === $user->id || Gate::forUser($user)->allows('delete', $parent);
+    }
 
     public static function find(string $type, int $id): Model
     {
@@ -60,12 +89,23 @@ final class Attachable
     /** Fiche dont on applique les droits : une section de journal suit son journal. */
     public static function subject(Model $parent): Model
     {
-        return $parent instanceof JournalSection ? $parent->journal : $parent;
+        return match (true) {
+            $parent instanceof JournalSection => $parent->journal,
+            $parent instanceof Comment => self::subject($parent->commentable()->withTrashed()->firstOrFail()),
+            default => $parent,
+        };
     }
 
     /** Ajouter : qui peut modifier la fiche ; sur une tâche, aussi les personnes affectées (notes, photos). */
     public static function authorizeAdd(User $user, Model $parent): void
     {
+        // Pièces jointes d'un commentaire : son auteur seulement, s'il voit encore la fiche
+        if ($parent instanceof Comment) {
+            abort_unless($parent->created_by === $user->id, 403, 'Seul l\'auteur du commentaire peut y joindre des fichiers.');
+            Gate::forUser($user)->authorize('view', self::subject($parent));
+
+            return;
+        }
         $parent = self::subject($parent);
         Gate::forUser($user)->authorize($parent instanceof Task ? 'progress' : 'update', $parent);
     }
@@ -77,6 +117,11 @@ final class Attachable
     public static function authorizeChange(User $user, Model $attachment, Model $parent): void
     {
         $gate = Gate::forUser($user);
+        if ($parent instanceof Comment) {
+            abort_unless(self::canDeleteComment($user, $parent, self::subject($parent)), 403, "Vous n'avez pas le droit de faire cette action.");
+
+            return;
+        }
         $parent = self::subject($parent);
         $allowed = $gate->allows('delete', $parent)
             || ($attachment->created_by === $user->id && $gate->allows($parent instanceof Task ? 'progress' : 'update', $parent));

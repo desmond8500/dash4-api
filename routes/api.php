@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\ClientLogoController;
 use App\Http\Controllers\Api\V1\ClientRequestController;
 use App\Http\Controllers\Api\V1\ClientRequestConvertController;
 use App\Http\Controllers\Api\V1\ClientRequestLinkController;
+use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DeliveryNoteController;
@@ -218,6 +219,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('{type}/{id}/documents', [DocumentController::class, 'index']);
             Route::post('{type}/{id}/documents', [DocumentController::class, 'store']);
         });
+        Route::where(['type' => implode('|', Attachable::COMMENTABLE), 'id' => '[0-9]+'])->group(function () {
+            Route::get('{type}/{id}/comments', [CommentController::class, 'index']);
+            Route::post('{type}/{id}/comments', [CommentController::class, 'store'])->middleware('throttle:60,1');
+            Route::get('{type}/{id}/mentionable', [CommentController::class, 'mentionable']);
+        });
+        Route::patch('comments/{comment}', [CommentController::class, 'update']);
+        Route::delete('comments/{comment}', [CommentController::class, 'destroy']);
         Route::patch('notes/{note}', [NoteController::class, 'update']);
         Route::delete('notes/{note}', [NoteController::class, 'destroy']);
         Route::patch('links/{link}', [LinkController::class, 'update']);

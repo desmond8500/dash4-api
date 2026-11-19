@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Article;
 use App\Models\Brand;
 use App\Models\Client;
+use App\Models\Comment;
 use App\Models\ClientRequest;
 use App\Models\Contact;
 use App\Models\DeliveryNote;
@@ -58,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
             'delivery_note' => DeliveryNote::class,
             'stock_movement' => StockMovement::class,
             'note' => Note::class,
+            'comment' => Comment::class,
             'link' => Link::class,
             'document' => Document::class,
         ]);
