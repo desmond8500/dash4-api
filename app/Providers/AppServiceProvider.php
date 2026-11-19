@@ -18,6 +18,7 @@ use App\Models\Provider;
 use App\Models\Purchase;
 use App\Models\Quote;
 use App\Models\StockMovement;
+use App\Models\Task;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -46,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
             'provider' => Provider::class,
             'purchase' => Purchase::class,
             'expense' => Expense::class,
+            'task' => Task::class,
             'brand' => Brand::class,
             'delivery_note' => DeliveryNote::class,
             'stock_movement' => StockMovement::class,

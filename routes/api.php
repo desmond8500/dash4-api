@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SettingsController;
 use App\Http\Controllers\Api\V1\StockLogoController;
 use App\Http\Controllers\Api\V1\StockMovementController;
+use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -156,6 +157,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}/email-draft', [InvoiceController::class, 'emailDraft']);
         Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
+
+        // Tâches et planning
+        Route::get('tasks/summary', [TaskController::class, 'summary'])->name('tasks.summary');
+        Route::apiResource('tasks', TaskController::class);
+        Route::post('tasks/{task}/subtasks', [TaskController::class, 'addSubtask']);
+        Route::patch('subtasks/{subtask}', [TaskController::class, 'updateSubtask']);
+        Route::delete('subtasks/{subtask}', [TaskController::class, 'removeSubtask']);
 
         // Comptabilité : dépenses, caisses, catégories, transactions, bilan
         Route::get('expenses/summary', [ExpenseController::class, 'summary'])->name('expenses.summary');

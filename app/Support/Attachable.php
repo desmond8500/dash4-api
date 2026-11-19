@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\Provider;
 use App\Models\Purchase;
 use App\Models\Quote;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
@@ -33,6 +34,7 @@ final class Attachable
         'providers' => Provider::class,
         'purchases' => Purchase::class,
         'expenses' => Expense::class,
+        'tasks' => Task::class,
     ];
 
     public static function find(string $type, int $id): Model
@@ -47,9 +49,10 @@ final class Attachable
         Gate::forUser($user)->authorize('view', $parent);
     }
 
+    /** Ajouter : qui peut modifier la fiche ; sur une tâche, aussi les personnes affectées (notes, photos). */
     public static function authorizeAdd(User $user, Model $parent): void
     {
-        Gate::forUser($user)->authorize('update', $parent);
+        Gate::forUser($user)->authorize($parent instanceof Task ? 'progress' : 'update', $parent);
     }
 
     /**
@@ -60,7 +63,7 @@ final class Attachable
     {
         $gate = Gate::forUser($user);
         $allowed = $gate->allows('delete', $parent)
-            || ($attachment->created_by === $user->id && $gate->allows('update', $parent));
+            || ($attachment->created_by === $user->id && $gate->allows($parent instanceof Task ? 'progress' : 'update', $parent));
 
         abort_unless($allowed, 403, "Vous n'avez pas le droit de faire cette action.");
     }

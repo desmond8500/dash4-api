@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ClientRequestResource;
 use App\Http\Resources\ProjectResource;
 use App\Http\Resources\QuoteResource;
+use App\Http\Resources\TaskResource;
 use App\Models\ClientRequest;
 use App\Models\Project;
+use App\Models\Task;
 use App\Support\QuoteEditing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +21,7 @@ use Illuminate\Validation\Rule;
 /**
  * POST /api/v1/client-requests/{id}/convert — transforme une demande en projet ou en devis (TODO §3).
  * La demande passe à « Traitée » et garde le lien vers ce qu'elle est devenue.
- * Tâche et intervention s'ajouteront ici quand ces modules existeront.
+ * En tâche : affectée à la personne en charge de la demande.
  */
 class ClientRequestConvertController extends Controller
 {
@@ -31,27 +33,41 @@ class ClientRequestConvertController extends Controller
         abort_if($clientRequest->converted_to_type !== null, 422, 'Cette demande a déjà été transformée.');
 
         $data = $request->validate([
-            'type' => ['required', Rule::in(['project', 'quote'])],
+            'type' => ['required', Rule::in(['project', 'quote', 'task'])],
             'name' => ['nullable', 'string', 'max:255'],
             // Obligatoire si la demande n'est pas rattachée à un client (simple nom + téléphone)
             'client_id' => [
-                Rule::requiredIf($clientRequest->client_id === null), 'nullable', 'integer',
+                Rule::requiredIf($clientRequest->client_id === null && $request->input('type') !== 'task'), 'nullable', 'integer',
                 Rule::exists('clients', 'id')->whereNull('deleted_at'),
             ],
             'manager_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('is_active', true)->whereNull('deleted_at')],
         ], [], ['type' => 'type', 'name' => 'nom', 'client_id' => 'client', 'manager_id' => 'chef de projet']);
 
         $isQuote = $data['type'] === 'quote';
+        $isTask = $data['type'] === 'task';
         abort_unless(
-            $user->can($isQuote ? 'quotes.create' : 'projects.create'),
+            $user->can($isTask ? 'tasks.create' : ($isQuote ? 'quotes.create' : 'projects.create')),
             403,
-            $isQuote ? "Vous n'avez pas le droit de créer un devis." : "Vous n'avez pas le droit de créer un projet.",
+            $isTask ? "Vous n'avez pas le droit de créer une tâche." : ($isQuote ? "Vous n'avez pas le droit de créer un devis." : "Vous n'avez pas le droit de créer un projet."),
         );
         $name = $data['name'] ?? Str::limit(Str::squish($clientRequest->body), 80, '…');
         $clientId = $data['client_id'] ?? $clientRequest->client_id;
 
-        $created = DB::transaction(function () use ($data, $clientRequest, $user, $isQuote, $name, $clientId) {
-            if ($isQuote) {
+        $created = DB::transaction(function () use ($data, $clientRequest, $user, $isQuote, $isTask, $name, $clientId) {
+            if ($isTask) {
+                $created = new Task([
+                    'title' => $name,
+                    'description' => $clientRequest->body,
+                    'client_id' => $clientId,
+                    'client_request_id' => $clientRequest->id,
+                    'priority' => $clientRequest->priority->value,
+                ]);
+                $created->created_by = $user->id;
+                $created->save();
+                if ($clientRequest->assigned_to && $user->can('tasks.assign')) {
+                    $created->assignees()->sync([$clientRequest->assigned_to]);
+                }
+            } elseif ($isQuote) {
                 $created = QuoteEditing::createDraft(['client_id' => $clientId, 'title' => $name, 'notes' => $clientRequest->body], $user);
             } else {
                 $created = new Project([
@@ -81,9 +97,11 @@ class ClientRequestConvertController extends Controller
         return response()->json([
             'data' => [
                 'request' => new ClientRequestResource($clientRequest->refresh()->load(['client:id,name', 'assignee', 'creator', 'processor'])),
-                ...($isQuote
-                    ? ['quote' => new QuoteResource($created->load(QuoteEditing::FULL))]
-                    : ['project' => new ProjectResource($created->load(['client:id,name', 'manager:id,firstname,lastname']))]),
+                ...match (true) {
+                    $isTask => ['task' => new TaskResource($created->load(TaskController::FULL))],
+                    $isQuote => ['quote' => new QuoteResource($created->load(QuoteEditing::FULL))],
+                    default => ['project' => new ProjectResource($created->load(['client:id,name', 'manager:id,firstname,lastname']))],
+                },
             ],
         ], 201);
     }
