@@ -25,6 +25,7 @@ final class Settings
             'credit_note' => 'AV-{YYYY}-{####}',
             'delivery_note' => 'BL-{YYYY}-{####}',
             'purchase_order' => 'BC-{YYYY}-{####}',
+            'contract' => 'CTR-{YYYY}-{####}',
         ],
     ];
 
@@ -34,6 +35,7 @@ final class Settings
         'credit_note' => 'Avoirs',
         'delivery_note' => 'Bons de livraison',
         'purchase_order' => 'Bons de commande',
+        'contract' => 'Contrats',
     ];
 
     private const CACHE_KEY = 'dash4.settings';

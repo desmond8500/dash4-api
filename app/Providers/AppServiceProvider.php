@@ -14,6 +14,7 @@ use App\Models\ReceptionReport;
 use App\Models\Sheet;
 use App\Policies\SitePartPolicy;
 use App\Models\Comment;
+use App\Models\Contract;
 use App\Models\ClientRequest;
 use App\Models\Contact;
 use App\Models\DeliveryNote;
@@ -79,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
             'equipment' => Equipment::class,
             'reception_report' => ReceptionReport::class,
             'sheet' => Sheet::class,
+            'contract' => Contract::class,
             'link' => Link::class,
             'document' => Document::class,
         ]);

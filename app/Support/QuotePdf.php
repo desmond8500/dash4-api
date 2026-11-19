@@ -6,6 +6,9 @@ use App\Models\Company;
 use App\Models\DeliveryNote;
 use App\Models\Document;
 use App\Models\Invoice;
+use App\Models\Badge;
+use App\Models\BadgeTemplate;
+use App\Models\Contract;
 use App\Models\Journal;
 use App\Models\Plan;
 use App\Models\Project;
@@ -179,6 +182,59 @@ final class QuotePdf
             'project' => $project,
             'places' => $places,
             'planImages' => $planImages,
+        ])->setPaper('a4');
+    }
+
+    /**
+     * Badges au format carte CR80 (85,6 × 54 mm) : `cards` une carte par page (imprimante à cartes),
+     * `sheet` planche A4 de 10 cartes à découper.
+     *
+     * @param  \Illuminate\Support\Collection<int, Badge>  $badges
+     */
+    public static function badges($badges, string $layout = 'cards'): DomPdf
+    {
+        $company = Company::current();
+        $cards = $badges->map(function (Badge $b) use ($company) {
+            $t = $b->template;
+            $portrait = $t?->orientation === 'portrait';
+
+            return [
+                'badge' => $b,
+                'portrait' => $portrait,
+                'primary' => $t?->primary_color ?? '#1d4ed8',
+                'text' => $t?->text_color ?? '#111827',
+                'title' => $t?->title ?? $company->name,
+                'subtitle' => $t?->subtitle,
+                'footer' => $t?->footer,
+                'fields' => $t ? $t->printedFields() : ['job_title', 'department'],
+                'logo' => $t?->logo_path ? self::dataUri('public', $t->logo_path) : self::dataUri('public', $company->logo_path),
+                'background' => $t?->background_path ? self::dataUri('public', $t->background_path) : null,
+                'photo' => $b->photo_path ? self::dataUri('public', $b->photo_path) : null,
+            ];
+        });
+        $pdf = Pdf::loadView('pdf.badges', ['cards' => $cards, 'layout' => $layout, 'labels' => BadgeTemplate::FIELDS]);
+        if ($layout === 'sheet') {
+            return $pdf->setPaper('a4');
+        }
+        // 85,6 × 54 mm en points ; une carte en portrait si le premier modèle l'est
+        $portrait = (bool) ($cards->first()['portrait'] ?? false);
+
+        return $pdf->setPaper($portrait ? [0, 0, 153.07, 242.65] : [0, 0, 242.65, 153.07]);
+    }
+
+    /** Contrat de maintenance : parties, durée, facturation, prestations et conditions. */
+    public static function contract(Contract $contract): DomPdf
+    {
+        $contract->load(['client', 'project', 'lines']);
+        $company = Company::current();
+
+        $signatureOn = $company->signatureSettings()['contract'] ?? true;
+
+        return Pdf::loadView('pdf.contract', [
+            ...self::common($company),
+            'contract' => $contract,
+            'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
+            'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
         ])->setPaper('a4');
     }
 

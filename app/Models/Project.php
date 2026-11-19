@@ -80,6 +80,11 @@ class Project extends Model
         return $this->hasMany(Sheet::class)->latest()->orderByDesc('id');
     }
 
+    public function badges(): HasMany
+    {
+        return $this->hasMany(Badge::class)->orderBy('lastname')->orderBy('firstname')->orderBy('id');
+    }
+
     public function receptionReports(): HasMany
     {
         return $this->hasMany(ReceptionReport::class)->latest('date')->orderByDesc('id');

@@ -26,6 +26,7 @@ class Company extends Model
         'purchase_order' => 'Bons de commande',
         'report' => "Rapports d'intervention",
         'acceptance' => 'Procès-verbaux',
+        'contract' => 'Contrats',
     ];
 
     protected function casts(): array

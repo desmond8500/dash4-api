@@ -49,6 +49,8 @@ class Invoice extends Model
             'vat_rate' => 'float',
             'brs_rate' => 'float',
             'issued_at' => 'date',
+            'period_start' => 'date',
+            'period_end' => 'date',
             'due_at' => 'date',
             'paid_at' => 'datetime',
             'subtotal' => 'integer',
@@ -57,6 +59,11 @@ class Invoice extends Model
             'paid_amount' => 'integer',
             'show_signature' => 'boolean',
         ];
+    }
+
+    public function contract(): BelongsTo
+    {
+        return $this->belongsTo(Contract::class)->withTrashed();
     }
 
     public function quote(): BelongsTo

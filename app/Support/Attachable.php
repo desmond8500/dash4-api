@@ -11,6 +11,7 @@ use App\Models\InstalledSystem;
 use App\Models\ReceptionReport;
 use App\Models\Sheet;
 use App\Models\Comment;
+use App\Models\Contract;
 use App\Models\ClientRequest;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -55,12 +56,13 @@ final class Attachable
         'equipment' => Equipment::class,
         'reception-reports' => ReceptionReport::class,
         'sheets' => Sheet::class,
+        'contracts' => Contract::class,
     ];
 
     /** Fiches qui ont un fil de commentaires (pas les sections de journal, ni les commentaires eux-mêmes). */
     public const COMMENTABLE = [
         'clients', 'projects', 'quotes', 'invoices', 'articles', 'brands', 'providers', 'purchases', 'expenses',
-        'tasks', 'client-requests', 'journals', 'tech-shares', 'installed-systems', 'equipment', 'reception-reports',
+        'tasks', 'client-requests', 'journals', 'tech-shares', 'installed-systems', 'equipment', 'reception-reports', 'contracts',
     ];
 
     /** Nom de la fiche dans l'URL (« projects »…) à partir du modèle. */

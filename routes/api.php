@@ -11,7 +11,9 @@ use App\Http\Controllers\Api\V1\ClientLogoController;
 use App\Http\Controllers\Api\V1\ClientRequestController;
 use App\Http\Controllers\Api\V1\ClientRequestConvertController;
 use App\Http\Controllers\Api\V1\ClientRequestLinkController;
+use App\Http\Controllers\Api\V1\BadgeController;
 use App\Http\Controllers\Api\V1\CommentController;
+use App\Http\Controllers\Api\V1\ContractController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DeliveryNoteController;
@@ -144,6 +146,29 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('sheets/{sheet}', [SheetController::class, 'destroy']);
         Route::get('sheets/{sheet}/pdf', [SheetController::class, 'pdf']);
         Route::get('projects/{project}/doe', DoeController::class);
+
+        // Badges
+        Route::get('badge-templates', [BadgeController::class, 'templates']);
+        Route::post('badge-templates', [BadgeController::class, 'storeTemplate']);
+        Route::patch('badge-templates/{template}', [BadgeController::class, 'updateTemplate']);
+        Route::delete('badge-templates/{template}', [BadgeController::class, 'destroyTemplate']);
+        Route::post('badge-templates/{template}/images/{kind}', [BadgeController::class, 'storeTemplateImage']);
+        Route::delete('badge-templates/{template}/images/{kind}', [BadgeController::class, 'destroyTemplateImage']);
+        Route::get('projects/{project}/badges', [BadgeController::class, 'index']);
+        Route::post('projects/{project}/badges', [BadgeController::class, 'store']);
+        Route::get('projects/{project}/badges/pdf', [BadgeController::class, 'pdf']);
+        Route::patch('badges/{badge}', [BadgeController::class, 'update']);
+        Route::delete('badges/{badge}', [BadgeController::class, 'destroy']);
+        Route::post('badges/{badge}/photo', [BadgeController::class, 'storePhoto']);
+
+        // Contrats et forfaits
+        Route::get('flat-rates', [ContractController::class, 'flatRates']);
+        Route::post('flat-rates', [ContractController::class, 'storeFlatRate']);
+        Route::patch('flat-rates/{flatRate}', [ContractController::class, 'updateFlatRate']);
+        Route::delete('flat-rates/{flatRate}', [ContractController::class, 'destroyFlatRate']);
+        Route::apiResource('contracts', ContractController::class);
+        Route::post('contracts/{contract}/invoice', [ContractController::class, 'invoice']);
+        Route::get('contracts/{contract}/pdf', [ContractController::class, 'pdf']);
 
         Route::post('projects/{project}/logo', [ProjectLogoController::class, 'store']);
         Route::delete('projects/{project}/logo', [ProjectLogoController::class, 'destroy']);
