@@ -12,5 +12,8 @@ Artisan::command('inspire', function () {
 // Sur alwaysdata : tâche planifiée « php artisan schedule:run » toutes les minutes (docs/DEPLOIEMENT.md).
 Schedule::command('client-requests:remind')->hourly()->withoutOverlapping();
 
+// Informations temporaires des techniciens : contenu effacé à l'expiration — toutes les 10 minutes.
+Schedule::command('tech-shares:expire')->everyTenMinutes()->withoutOverlapping();
+
 // Boîte mail des demandes (si configurée : INBOX_HOST…) — toutes les 5 minutes.
 Schedule::command('inbox:fetch')->everyFiveMinutes()->withoutOverlapping();

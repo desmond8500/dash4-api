@@ -41,6 +41,8 @@ use App\Http\Controllers\Api\V1\StockLogoController;
 use App\Http\Controllers\Api\V1\StockMovementController;
 use App\Http\Controllers\Api\V1\StorageLocationController;
 use App\Http\Controllers\Api\V1\TaskController;
+use App\Http\Controllers\Api\V1\TechAccessRequestController;
+use App\Http\Controllers\Api\V1\TechShareController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -166,6 +168,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         // Journaux d'intervention
         Route::apiResource('journals', JournalController::class);
         Route::get('journals/{journal}/pdf', [JournalController::class, 'pdf'])->name('journals.pdf');
+        Route::apiResource('tech-shares', TechShareController::class);
+        Route::post('tech-shares/{tech_share}/read', [TechShareController::class, 'read']);
+        Route::post('tech-shares/{tech_share}/expire', [TechShareController::class, 'expire']);
+        Route::apiResource('tech-access-requests', TechAccessRequestController::class)->except('update');
+        Route::post('tech-access-requests/{tech_access_request}/decide', [TechAccessRequestController::class, 'decide']);
         Route::get('journals/{journal}/email-draft', [JournalController::class, 'emailDraft']);
         Route::post('journals/{journal}/send', [JournalController::class, 'send'])->middleware('throttle:20,1');
 

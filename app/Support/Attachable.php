@@ -15,6 +15,7 @@ use App\Models\Provider;
 use App\Models\Purchase;
 use App\Models\Quote;
 use App\Models\Task;
+use App\Models\TechShare;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
@@ -41,6 +42,7 @@ final class Attachable
         'client-requests' => ClientRequest::class,
         'journals' => Journal::class,
         'journal-sections' => JournalSection::class,
+        'tech-shares' => TechShare::class,
     ];
 
     public static function find(string $type, int $id): Model
