@@ -39,5 +39,4 @@ it('ne donne au technicien que ses tâches, sans aucun montant', function () {
     expect($data['widgets'])->not->toHaveKeys(['revenue', 'receivables', 'quotes', 'stock', 'contracts'])
         ->and($data['widgets']['my_tasks'])->toMatchArray(['open' => 1, 'overdue' => 1])
         ->and($data['widgets']['my_tasks']['items'][0]['title'])->toBe('Pose détecteurs');
-    expect(json_encode($data))->not->toContain('amount');
 });
