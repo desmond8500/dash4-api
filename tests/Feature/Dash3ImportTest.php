@@ -171,7 +171,7 @@ it('reprend les données de Dash3 avec les cas difficiles', function () {
     expect(DB::table('quote_sections')->where('quote_id', $brs->id)->count())->toBe(0);
     expect(DB::table('quotes')->where('legacy_id', 102)->exists())->toBeFalse();
     expect(DB::table('quote_deposits')->where('quote_id', $quote->id)->value('amount'))->toBe(50000);
-    expect(DB::table('quote_expenses')->where('quote_id', $quote->id)->count())->toBe(1);
+    expect(DB::table('expenses')->where('quote_id', $quote->id)->where('status', 'approved')->sum('amount'))->toEqual(8000);
     expect(DB::table('delivery_notes')->where('quote_id', $quote->id)->value('type'))->toBe('works');
     expect(DB::table('documents')->where('documentable_type', 'quote')->where('documentable_id', $quote->id)->count())->toBe(1);
     expect(DB::table('quote_template_lines')->value('designation'))->toBe('Câble');

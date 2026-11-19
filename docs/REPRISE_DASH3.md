@@ -62,7 +62,7 @@ On peut ne reprendre qu'une partie avec `--only=clients --only=contacts…` (dan
 | `invoices` | `quotes` | Numéro = référence Dash3 (`CBA-060-25`) ; titre = description ; statut ci-dessous ; taxe `brs` → BRS, sinon sans taxe ; remise 0,1 → 10 % |
 | `invoice_sections`, `invoice_rows` | `quote_sections`, `quote_lines` | Section masquée gardée mais hors total ; prix unitaire = coût × coefficient arrondi, comme dans Dash3 ; référence « _ » = aucune ; article inconnu : ligne gardée sans lien |
 | `invoice_acomptes` | `quote_deposits` | |
-| `invoice_spents` | `quote_expenses` | « prévue » = non payée |
+| `invoice_spents` | `expenses` (dépenses du devis) | Validées, rattachées au devis et à son projet ; « prévue » = non payée |
 | `invoice_bls` | `delivery_notes` | Numéro `BL-D3-{id}` ; « livraison » → bordereau de livraison, sinon de travaux |
 | `invoice_documents` | `documents` du devis | Lignes sans fichier (« _ ») ignorées |
 | `factures` | `invoices` | Numéro = référence ; une ligne au montant de la facture ; « payé » → payée, avec un paiement (moyen « autre ») |

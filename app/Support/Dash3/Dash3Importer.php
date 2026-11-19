@@ -604,16 +604,19 @@ class Dash3Importer
             $this->count('quote_deposits', 'created');
         }
         foreach ($this->src->table('invoice_spents')->where('invoice_id', $legacyQuote)->whereNull('deleted_at')->orderBy('id')->get() as $e) {
-            $expenseId = DB::table('quote_expenses')->insertGetId([
-                'quote_id' => $quoteId, 'label' => $this->text($e->name, 255) ?? 'Dépense', 'description' => $this->text($e->description),
-                'amount' => (float) $e->montant, 'spent_at' => $e->date, 'is_paid' => mb_strtolower((string) $e->status) !== 'prevue',
+            // Dépenses réelles d'un devis : des dépenses validées, rattachées au devis et à son projet
+            $expenseId = DB::table('expenses')->insertGetId([
+                'quote_id' => $quoteId, 'project_id' => DB::table('quotes')->where('id', $quoteId)->value('project_id'),
+                'label' => $this->text($e->name, 255) ?? 'Dépense', 'description' => $this->text($e->description),
+                'amount' => (int) round((float) $e->montant), 'spent_at' => $e->date, 'is_paid' => mb_strtolower((string) $e->status) !== 'prevue',
+                'status' => 'approved', 'decided_at' => $e->created_at ?? $this->now, 'decided_by' => $this->owner->id,
                 'created_by' => $this->owner->id, 'legacy_id' => $e->id, ...$this->stamps($e),
             ]);
             // Décalage de l'identifiant : un devis a aussi des documents venant de invoice_documents
             if ($doc = $this->document('quote', $quoteId, $e->file ?? null, $this->text($e->name, 255) ?? 'Justificatif', 'invoice_spents', 10_000_000 + $e->id)) {
-                DB::table('quote_expenses')->where('id', $expenseId)->update(['document_id' => $doc]);
+                DB::table('expenses')->where('id', $expenseId)->update(['document_id' => $doc]);
             }
-            $this->count('quote_expenses', 'created');
+            $this->count('expenses', 'created');
         }
         foreach ($this->src->table('invoice_bls')->where('invoice_id', $legacyQuote)->orderBy('id')->get() as $b) {
             DB::table('delivery_notes')->insert([
