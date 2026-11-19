@@ -16,6 +16,7 @@ use App\Models\ClientRequest;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Journal;
+use App\Models\Message;
 use App\Models\JournalSection;
 use App\Models\Project;
 use App\Models\Provider;
@@ -57,6 +58,7 @@ final class Attachable
         'reception-reports' => ReceptionReport::class,
         'sheets' => Sheet::class,
         'contracts' => Contract::class,
+        'messages' => Message::class,
     ];
 
     /** Fiches qui ont un fil de commentaires (pas les sections de journal, ni les commentaires eux-mêmes). */
@@ -118,6 +120,12 @@ final class Attachable
 
             return;
         }
+        // Fichiers d'un message : son auteur, membre de la conversation
+        if ($parent instanceof Message) {
+            Gate::forUser($user)->authorize('update', $parent);
+
+            return;
+        }
         $parent = self::subject($parent);
         Gate::forUser($user)->authorize($parent instanceof Task ? 'progress' : 'update', $parent);
     }
@@ -131,6 +139,11 @@ final class Attachable
         $gate = Gate::forUser($user);
         if ($parent instanceof Comment) {
             abort_unless(self::canDeleteComment($user, $parent, self::subject($parent)), 403, "Vous n'avez pas le droit de faire cette action.");
+
+            return;
+        }
+        if ($parent instanceof Message) {
+            $gate->authorize('update', $parent);
 
             return;
         }

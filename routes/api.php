@@ -56,6 +56,7 @@ use App\Http\Controllers\Api\V1\TechAccessRequestController;
 use App\Http\Controllers\Api\V1\TechShareController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\CvController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -96,6 +97,21 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('cvs/{cv}/projects', [CvController::class, 'importProjects']);
         Route::get('cvs/{cv}/pdf', [CvController::class, 'pdf']);
         Route::get('users/{user}/cvs', [CvController::class, 'shared']);
+
+        // Messagerie interne (tous profils ; chacun ne voit que ses conversations)
+        Route::get('messaging/users', [ConversationController::class, 'users']);
+        Route::get('conversations', [ConversationController::class, 'index']);
+        Route::get('conversations/unread', [ConversationController::class, 'unread']);
+        Route::post('conversations', [ConversationController::class, 'store']);
+        Route::get('conversations/{conversation}', [ConversationController::class, 'show']);
+        Route::patch('conversations/{conversation}', [ConversationController::class, 'update']);
+        Route::post('conversations/{conversation}/members', [ConversationController::class, 'addMembers']);
+        Route::delete('conversations/{conversation}/members/{user}', [ConversationController::class, 'removeMember']);
+        Route::get('conversations/{conversation}/messages', [ConversationController::class, 'messages']);
+        Route::post('conversations/{conversation}/messages', [ConversationController::class, 'send']);
+        Route::post('conversations/{conversation}/read', [ConversationController::class, 'read']);
+        Route::patch('messages/{message}', [ConversationController::class, 'updateMessage']);
+        Route::delete('messages/{message}', [ConversationController::class, 'destroyMessage']);
 
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
         Route::apiResource('users', UserController::class)->except('destroy');

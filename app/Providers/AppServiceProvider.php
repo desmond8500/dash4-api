@@ -83,6 +83,8 @@ class AppServiceProvider extends ServiceProvider
             'contract' => Contract::class,
             'link' => Link::class,
             'document' => Document::class,
+            'message' => \App\Models\Message::class,
+            'conversation' => \App\Models\Conversation::class,
         ]);
 
         // En développement : erreur si on essaie d'enregistrer un attribut non autorisé
