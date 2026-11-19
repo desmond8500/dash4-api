@@ -29,6 +29,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'job_title' => $this->job_title,
+            'avatar_url' => $this->avatar_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar_path) : null,
             'account_type' => [
                 'value' => $this->account_type->value,
                 'label' => $this->account_type->label(),

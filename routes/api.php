@@ -56,6 +56,8 @@ use App\Http\Controllers\Api\V1\TechAccessRequestController;
 use App\Http\Controllers\Api\V1\TechShareController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\CvController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Support\Attachable;
 use Illuminate\Support\Facades\Route;
@@ -79,6 +81,21 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function () {
         Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
+
+        // Espace personnel : profil et CV
+        Route::patch('me', [ProfileController::class, 'update']);
+        Route::post('me/avatar', [ProfileController::class, 'avatar']);
+        Route::put('me/password', [ProfileController::class, 'password'])->middleware('throttle:6,1');
+        Route::get('me/cvs', [CvController::class, 'index']);
+        Route::post('me/cvs', [CvController::class, 'store']);
+        Route::get('cvs/{cv}', [CvController::class, 'show']);
+        Route::patch('cvs/{cv}', [CvController::class, 'update']);
+        Route::delete('cvs/{cv}', [CvController::class, 'destroy']);
+        Route::post('cvs/{cv}/duplicate', [CvController::class, 'duplicate']);
+        Route::post('cvs/{cv}/photo', [CvController::class, 'photo']);
+        Route::post('cvs/{cv}/projects', [CvController::class, 'importProjects']);
+        Route::get('cvs/{cv}/pdf', [CvController::class, 'pdf']);
+        Route::get('users/{user}/cvs', [CvController::class, 'shared']);
 
         Route::get('roles', [RoleController::class, 'index'])->name('roles.index');
         Route::apiResource('users', UserController::class)->except('destroy');

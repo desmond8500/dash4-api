@@ -238,6 +238,24 @@ final class QuotePdf
         ])->setPaper('a4');
     }
 
+    /** CV de l'espace personnel : une ou deux colonnes, couleur et police choisies. */
+    public static function cv(\App\Models\Cv $cv): DomPdf
+    {
+        $cv->load('sections.items');
+        $fonts = ['sans' => 'DejaVu Sans', 'serif' => 'DejaVu Serif', 'mono' => 'DejaVu Sans Mono'];
+        $side = ['skills', 'languages', 'certifications'];
+        $sections = $cv->sections->filter(fn ($s) => $s->items->isNotEmpty());
+
+        return Pdf::loadView('pdf.cv', [
+            'cv' => $cv,
+            'font' => $fonts[$cv->font] ?? 'DejaVu Sans',
+            'photo' => $cv->show_photo ? self::dataUri('public', $cv->photo_path) : null,
+            'two' => $cv->layout === 'two_columns',
+            'main' => $cv->layout === 'two_columns' ? $sections->reject(fn ($s) => in_array($s->type, $side, true))->values() : $sections->values(),
+            'aside' => $cv->layout === 'two_columns' ? $sections->filter(fn ($s) => in_array($s->type, $side, true))->values() : collect(),
+        ])->setPaper('a4');
+    }
+
     private static function common(Company $company): array
     {
         return [
