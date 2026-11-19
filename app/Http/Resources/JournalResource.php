@@ -32,7 +32,10 @@ class JournalResource extends JsonResource
             'summary' => $this->summary,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'sections' => $this->whenLoaded('sections', fn () => $this->sections->map(fn ($s) => $s->only(['id', 'position', 'title', 'body']))->values()),
+            'sections' => $this->whenLoaded('sections', fn () => $this->sections->map(fn ($s) => [
+                ...$s->only(['id', 'position', 'title', 'body']),
+                'photos' => $s->relationLoaded('documents') ? DocumentResource::collection($s->documents)->resolve($request) : [],
+            ])->values()),
             'participants' => $this->whenLoaded('participants', fn () => $this->participants->map(fn ($p) => [
                 'id' => $p->id,
                 'user_id' => $p->user_id,
@@ -42,6 +45,11 @@ class JournalResource extends JsonResource
                 'kind' => $p->user_id ? 'team' : ($p->contact_id ? 'contact' : 'other'),
             ])->values()),
             'photos_count' => $this->whenCounted('documents'),
+            'emails' => $this->whenLoaded('emails', fn () => $this->emails->map(fn ($m) => [
+                'id' => $m->id, 'to' => $m->to, 'cc' => $m->cc ?? [], 'subject' => $m->subject,
+                'attachments' => $m->attachments ?? [], 'sent_at' => $m->sent_at?->toIso8601String(),
+                'sender' => AttachmentResources::author($m->sender),
+            ])->values()),
             'creator' => $this->whenLoaded('creator', fn () => AttachmentResources::author($this->creator)),
             'created_by' => $this->created_by,
             'can' => [

@@ -48,15 +48,27 @@
 @endif
 
 @foreach ($journal->sections as $section)
-<div class="section avoid-break">
+@php($list = $sectionPhotos[$section->id] ?? collect())
+<div class="section{{ $list->isEmpty() ? ' avoid-break' : '' }}">
     <h3>{{ $section->title }}</h3>
     @if ($section->body)<div class="pre">{{ $section->body }}</div>@endif
+    @if ($list->isNotEmpty())
+    <table class="photos">
+        @foreach ($list->chunk(3) as $row)
+        <tr>
+            @foreach ($row as $photo)
+            <td><img src="{{ $photo['src'] }}" alt=""><div class="caption">{{ $photo['name'] }}</div></td>
+            @endforeach
+        </tr>
+        @endforeach
+    </table>
+    @endif
 </div>
 @endforeach
 
 @if ($photos->isNotEmpty())
 <div class="section">
-    <h3>Photos</h3>
+    <h3>{{ $journal->sections->isEmpty() ? 'Photos' : 'Autres photos' }}</h3>
     <table class="photos">
         @foreach ($photos->chunk(3) as $row)
         <tr>

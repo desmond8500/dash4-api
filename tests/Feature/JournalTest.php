@@ -74,3 +74,55 @@ it('filtre les journaux par projet et par période', function () {
     $this->getJson('/api/v1/journals?from=2026-11-16&to=2026-11-22')->assertJsonCount(2, 'data');
     $this->postJson('/api/v1/journals', ['title' => 'X', 'date' => '2026-11-19', 'latitude' => 14])->assertJsonValidationErrors('longitude');
 });
+
+it('garde les photos d\'une section quand on modifie les sections, et les retire avec la section', function () {
+    Storage::fake('local');
+    $tech = userWithRole('technician');
+    Sanctum::actingAs($tech);
+    $journal = $this->postJson('/api/v1/journals', [
+        'title' => 'Dépannage', 'date' => '2026-11-19',
+        'sections' => [['title' => 'Travaux réalisés', 'body' => 'A'], ['title' => 'Reste à faire', 'body' => 'B']],
+    ])->assertCreated()->json('data');
+    [$done, $todo] = $journal['sections'];
+
+    $this->post("/api/v1/journal-sections/{$done['id']}/documents", ['file' => UploadedFile::fake()->image('avant.jpg')], ['Accept' => 'application/json'])->assertCreated();
+
+    // Section modifiée (même id) : la photo reste ; nouvelle section ajoutée ; « Reste à faire » retirée
+    $updated = $this->patchJson("/api/v1/journals/{$journal['id']}", ['sections' => [
+        ['id' => $done['id'], 'title' => 'Travaux réalisés', 'body' => 'A modifié'],
+        ['title' => 'Remarques', 'body' => 'C'],
+    ]])->assertOk()->json('data');
+
+    expect($updated['sections'])->toHaveCount(2)
+        ->and($updated['sections'][0]['id'])->toBe($done['id'])
+        ->and($updated['sections'][0]['photos'])->toHaveCount(1)
+        ->and(collect($updated['sections'])->pluck('id'))->not->toContain($todo['id']);
+    expect(substr($this->get("/api/v1/journals/{$journal['id']}/pdf")->assertOk()->getContent(), 0, 4))->toBe('%PDF');
+
+    $this->patchJson("/api/v1/journals/{$journal['id']}", ['sections' => []])->assertOk();
+    expect(\App\Models\Document::query()->count())->toBe(0);
+
+    // Un autre technicien ne peut pas ajouter de photo
+    $other = Journal::factory()->create(['title' => 'Autre']);
+    $section = $other->sections()->create(['position' => 0, 'title' => 'X']);
+    $this->post("/api/v1/journal-sections/{$section->id}/documents", ['file' => UploadedFile::fake()->image('x.jpg')], ['Accept' => 'application/json'])->assertForbidden();
+});
+
+it('envoie le rapport par e-mail avec son PDF et le garde dans l\'historique', function () {
+    \Illuminate\Support\Facades\Mail::fake();
+    $client = Client::factory()->create();
+    $tech = userWithRole('technician');
+    Sanctum::actingAs($tech);
+    $journal = $this->postJson('/api/v1/journals', ['title' => 'Maintenance', 'date' => '2026-11-19', 'client_id' => $client->id])->json('data');
+
+    $this->getJson("/api/v1/journals/{$journal['id']}/email-draft")->assertOk()
+        ->assertJsonPath('data.subject', "Rapport d'intervention du 19/11/2026 — Maintenance");
+    $this->postJson("/api/v1/journals/{$journal['id']}/send", ['to' => ['client@exemple.sn'], 'subject' => 'Rapport', 'message' => 'Bonjour'])
+        ->assertOk()->assertJsonPath('data.emails.0.attachments', ['Rapport 2026-11-19.pdf']);
+
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\QuoteMail::class, fn ($m) => $m->hasTo('client@exemple.sn') && $m->document instanceof Journal);
+
+    // Sans droit sur le journal : refusé
+    Sanctum::actingAs(userWithRole('technician'));
+    $this->postJson("/api/v1/journals/{$journal['id']}/send", ['to' => ['a@b.sn'], 'subject' => 'X', 'message' => 'Y'])->assertForbidden();
+});

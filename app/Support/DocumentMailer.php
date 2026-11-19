@@ -15,7 +15,7 @@ use Illuminate\Support\Testing\Fakes\MailFake;
 use Throwable;
 
 /**
- * Envoi d'un document (devis, facture) par e-mail : destinataires proposés, signatures,
+ * Envoi d'un document (devis, facture, rapport) par e-mail : destinataires proposés, signatures,
  * validation, envoi immédiat avec les PDF joints, et trace dans l'historique.
  */
 final class DocumentMailer
@@ -113,7 +113,7 @@ final class DocumentMailer
         $email->email_signature_id = $signature?->id;
         $document->emails()->save($email);
 
-        activity($document->getMorphClass() === 'invoice' ? 'invoices' : 'quotes')
+        activity(match ($document->getMorphClass()) { 'invoice' => 'invoices', 'journal' => 'journals', default => 'quotes' })
             ->performedOn($document)->causedBy($user)
             ->withProperties(['to' => $data['to'], 'cc' => $data['cc'] ?? []])
             ->log("{$label} envoyé par e-mail");

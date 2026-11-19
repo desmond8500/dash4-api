@@ -166,6 +166,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         // Journaux d'intervention
         Route::apiResource('journals', JournalController::class);
         Route::get('journals/{journal}/pdf', [JournalController::class, 'pdf'])->name('journals.pdf');
+        Route::get('journals/{journal}/email-draft', [JournalController::class, 'emailDraft']);
+        Route::post('journals/{journal}/send', [JournalController::class, 'send'])->middleware('throttle:20,1');
 
         // Boîte mail des demandes ; liens d'une demande vers d'autres fiches
         Route::get('inbound-emails', [InboundEmailController::class, 'index']);

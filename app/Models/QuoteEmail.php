@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** Trace d'un envoi de devis par e-mail. */
+/** Trace d'un envoi par e-mail : devis, facture ou rapport d'intervention. */
 class QuoteEmail extends Model
 {
     protected $fillable = ['to', 'cc', 'subject', 'message', 'attachments', 'sent_at'];
@@ -23,6 +23,11 @@ class QuoteEmail extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function journal(): BelongsTo
+    {
+        return $this->belongsTo(Journal::class);
     }
 
     public function sender(): BelongsTo

@@ -47,6 +47,12 @@ class Journal extends Model
         return $this->hasMany(JournalParticipant::class)->orderBy('id');
     }
 
+    /** E-mails envoyés (historique, table quote_emails). */
+    public function emails(): HasMany
+    {
+        return $this->hasMany(QuoteEmail::class)->latest('sent_at');
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class)->withTrashed();

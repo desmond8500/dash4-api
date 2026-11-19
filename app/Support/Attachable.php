@@ -9,6 +9,7 @@ use App\Models\ClientRequest;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Journal;
+use App\Models\JournalSection;
 use App\Models\Project;
 use App\Models\Provider;
 use App\Models\Purchase;
@@ -39,6 +40,7 @@ final class Attachable
         'tasks' => Task::class,
         'client-requests' => ClientRequest::class,
         'journals' => Journal::class,
+        'journal-sections' => JournalSection::class,
     ];
 
     public static function find(string $type, int $id): Model
@@ -50,12 +52,19 @@ final class Attachable
 
     public static function authorizeView(User $user, Model $parent): void
     {
-        Gate::forUser($user)->authorize('view', $parent);
+        Gate::forUser($user)->authorize('view', self::subject($parent));
+    }
+
+    /** Fiche dont on applique les droits : une section de journal suit son journal. */
+    public static function subject(Model $parent): Model
+    {
+        return $parent instanceof JournalSection ? $parent->journal : $parent;
     }
 
     /** Ajouter : qui peut modifier la fiche ; sur une tâche, aussi les personnes affectées (notes, photos). */
     public static function authorizeAdd(User $user, Model $parent): void
     {
+        $parent = self::subject($parent);
         Gate::forUser($user)->authorize($parent instanceof Task ? 'progress' : 'update', $parent);
     }
 
@@ -66,6 +75,7 @@ final class Attachable
     public static function authorizeChange(User $user, Model $attachment, Model $parent): void
     {
         $gate = Gate::forUser($user);
+        $parent = self::subject($parent);
         $allowed = $gate->allows('delete', $parent)
             || ($attachment->created_by === $user->id && $gate->allows($parent instanceof Task ? 'progress' : 'update', $parent));
 

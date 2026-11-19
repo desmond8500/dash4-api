@@ -12,6 +12,7 @@ use App\Models\Document;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Journal;
+use App\Models\JournalSection;
 use App\Models\Link;
 use App\Models\Note;
 use App\Models\Project;
@@ -50,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
             'expense' => Expense::class,
             'task' => Task::class,
             'journal' => Journal::class,
+            'journal_section' => JournalSection::class,
             'brand' => Brand::class,
             'delivery_note' => DeliveryNote::class,
             'stock_movement' => StockMovement::class,

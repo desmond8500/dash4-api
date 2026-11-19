@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\JournalResource;
 use App\Models\Journal;
 use App\Models\Task;
+use App\Support\DocumentMailer;
 use App\Support\QuotePdf;
 use App\Support\SyncQuery;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class JournalController extends Controller
 {
-    public const FULL = ['project:id,name,manager_id', 'client:id,name', 'quote:id,number', 'task:id,title', 'sections', 'participants.user:id,firstname,lastname', 'participants.contact', 'creator:id,firstname,lastname'];
+    public const FULL = ['project:id,name,manager_id', 'client:id,name', 'quote:id,number', 'task:id,title', 'sections.documents.creator:id,firstname,lastname', 'participants.user:id,firstname,lastname', 'participants.contact', 'creator:id,firstname,lastname', 'emails.sender:id,firstname,lastname'];
 
     /** GET /api/v1/journals — filtres : project_id, client_id, task_id, type, from, to, mine=1, search ; synchro : updated_since. */
     public function index(Request $request): AnonymousResourceCollection
@@ -87,7 +88,10 @@ class JournalController extends Controller
         return new JournalResource($journal->load(self::FULL)->loadCount('documents'));
     }
 
-    /** PATCH — `sections` et `participants` envoyés : remplacent la liste. */
+    /**
+     * PATCH — `participants` envoyés : remplacent la liste. `sections` envoyées : celles qui ont un `id`
+     * sont modifiées (leurs photos restent), les autres créées, les absentes retirées.
+     */
     public function update(Request $request, Journal $journal): JournalResource
     {
         $this->authorize('update', $journal);
@@ -95,8 +99,7 @@ class JournalController extends Controller
         DB::transaction(function () use ($journal, $data) {
             $journal->update(array_diff_key($data, ['sections' => true, 'participants' => true]));
             if (array_key_exists('sections', $data)) {
-                $journal->sections()->delete();
-                $this->writeSections($journal, $data['sections']);
+                $this->syncSections($journal, $data['sections']);
             }
             if (array_key_exists('participants', $data)) {
                 $journal->participants()->delete();
@@ -132,6 +135,48 @@ class JournalController extends Controller
         }
     }
 
+    private function syncSections(Journal $journal, array $sections): void
+    {
+        $existing = $journal->sections()->get()->keyBy('id');
+        $kept = [];
+        foreach (array_values($sections) as $i => $s) {
+            $attributes = ['position' => $i, 'title' => $s['title'], 'body' => $s['body'] ?? null];
+            if (! empty($s['id']) && $section = $existing->get($s['id'])) {
+                $section->update($attributes);
+                $kept[] = $section->id;
+            } else {
+                $kept[] = $journal->sections()->create($attributes)->id;
+            }
+        }
+        // Une à une : les photos des sections retirées partent avec elles
+        $existing->except($kept)->each->delete();
+    }
+
+    /** GET /api/v1/journals/{id}/email-draft — destinataires proposés (client et contacts), objet et message. */
+    public function emailDraft(Request $request, Journal $journal): JsonResponse
+    {
+        $this->authorize('update', $journal);
+
+        return response()->json(['data' => DocumentMailer::draft(
+            $journal->client,
+            $request->user(),
+            "Rapport d'intervention du {$journal->date->format('d/m/Y')} — {$journal->title}",
+            "Bonjour,\n\nVeuillez trouver ci-joint le rapport de notre intervention du {$journal->date->format('d/m/Y')}"
+                ." (« {$journal->title} »).\n\nNous restons à votre disposition pour toute question.",
+        )]);
+    }
+
+    /** POST /api/v1/journals/{id}/send — `to`, `cc`, `subject`, `message`, `signature_id` ; le rapport PDF est joint. */
+    public function send(Request $request, Journal $journal): JournalResource
+    {
+        $this->authorize('update', $journal);
+        $data = DocumentMailer::validate($request);
+        $name = 'Rapport '.$journal->date->format('Y-m-d').'.pdf';
+        DocumentMailer::send($journal, $data, [['name' => $name, 'data' => QuotePdf::journal($journal)->output()]], $request->user(), "Rapport « {$journal->title} »");
+
+        return new JournalResource($journal->refresh()->load(self::FULL)->loadCount('documents'));
+    }
+
     private function writeParticipants(Journal $journal, array $participants): void
     {
         $seen = [];
@@ -164,6 +209,7 @@ class JournalController extends Controller
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
             'sections' => ['sometimes', 'array', 'max:50'],
+            'sections.*.id' => ['nullable', 'integer'],
             'sections.*.title' => ['required', 'string', 'max:255'],
             'sections.*.body' => ['nullable', 'string', 'max:20000'],
             'participants' => ['sometimes', 'array', 'max:50'],

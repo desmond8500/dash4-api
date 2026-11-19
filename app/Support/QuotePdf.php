@@ -93,18 +93,28 @@ final class QuotePdf
     /** Rapport d'intervention : sections, intervenants et photos (12 au plus). */
     public static function journal(Journal $journal): DomPdf
     {
-        $journal->load(['project', 'client', 'task', 'sections', 'participants.user', 'participants.contact', 'creator', 'documents']);
-        $photos = $journal->documents
-            ->filter(fn ($d) => in_array($d->mime_type, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true))
-            ->take(12)
-            ->map(fn ($d) => ['name' => $d->name, 'src' => self::dataUri(Document::DISK, $d->path)])
-            ->filter(fn ($p) => $p['src'] !== null)
-            ->values();
+        $journal->load(['project', 'client', 'task', 'sections.documents', 'participants.user', 'participants.contact', 'creator', 'documents']);
+        // Au plus 30 photos en tout : d'abord celles des sections, puis les photos générales
+        $budget = 30;
+        $images = function ($documents, int $max) use (&$budget) {
+            $list = $documents
+                ->filter(fn ($d) => in_array($d->mime_type, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true))
+                ->take(min($max, max(0, $budget)))
+                ->map(fn ($d) => ['name' => $d->name, 'src' => self::dataUri(Document::DISK, $d->path)])
+                ->filter(fn ($p) => $p['src'] !== null)
+                ->values();
+            $budget -= $list->count();
+
+            return $list;
+        };
+        $sectionPhotos = $journal->sections->mapWithKeys(fn ($s) => [$s->id => $images($s->documents, 9)]);
+        $photos = $images($journal->documents, 12);
 
         return Pdf::loadView('pdf.journal', [
             ...self::common(Company::current()),
             'journal' => $journal,
             'photos' => $photos,
+            'sectionPhotos' => $sectionPhotos,
         ])->setPaper('a4');
     }
 
