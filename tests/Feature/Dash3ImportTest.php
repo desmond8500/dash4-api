@@ -82,7 +82,10 @@ beforeEach(function () {
         ['id' => 2, 'invoice_section_id' => 1, 'designation' => 'Pose', 'coef' => 1, 'reference' => 'MO', 'quantite' => 3, 'prix' => 10000, 'priorite_id' => 7, 'article_id' => 999],
         ['id' => 3, 'invoice_section_id' => 2, 'designation' => 'Disque', 'coef' => 1, 'reference' => '_', 'quantite' => 1, 'prix' => 5000, 'priorite_id' => 6],
     ]);
-    dash3('invoice_acomptes', [['id' => 1, 'invoice_id' => 100, 'name' => 'Acompte', 'montant' => '50000', 'statut' => 1, 'date' => '2025-06-05', 'show' => 1]]);
+    dash3('invoice_acomptes', [
+        ['id' => 1, 'invoice_id' => 100, 'name' => 'Acompte', 'montant' => '50000', 'statut' => 1, 'date' => '2025-06-05', 'show' => 1],
+        ['id' => 2, 'invoice_id' => 555, 'name' => 'Orphelin', 'montant' => '1000', 'statut' => 0, 'date' => '2025-06-05', 'show' => 1],
+    ]);
     dash3('invoice_spents', [['id' => 1, 'invoice_id' => 100, 'name' => 'Quincaillerie', 'montant' => '8000', 'date' => '2025-06-06', 'status' => 'achete']]);
     dash3('invoice_bls', [['id' => 1, 'invoice_id' => 100, 'name' => 'BL', 'date' => '2025-06-10', 'type' => 'travaux', 'done' => 'Pose des caméras', 'logo' => 0]]);
     dash3('invoice_documents', [
@@ -217,7 +220,7 @@ it('reprend les données de Dash3 avec les cas difficiles', function () {
 
     // Rapport : l'orphelin et la ligne sans article sont listés
     $json = json_decode(file_get_contents($report), true);
-    expect(implode("\n", $json['rejected']))->toContain('invoices #102')->toContain('invoice_rows #2');
+    expect(implode("\n", $json['rejected']))->toContain('invoices #102')->toContain('invoice_rows #2')->toContain('invoice_acomptes #2');
     expect($json['missing_files'])->toBe([]);
 
     // Relancée : rien n'est créé deux fois

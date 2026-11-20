@@ -589,6 +589,14 @@ class Dash3Importer
 
             $this->importQuoteChildren($r->id, $quoteId);
         }
+        // Acomptes, dépenses, bordereaux et documents dont le devis n'existe pas (ou a été rejeté) : listés
+        foreach (['invoice_acomptes' => 'acompte', 'invoice_spents' => 'dépense', 'invoice_bls' => 'bordereau', 'invoice_documents' => 'document'] as $table => $label) {
+            foreach ($this->rows($table) as $child) {
+                if (! $this->v($child, 'deleted_at') && ! $this->id('quotes', $this->v($child, 'invoice_id'))) {
+                    $this->reject($table, $child->id, "{$label} d'un devis inconnu (#{$this->v($child, 'invoice_id')})");
+                }
+            }
+        }
         $this->checks['Devis repris : total HT avant remise (Dash3)'] = $dash3Total;
         $this->checks['Devis repris : total HT avant remise (Dash4)'] = $dash4Total;
     }
