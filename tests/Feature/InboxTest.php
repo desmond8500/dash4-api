@@ -69,8 +69,8 @@ it('relève la boîte une seule fois par message et reconnaît le client par son
         12 => rawEmail('Awa <awa@teranga.sn>', 'Devis portail', 'm2@teranga.sn'),
         13 => rawEmail('inconnu@gmail.com', 'Bonjour', 'm3@gmail.com'),
     ]);
-    expect(InboxFetcher::run($box))->toBe(['imported' => 3, 'skipped' => 0])->and($box->seen)->toBe([11, 12, 13]);
-    expect(InboxFetcher::run(new FakeMailbox([14 => rawEmail('x@y.sn', 'Encore', 'm1@teranga.sn')])))->toBe(['imported' => 0, 'skipped' => 1]);
+    expect(InboxFetcher::run($box))->toBe(['imported' => 3, 'skipped' => 0, 'failed' => 0])->and($box->seen)->toBe([11, 12, 13]);
+    expect(InboxFetcher::run(new FakeMailbox([14 => rawEmail('x@y.sn', 'Encore', 'm1@teranga.sn')])))->toBe(['imported' => 0, 'skipped' => 1, 'failed' => 0]);
 
     $first = InboundEmail::where('message_id', 'm1@teranga.sn')->first();
     expect($first->client_id)->toBe($client->id)->and($first->attachments[0]['name'])->toBe('plan.pdf');
