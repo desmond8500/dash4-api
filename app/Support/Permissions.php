@@ -65,6 +65,8 @@ final class Permissions
         'exports.run',
         'records.force_delete',
         'audit.view',
+        // Sauvegardes de la base et des fichiers : administrateurs seulement
+        'backups.manage',
     ];
 
     /**
@@ -80,6 +82,7 @@ final class Permissions
         'exports.run',
         'records.force_delete',
         'audit.view',
+        'backups.manage',
         'users.view',
         'users.manage',
         'company.update',
@@ -120,6 +123,7 @@ final class Permissions
                 'signature.manage',
                 'records.force_delete',
                 'settings.update',
+                'backups.manage',
             ])),
 
             self::ROLE_PROJECT_MANAGER => [

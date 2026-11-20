@@ -21,6 +21,13 @@ return [
     /*
     | Adresse du front web : lien des e-mails « mot de passe oublié » (valable aussi pour les techniciens).
     */
+    /*
+    | Sauvegardes (php artisan backup:run) : nombre de jours gardés sur le serveur.
+    */
+    'backups' => [
+        'keep_days' => (int) env('BACKUP_KEEP_DAYS', 14),
+    ],
+
     'web_url' => rtrim((string) env('WEB_URL', 'https://dash4web.netlify.app'), '/'),
 
     /*

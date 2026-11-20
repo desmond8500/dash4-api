@@ -56,6 +56,7 @@ use App\Http\Controllers\Api\V1\TechAccessRequestController;
 use App\Http\Controllers\Api\V1\TechShareController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\BackupController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\CvController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
@@ -100,6 +101,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('cvs/{cv}/projects', [CvController::class, 'importProjects']);
         Route::get('cvs/{cv}/pdf', [CvController::class, 'pdf']);
         Route::get('users/{user}/cvs', [CvController::class, 'shared']);
+
+        // Sauvegardes (administrateurs)
+        Route::get('backups', [BackupController::class, 'index']);
+        Route::post('backups', [BackupController::class, 'store']);
+        Route::get('backups/{name}', [BackupController::class, 'download'])->where('name', '[A-Za-z0-9.\-]+');
+        Route::delete('backups/{name}', [BackupController::class, 'destroy'])->where('name', '[A-Za-z0-9.\-]+');
 
         // Messagerie interne (tous profils ; chacun ne voit que ses conversations)
         Route::get('messaging/users', [ConversationController::class, 'users']);

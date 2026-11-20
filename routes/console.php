@@ -20,3 +20,7 @@ Schedule::command('tech-shares:expire')->everyTenMinutes()->withoutOverlapping()
 
 // Boîte mail des demandes (si configurée : INBOX_HOST…) — toutes les 5 minutes.
 Schedule::command('inbox:fetch')->everyFiveMinutes()->withoutOverlapping();
+
+// Sauvegardes : la base chaque nuit, la base et les fichiers chaque dimanche (gardées BACKUP_KEEP_DAYS jours).
+Schedule::command('backup:run')->dailyAt('02:30')->withoutOverlapping()->when(fn () => now()->dayOfWeek !== 0);
+Schedule::command('backup:run --files')->weeklyOn(0, '02:30')->withoutOverlapping();
