@@ -125,3 +125,17 @@ it('ignore les publicités et réserve la boîte à qui traite les demandes', fu
     $this->postJson("/api/v1/inbound-emails/{$email->id}/ignore", ['restore' => true])->assertJsonPath('data.status.value', 'new');
     $this->postJson('/api/v1/inbound-emails/fetch')->assertStatus(422);
 });
+
+it('lit un e-mail dans un jeu de caractères inconnu de PHP et ne bloque pas la relève sur un message illisible', function () {
+    $vietnamese = "From: client@example.com\r\nSubject: Panne\r\nMessage-ID: <vn-1@example.com>\r\nContent-Type: text/plain; charset=\"windows-1258\"\r\nContent-Transfer-Encoding: base64\r\n\r\n".base64_encode("Bonjour\nLe pr\xe9sident")."\r\n";
+    $unknown = "From: autre@example.com\r\nSubject: Devis\r\nMessage-ID: <x-1@example.com>\r\nContent-Type: text/plain; charset=x-inconnu\r\n\r\nMerci pour le devis\r\n";
+    expect(MimeParser::parse($vietnamese)['text'])->toStartWith('Bonjour')
+        ->and(mb_check_encoding(MimeParser::parse($vietnamese)['text'], 'UTF-8'))->toBeTrue();
+    expect(MimeParser::parse($unknown)['text'])->toBe('Merci pour le devis');
+
+    // Un message illisible (ici, rien à lire) est compté et laissé non lu ; les autres sont relevés
+    $mailbox = new FakeMailbox([1 => $vietnamese, 2 => null, 3 => $unknown]);
+    $result = InboxFetcher::run($mailbox);
+    expect($result)->toBe(['imported' => 2, 'skipped' => 0, 'failed' => 1])
+        ->and($mailbox->seen)->toBe([1, 3]);
+});

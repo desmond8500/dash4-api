@@ -68,7 +68,9 @@ class InboundEmailController extends Controller
             abort(502, $e->getMessage());
         }
 
-        return response()->json(['data' => $result, 'message' => "{$result['imported']} nouvel(s) e-mail(s)."]);
+        $message = "{$result['imported']} nouvel(s) e-mail(s).".($result['failed'] ? " {$result['failed']} e-mail(s) illisible(s), laissé(s) dans la boîte mail." : '');
+
+        return response()->json(['data' => $result, 'message' => $message]);
     }
 
     /**

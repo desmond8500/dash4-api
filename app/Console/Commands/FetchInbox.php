@@ -22,6 +22,9 @@ class FetchInbox extends Command
         }
         $result = InboxFetcher::run(ImapMailbox::fromConfig(), (int) $this->option('limit'));
         $this->info("{$result['imported']} e-mail(s) importé(s), {$result['skipped']} déjà connu(s).");
+        if ($result['failed']) {
+            $this->warn("{$result['failed']} e-mail(s) illisible(s), laissé(s) dans la boîte (détail dans storage/logs).");
+        }
 
         return self::SUCCESS;
     }

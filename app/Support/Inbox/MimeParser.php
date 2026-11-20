@@ -167,15 +167,55 @@ final class MimeParser
         return ['email' => filter_var($email, FILTER_VALIDATE_EMAIL) ? strtolower($email) : null, 'name' => null];
     }
 
+    /**
+     * Texte converti en UTF-8. Un jeu de caractères inconnu de PHP (windows-1258, x-mac-…) ne fait
+     * jamais échouer la lecture : iconv est essayé, puis Windows-1252 en dernier recours.
+     */
     private static function toUtf8(string $content, ?string $charset): string
     {
-        $charset = strtolower(trim((string) $charset));
-        if ($charset === '' || $charset === 'utf-8' || $charset === 'us-ascii') {
-            return mb_check_encoding($content, 'UTF-8') ? $content : mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
+        $charset = strtolower(trim((string) $charset, " \t\"'"));
+        if ($charset === '' || $charset === 'utf-8' || $charset === 'utf8' || $charset === 'us-ascii') {
+            return self::fallback($content);
         }
-        $converted = @mb_convert_encoding($content, 'UTF-8', $charset === 'iso-8859-1' ? 'Windows-1252' : $charset);
+        if (in_array($charset, ['iso-8859-1', 'latin1', 'latin-1'], true)) {
+            $charset = 'windows-1252';
+        }
+        if (self::mbSupports($charset)) {
+            try {
+                return mb_convert_encoding($content, 'UTF-8', $charset);
+            } catch (\ValueError) {
+                // essayé autrement ci-dessous
+            }
+        }
+        if (function_exists('iconv')) {
+            $converted = @iconv($charset, 'UTF-8//TRANSLIT//IGNORE', $content);
+            if ($converted !== false && $converted !== '') {
+                return $converted;
+            }
+        }
 
-        return $converted !== false ? $converted : $content;
+        return self::fallback($content);
+    }
+
+    private static function fallback(string $content): string
+    {
+        return mb_check_encoding($content, 'UTF-8') ? $content : mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
+    }
+
+    private static function mbSupports(string $charset): bool
+    {
+        static $known = null;
+        if ($known === null) {
+            $known = [];
+            foreach (mb_list_encodings() as $encoding) {
+                $known[strtolower($encoding)] = true;
+                foreach (mb_encoding_aliases($encoding) as $alias) {
+                    $known[strtolower($alias)] = true;
+                }
+            }
+        }
+
+        return isset($known[$charset]);
     }
 
     public static function htmlToText(string $html): string
