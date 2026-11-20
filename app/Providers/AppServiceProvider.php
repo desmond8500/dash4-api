@@ -49,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Préférences : une catégorie de notifications coupée n'est pas envoyée
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Notifications\Events\NotificationSending::class, [\App\Support\Preferences::class, 'filter']);
+
         // Suivi de chantier : droits du chantier du projet
         foreach ([Building::class, InstalledSystem::class, Equipment::class, ReceptionReport::class, Plan::class, Quantity::class, Sheet::class] as $model) {
             Gate::policy($model, SitePartPolicy::class);

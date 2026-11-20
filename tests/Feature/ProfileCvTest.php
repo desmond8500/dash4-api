@@ -87,3 +87,20 @@ it('ne montre un CV qu\'à son auteur, ou à un administrateur s\'il est partag�
     Sanctum::actingAs($other);
     $this->getJson("/api/v1/users/{$owner->id}/cvs")->assertForbidden();
 });
+
+it('enregistre les préférences et ne prévient plus d\'une catégorie coupée', function () {
+    $tech = userWithRole('technician');
+    Sanctum::actingAs($tech);
+    $this->getJson('/api/v1/auth/me')->assertJsonPath('data.preferences.theme', 'system')->assertJsonPath('data.preferences.notifications.tasks', true);
+
+    $this->patchJson('/api/v1/me', ['preferences' => ['theme' => 'dark', 'notifications' => ['tasks' => false]]])
+        ->assertOk()->assertJsonPath('data.preferences.theme', 'dark')
+        ->assertJsonPath('data.preferences.notifications.tasks', false)->assertJsonPath('data.preferences.notifications.mentions', true);
+    $this->patchJson('/api/v1/me', ['preferences' => ['theme' => 'violet']])->assertJsonValidationErrors('preferences.theme');
+    $this->patchJson('/api/v1/me', ['preferences' => ['notifications' => ['banque' => false]]])->assertJsonValidationErrors('preferences.notifications');
+
+    $task = \App\Models\Task::factory()->create();
+    $tech->refresh()->notify(new \App\Notifications\TaskAssignedNotification($task, 'Moussa'));
+    $tech->notify(new \App\Notifications\BackupFailedNotification('test'));
+    expect($tech->notifications()->count())->toBe(1)->and($tech->notifications()->first()->data['kind'])->toBe('backup.failed');
+});

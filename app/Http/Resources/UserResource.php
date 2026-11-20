@@ -40,6 +40,8 @@ class UserResource extends JsonResource
                 'label' => Permissions::ROLE_LABELS[$name] ?? $name,
             ])->values(),
             'permissions' => $this->when($this->withPermissions, fn () => $this->effectivePermissions()),
+            // Préférences : seulement pour la personne connectée
+            'preferences' => $this->when($this->withPermissions, fn () => \App\Support\Preferences::for($this->resource)),
             'last_login_at' => $this->last_login_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

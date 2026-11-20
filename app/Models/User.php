@@ -38,6 +38,7 @@ class User extends Authenticatable
     {
         return [
             'dashboard_layout' => 'array',
+            'preferences' => 'array',
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',

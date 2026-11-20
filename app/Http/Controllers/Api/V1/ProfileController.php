@@ -14,16 +14,25 @@ use Illuminate\Validation\Rules\Password;
 /** Espace personnel : son profil, sa photo et son mot de passe (aucune permission requise). */
 class ProfileController extends Controller
 {
-    /** PATCH /api/v1/me — prénom, nom, téléphone, fonction (l'e-mail et les rôles se changent par un administrateur). */
+    /** PATCH /api/v1/me — prénom, nom, téléphone, fonction, `preferences` (thème, notifications) ; l'e-mail et les rôles se changent par un administrateur. */
     public function update(Request $request): UserResource
     {
         $user = $request->user();
-        $user->update($request->validate([
+        $data = $request->validate([
             'firstname' => ['sometimes', 'required', 'string', 'max:100'],
             'lastname' => ['sometimes', 'required', 'string', 'max:100'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
             'job_title' => ['sometimes', 'nullable', 'string', 'max:255'],
-        ], [], ['firstname' => 'prénom', 'lastname' => 'nom', 'phone' => 'téléphone', 'job_title' => 'fonction']));
+            'preferences' => ['sometimes', 'array'],
+            'preferences.theme' => ['sometimes', \Illuminate\Validation\Rule::in(\App\Support\Preferences::THEMES)],
+            'preferences.notifications' => ['sometimes', 'array:'.implode(',', array_keys(\App\Support\Preferences::CATEGORIES))],
+            'preferences.notifications.*' => ['boolean'],
+        ], [], ['firstname' => 'prénom', 'lastname' => 'nom', 'phone' => 'téléphone', 'job_title' => 'fonction', 'preferences.theme' => 'thème']);
+        if (isset($data['preferences'])) {
+            $user->forceFill(['preferences' => \App\Support\Preferences::merge($user, $data['preferences'])]);
+            unset($data['preferences']);
+        }
+        $user->fill($data)->save();
 
         return (new UserResource($user->refresh()))->withPermissions();
     }
