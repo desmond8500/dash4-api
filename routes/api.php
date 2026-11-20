@@ -58,6 +58,7 @@ use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\CvController;
+use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Support\Attachable;
@@ -78,6 +79,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])
         ->middleware('throttle:login')
         ->name('auth.login');
+    Route::post('auth/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1');
+    Route::post('auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1');
 
     Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function () {
         Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');

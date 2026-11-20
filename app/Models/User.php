@@ -28,6 +28,12 @@ class User extends Authenticatable
         hasPermissionTo as protected roleHasPermissionTo;
     }
 
+    /** Lien « mot de passe oublié » vers le front web, en français. */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
+
     protected function casts(): array
     {
         return [

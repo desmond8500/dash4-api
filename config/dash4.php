@@ -19,6 +19,11 @@ return [
     'token_lifetime_minutes' => (int) env('TOKEN_LIFETIME_MINUTES', 43200),
 
     /*
+    | Adresse du front web : lien des e-mails « mot de passe oublié » (valable aussi pour les techniciens).
+    */
+    'web_url' => rtrim((string) env('WEB_URL', 'https://dash4web.netlify.app'), '/'),
+
+    /*
     | Demandes clients : une demande encore « Nouvelle » après ce nombre de jours
     | est en retard et une relance est envoyée (TODO §3).
     */
