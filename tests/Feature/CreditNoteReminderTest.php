@@ -17,7 +17,7 @@ function issuedInvoice(int $total = 100000, ?string $due = null, array $extra = 
         'title' => 'Vidéosurveillance', 'status' => 'issued', 'issued_at' => now()->subDays(40)->toDateString(),
         'due_at' => $due ?? now()->subDays(10)->toDateString(), 'tax_mode' => 'none', 'subtotal' => $total, 'total' => $total, ...$extra,
     ]);
-    $invoice->lines()->create(['designation' => 'Pose', 'quantity' => 1, 'unit_price' => $total, 'line_total' => $total]);
+    $invoice->lines()->forceCreate(['designation' => 'Pose', 'quantity' => 1, 'unit_price' => $total, 'line_total' => $total]);
 
     return $invoice;
 }
