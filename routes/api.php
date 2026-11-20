@@ -102,6 +102,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('cvs/{cv}/pdf', [CvController::class, 'pdf']);
         Route::get('users/{user}/cvs', [CvController::class, 'shared']);
 
+        // Exports comptables (CSV, FEC)
+        Route::get('exports', [\App\Http\Controllers\Api\V1\ExportController::class, 'index']);
+        Route::get('exports/{type}', [\App\Http\Controllers\Api\V1\ExportController::class, 'download'])->where('type', '[a-z_]+');
+
         // Sauvegardes (administrateurs)
         Route::get('backups', [BackupController::class, 'index']);
         Route::post('backups', [BackupController::class, 'store']);

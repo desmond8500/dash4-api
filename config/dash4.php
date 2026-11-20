@@ -28,6 +28,26 @@ return [
         'keep_days' => (int) env('BACKUP_KEEP_DAYS', 14),
     ],
 
+    /*
+    | Comptes du journal des écritures (export « FEC »), plan SYSCOHADA. Valeurs par défaut à faire
+    | valider par votre comptable ; à changer ici si besoin.
+    */
+    'accounting' => [
+        'clients' => '411000',
+        'suppliers' => '401000',
+        'sales' => '706000',
+        'purchases' => '601000',
+        'expenses' => '638000',
+        'vat_collected' => '443100',
+        'vat_deductible' => '445200',
+        'brs' => '449100',
+        'bank' => '521000',
+        'cash' => '571000',
+        'mobile_money' => '521100',
+        'other_income' => '758000',
+        'other_charges' => '658000',
+    ],
+
     'web_url' => rtrim((string) env('WEB_URL', 'https://dash4web.netlify.app'), '/'),
 
     /*
