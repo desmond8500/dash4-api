@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ContractController extends Controller
 {
-    private const FULL = ['client:id,name', 'project:id,name', 'lines', 'invoices'];
+    private const FULL = ['client:id,name', 'project:id,name', 'lines', 'invoices', 'visits.task:id,title,status,due_date'];
 
     /** GET /api/v1/contracts — filtres : status, client_id, due=1 (à facturer), ending=1 (échéance proche), search. */
     public function index(Request $request): AnonymousResourceCollection

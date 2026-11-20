@@ -51,6 +51,10 @@ class ContractResource extends JsonResource
                 'period_end' => $i->period_end?->toDateString(),
                 ...($prices ? ['total' => $i->total] : []),
             ])->values()),
+            'visits' => $this->whenLoaded('visits', fn () => $this->visits->map(fn ($v) => [
+                'id' => $v->id, 'number' => $v->number, 'planned_on' => $v->planned_on?->toDateString(),
+                'task' => $v->task ? ['id' => $v->task->id, 'title' => $v->task->title, 'status' => ['value' => $v->task->status->value, 'label' => $v->task->status->label()]] : null,
+            ])->values()),
             'can' => [
                 'update' => (bool) $user?->can('update', $this->resource),
                 'delete' => (bool) $user?->can('delete', $this->resource),

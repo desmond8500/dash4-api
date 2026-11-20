@@ -60,6 +60,11 @@ class Contract extends Model
         return $this->hasMany(Invoice::class)->latest('period_start');
     }
 
+    public function visits(): HasMany
+    {
+        return $this->hasMany(ContractVisit::class)->orderBy('planned_on');
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

@@ -98,6 +98,12 @@ final class QuotePdf
         ])->setPaper('a4');
     }
 
+    /** @param  array<string, mixed>  $data */
+    public static function projectSummary(array $data): DomPdf
+    {
+        return Pdf::loadView('pdf.project_summary', [...self::common(Company::current()), ...$data])->setPaper('a4');
+    }
+
     public static function purchaseOrder(Purchase $purchase): DomPdf
     {
         $purchase->load(['provider', 'project', 'lines']);

@@ -44,6 +44,12 @@ class CheckContracts extends Command
                 }
             });
 
+        // Visites de maintenance des 30 prochains jours : une tâche au planning pour chacune
+        $visits = \App\Support\ContractVisits::plan(30);
+        if ($visits > 0) {
+            $this->info("{$visits} visite(s) de maintenance ajoutée(s) au planning.");
+        }
+
         // À facturer : un rappel par jour aux personnes qui facturent
         $due = Contract::query()->where('status', ContractStatus::Active->value)->whereDate('next_invoice_date', '<=', $today)->count();
         if ($due > 0) {

@@ -25,7 +25,7 @@ use Illuminate\Validation\Rules\Enum;
  */
 class ExpenseController extends Controller
 {
-    private const FULL = ['category', 'space:id,name', 'project:id,name', 'quote:id,number', 'provider:id,name', 'document', 'creator:id,firstname,lastname', 'decider:id,firstname,lastname'];
+    private const FULL = ['category', 'space:id,name', 'project:id,name', 'quote:id,number', 'provider:id,name', 'article:id,designation,reference', 'document', 'creator:id,firstname,lastname', 'decider:id,firstname,lastname'];
 
     /**
      * GET /api/v1/expenses — filtres : status (liste), mine=1, to_reimburse=1, expense_space_id, project_id,
@@ -217,13 +217,14 @@ class ExpenseController extends Controller
             'project_id' => ['sometimes', 'nullable', 'integer', Rule::exists('projects', 'id')->whereNull('deleted_at')],
             'quote_id' => ['sometimes', 'nullable', 'integer', Rule::exists('quotes', 'id')->whereNull('deleted_at')],
             'provider_id' => ['sometimes', 'nullable', 'integer', Rule::exists('providers', 'id')->whereNull('deleted_at')],
+            'article_id' => ['sometimes', 'nullable', 'integer', Rule::exists('articles', 'id')->whereNull('deleted_at')],
             'payment_method' => ['sometimes', 'nullable', new Enum(PaymentMethod::class)],
             'advanced' => ['sometimes', 'boolean'],
             'is_paid' => ['sometimes', 'boolean'],
             'file' => ['sometimes', ...$this->fileRules()],
         ], [], [
             'label' => 'libellé', 'amount' => 'montant', 'spent_at' => 'date', 'expense_category_id' => 'catégorie',
-            'expense_space_id' => 'caisse', 'project_id' => 'projet', 'quote_id' => 'devis', 'provider_id' => 'fournisseur',
+            'expense_space_id' => 'caisse', 'project_id' => 'projet', 'quote_id' => 'devis', 'provider_id' => 'fournisseur', 'article_id' => 'article',
             'payment_method' => 'moyen de paiement', 'file' => 'justificatif',
         ]);
     }

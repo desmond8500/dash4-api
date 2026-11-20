@@ -143,6 +143,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         Route::apiResource('projects', ProjectController::class);
         // Suivi de chantier : bâtiments, systèmes installés, équipements, avancement, PV de réception
+        Route::get('projects/{project}/summary-pdf', \App\Http\Controllers\Api\V1\ProjectSummaryController::class);
         Route::get('projects/{project}/site', [SiteController::class, 'show']);
         Route::post('projects/{project}/buildings', [SiteController::class, 'storeBuilding']);
         Route::patch('buildings/{building}', [SiteController::class, 'updateBuilding']);
