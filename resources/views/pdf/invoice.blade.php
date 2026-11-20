@@ -81,8 +81,11 @@
             @else
                 <tr class="grand"><td>Total</td><td class="num">{{ $money($invoice->total) }} {{ $symbol }}</td></tr>
             @endif
-            @if ($invoice->paid_amount > 0)
-                <tr><td>Déjà réglé</td><td class="num">− {{ $money($invoice->paid_amount) }} {{ $symbol }}</td></tr>
+            @if ($invoice->credited_amount > 0)
+                <tr><td>Avoir(s) {{ $invoice->creditNotes->pluck('number')->implode(', ') }}</td><td class="num">− {{ $money($invoice->credited_amount) }} {{ $symbol }}</td></tr>
+            @endif
+            @if ($invoice->paid_amount > 0 || $invoice->credited_amount > 0)
+                @if ($invoice->paid_amount > 0)<tr><td>Déjà réglé</td><td class="num">− {{ $money($invoice->paid_amount) }} {{ $symbol }}</td></tr>@endif
                 <tr><td><strong>Reste à payer</strong></td><td class="num"><strong>{{ $money($invoice->remainingAmount()) }} {{ $symbol }}</strong></td></tr>
             @endif
         </table>

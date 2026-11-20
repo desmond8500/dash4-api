@@ -19,6 +19,8 @@ final class Settings
         // Devis et factures sans taxe par défaut (décision du 18/11) ; TVA ou BRS se choisissent sur le document
         'default_tax' => 'none',
         // {YYYY} année, {YY} année sur 2 chiffres, {MM} mois, {####} numéro (autant de chiffres que de #)
+        // Relances de paiement : paliers en jours après l'échéance ; envoi automatique au client désactivé par défaut
+        'reminders' => ['auto' => false, 'days' => [7, 15, 30]],
         'numbering' => [
             'quote' => 'DEV-{YYYY}-{####}',
             'invoice' => 'FAC-{YYYY}-{####}',
@@ -50,6 +52,7 @@ final class Settings
         $settings = array_replace(self::DEFAULTS, $stored);
         // Formats : on complète ceux qui manquent avec les valeurs par défaut
         $settings['numbering'] = array_replace(self::DEFAULTS['numbering'], $stored['numbering'] ?? []);
+        $settings['reminders'] = array_replace(self::DEFAULTS['reminders'], $stored['reminders'] ?? []);
 
         return $settings;
     }

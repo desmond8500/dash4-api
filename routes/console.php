@@ -24,3 +24,6 @@ Schedule::command('inbox:fetch')->everyFiveMinutes()->withoutOverlapping();
 // Sauvegardes : la base chaque nuit, la base et les fichiers chaque dimanche (gardées BACKUP_KEEP_DAYS jours).
 Schedule::command('backup:run')->dailyAt('02:30')->withoutOverlapping()->when(fn () => now()->dayOfWeek !== 0);
 Schedule::command('backup:run --files')->weeklyOn(0, '02:30')->withoutOverlapping();
+
+// Factures impayées : paliers de relance signalés (et relances envoyées si l'envoi automatique est activé).
+Schedule::command('invoices:remind')->dailyAt('08:30')->withoutOverlapping();

@@ -72,13 +72,27 @@ final class QuotePdf
 
     public static function invoice(Invoice $invoice): DomPdf
     {
-        $invoice->load(['client.phones', 'client.emails', 'project', 'quote', 'bankAccount', 'lines', 'payments']);
+        $invoice->load(['client.phones', 'client.emails', 'project', 'quote', 'bankAccount', 'lines', 'payments', 'creditNotes']);
         $company = Company::current();
         $signatureOn = $invoice->show_signature && ($company->signatureSettings()['invoice'] ?? true);
 
         return Pdf::loadView('pdf.invoice', [
             ...self::common($company),
             'invoice' => $invoice,
+            'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
+            'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
+        ])->setPaper('a4');
+    }
+
+    public static function creditNote(\App\Models\CreditNote $note): DomPdf
+    {
+        $note->load(['invoice.bankAccount', 'invoice.project', 'client.phones', 'client.emails']);
+        $company = Company::current();
+        $signatureOn = $company->signatureSettings()['invoice'] ?? true;
+
+        return Pdf::loadView('pdf.credit_note', [
+            ...self::common($company),
+            'note' => $note,
             'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
             'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
         ])->setPaper('a4');

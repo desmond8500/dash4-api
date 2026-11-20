@@ -23,6 +23,7 @@ final class Preferences
         'expenses' => 'Dépenses',
         'stock' => 'Stock bas',
         'contracts' => 'Contrats de maintenance',
+        'invoices' => 'Factures à relancer',
     ];
 
     /** Notification => catégorie. */
@@ -35,6 +36,7 @@ final class Preferences
         Notifications\ExpenseNotification::class => 'expenses',
         Notifications\LowStockNotification::class => 'stock',
         Notifications\ContractNotification::class => 'contracts',
+        Notifications\InvoiceReminderNotification::class => 'invoices',
     ];
 
     /** @return array{theme: string, notifications: array<string, bool>} */

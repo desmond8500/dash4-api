@@ -286,6 +286,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         // Factures et paiements
         Route::get('invoices/summary', [InvoiceController::class, 'summary'])->name('invoices.summary');
+        Route::get('invoices/schedule', [InvoiceController::class, 'schedule']);
         Route::apiResource('invoices', InvoiceController::class);
         Route::post('invoices/{invoice}/lines', [InvoiceController::class, 'addLine']);
         Route::patch('invoice-lines/{line}', [InvoiceController::class, 'updateLine']);
@@ -297,6 +298,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}/email-draft', [InvoiceController::class, 'emailDraft']);
         Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send']);
+        Route::get('invoices/{invoice}/reminder-draft', [InvoiceController::class, 'reminderDraft']);
+        Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'remind']);
+        Route::post('invoices/{invoice}/credit-notes', [\App\Http\Controllers\Api\V1\CreditNoteController::class, 'store']);
+        Route::get('credit-notes/{creditNote}/pdf', [\App\Http\Controllers\Api\V1\CreditNoteController::class, 'pdf']);
 
         // Journaux d'intervention
         Route::apiResource('journals', JournalController::class);

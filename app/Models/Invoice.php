@@ -127,9 +127,26 @@ class Invoice extends Model
         return $this->subtotal;
     }
 
+    /** Reste à payer : total − paiements − avoirs. */
     public function remainingAmount(): int
     {
-        return max(0, $this->total - $this->paid_amount);
+        return max(0, $this->total - $this->paid_amount - (int) $this->credited_amount);
+    }
+
+    /** Montant qu'un nouvel avoir peut encore annuler. */
+    public function creditableAmount(): int
+    {
+        return max(0, $this->total - (int) $this->credited_amount);
+    }
+
+    public function creditNotes(): HasMany
+    {
+        return $this->hasMany(CreditNote::class)->orderBy('id');
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(InvoiceReminder::class)->orderBy('sent_at');
     }
 
     public function isOverdue(): bool
@@ -158,11 +175,15 @@ class Invoice extends Model
     {
         $paid = (int) $this->payments()->sum('amount');
         $this->paid_amount = $paid;
+        // Les avoirs soldent la facture comme des paiements
+        $credited = (int) $this->creditNotes()->sum('amount');
+        $this->credited_amount = $credited;
+        $settled = $paid + $credited;
 
         if (in_array($this->status, [InvoiceStatus::Issued, InvoiceStatus::PartiallyPaid, InvoiceStatus::Paid], true)) {
             $this->status = match (true) {
-                $paid >= $this->total && $this->total > 0 => InvoiceStatus::Paid,
-                $paid > 0 => InvoiceStatus::PartiallyPaid,
+                $settled >= $this->total && $this->total > 0 => InvoiceStatus::Paid,
+                $settled > 0 => InvoiceStatus::PartiallyPaid,
                 default => InvoiceStatus::Issued,
             };
             $this->paid_at = $this->status === InvoiceStatus::Paid

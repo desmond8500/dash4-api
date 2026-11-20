@@ -30,6 +30,10 @@ class SettingsController extends Controller
             'vat_rate' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'brs_rate' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'default_tax' => ['sometimes', new Enum(TaxMode::class)],
+            'reminders' => ['sometimes', 'array:auto,days'],
+            'reminders.auto' => ['sometimes', 'boolean'],
+            'reminders.days' => ['sometimes', 'array', 'min:1', 'max:5'],
+            'reminders.days.*' => ['integer', 'between:1,365', 'distinct'],
             'numbering' => ['sometimes', 'array:'.implode(',', array_keys(Settings::DOCUMENT_TYPES))],
             // Un numéro {####} obligatoire ; lettres, chiffres, tirets, barres, points et {YYYY} {YY} {MM}
             'numbering.*' => ['string', 'max:40', 'regex:/\{#{1,8}\}/', 'regex:/^([A-Za-z0-9\-\/_. ]|\{YYYY\}|\{YY\}|\{MM\}|\{#{1,8}\})+$/'],
@@ -39,6 +43,13 @@ class SettingsController extends Controller
             'currency' => 'devise', 'vat_rate' => 'taux de TVA', 'brs_rate' => 'taux de BRS', 'default_tax' => 'taxe par défaut',
         ]);
 
+        if (isset($data['reminders'])) {
+            $data['reminders'] = array_replace(Settings::get('reminders'), $data['reminders']);
+            $days = array_map('intval', $data['reminders']['days']);
+            sort($days);
+            $data['reminders']['days'] = array_values($days);
+            $data['reminders']['auto'] = (bool) $data['reminders']['auto'];
+        }
         if (isset($data['numbering'])) {
             $data['numbering'] = array_replace(Settings::get('numbering'), $data['numbering']);
         }

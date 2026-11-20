@@ -37,6 +37,7 @@ class InvoiceController extends Controller
         'client:id,name', 'project:id,name', 'quote:id,number,title,total', 'bankAccount', 'lines',
         'payments.creator:id,firstname,lastname', 'emails.sender:id,firstname,lastname',
         'creator:id,firstname,lastname', 'issuer:id,firstname,lastname',
+        'creditNotes.creator:id,firstname,lastname', 'reminders.sender:id,firstname,lastname',
     ];
 
     /**
@@ -321,6 +322,75 @@ class InvoiceController extends Controller
         DocumentMailer::send($invoice, $data, $files, $request->user(), "Facture {$invoice->number}");
 
         return $this->full($invoice);
+    }
+
+    /** GET /api/v1/invoices/{invoice}/reminder-draft — relance suivante proposée (objet, texte, destinataires). */
+    public function reminderDraft(Request $request, Invoice $invoice): JsonResponse
+    {
+        $this->authorize('update', $invoice);
+        abort_unless(in_array($invoice->status, [InvoiceStatus::Issued, InvoiceStatus::PartiallyPaid], true), 422, 'Seule une facture émise et non soldée se relance.');
+
+        return response()->json(['data' => \App\Support\InvoiceReminders::draft($invoice, $request->user())]);
+    }
+
+    /** POST /api/v1/invoices/{invoice}/remind — envoie la relance au client (PDF joint). */
+    public function remind(Request $request, Invoice $invoice): InvoiceResource
+    {
+        $this->authorize('update', $invoice);
+        abort_unless(in_array($invoice->status, [InvoiceStatus::Issued, InvoiceStatus::PartiallyPaid], true), 422, 'Seule une facture émise et non soldée se relance.');
+        \App\Support\InvoiceReminders::send($invoice, DocumentMailer::validate($request), $request->user());
+
+        return $this->full($invoice);
+    }
+
+    /**
+     * GET /api/v1/invoices/schedule — échéancier des encaissements attendus : factures émises non soldées,
+     * acomptes prévus non payés (devis acceptés), prochaines périodes des contrats actifs. `months` (6 par défaut).
+     */
+    public function schedule(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->can('invoices.view') && $request->user()->can('prices.view'), 403, "Vous n'avez pas le droit de faire cette action.");
+        $until = now()->addMonths(min(24, max(1, $request->integer('months', 6))))->endOfMonth();
+        $items = collect();
+
+        Invoice::query()->whereIn('status', [InvoiceStatus::Issued->value, InvoiceStatus::PartiallyPaid->value])
+            ->with('client:id,name')->get()
+            ->each(function (Invoice $i) use ($items) {
+                $items->push([
+                    'kind' => 'invoice', 'id' => $i->id, 'label' => "{$i->number} — {$i->title}",
+                    'client' => $i->client?->name, 'date' => ($i->due_at ?? $i->issued_at)?->toDateString(),
+                    'amount' => $i->remainingAmount(), 'overdue' => $i->isOverdue(),
+                ]);
+            });
+
+        \App\Models\QuoteDeposit::query()->where('is_paid', false)->whereNotNull('due_date')->whereDate('due_date', '<=', $until)
+            ->whereHas('quote', fn ($q) => $q->where('status', QuoteStatus::Accepted->value))
+            ->whereDoesntHave('invoices', fn ($q) => $q->where('status', '!=', InvoiceStatus::Cancelled->value))
+            ->with('quote.client:id,name')->get()
+            ->each(function ($d) use ($items) {
+                $items->push([
+                    'kind' => 'deposit', 'id' => $d->quote_id, 'label' => "Acompte « {$d->label} » — devis {$d->quote->number}",
+                    'client' => $d->quote->client?->name, 'date' => $d->due_date->toDateString(),
+                    'amount' => (int) $d->amount, 'overdue' => $d->due_date->isPast() && ! $d->due_date->isToday(),
+                ]);
+            });
+
+        \App\Models\Contract::query()->where('status', 'active')->whereNotNull('next_invoice_date')->whereDate('next_invoice_date', '<=', $until)
+            ->with(['client:id,name', 'lines'])->get()
+            ->each(function ($c) use ($items) {
+                $items->push([
+                    'kind' => 'contract', 'id' => $c->id, 'label' => "Contrat {$c->number} — {$c->title}",
+                    'client' => $c->client?->name, 'date' => $c->next_invoice_date->toDateString(),
+                    'amount' => (int) round($c->periodAmount()), 'overdue' => false,
+                ]);
+            });
+
+        $items = $items->sortBy(fn ($i) => $i['date'] ?? '9999')->values();
+
+        return response()->json(['data' => $items, 'meta' => [
+            'total' => $items->sum('amount'),
+            'overdue' => $items->where('overdue', true)->sum('amount'),
+        ]]);
     }
 
     private function ensureInvoiceable(Quote $quote): void

@@ -43,7 +43,9 @@ class InvoiceResource extends JsonResource
             'tax_amount' => $this->tax_amount,
             'total' => $this->total,
             'paid_amount' => $this->paid_amount,
+            'credited_amount' => (int) $this->credited_amount,
             'remaining_amount' => $this->remainingAmount(),
+            'creditable_amount' => $this->creditableAmount(),
             'paid_at' => $this->paid_at?->toIso8601String(),
             'lines' => $this->whenLoaded('lines', fn () => $this->lines->map(fn ($l) => $l->only(['id', 'position', 'designation', 'reference', 'unit', 'quantity', 'unit_price', 'line_total']))->values()),
             'payments' => $this->whenLoaded('payments', fn () => $this->payments->map(fn ($p) => [
@@ -59,6 +61,14 @@ class InvoiceResource extends JsonResource
                 'id' => $m->id, 'to' => $m->to, 'cc' => $m->cc ?? [], 'subject' => $m->subject,
                 'attachments' => $m->attachments ?? [], 'sent_at' => $m->sent_at?->toIso8601String(),
                 'sender' => AttachmentResources::author($m->sender),
+            ])->values()),
+            'credit_notes' => $this->whenLoaded('creditNotes', fn () => $this->creditNotes->map(fn ($n) => [
+                'id' => $n->id, 'number' => $n->number, 'amount' => $n->amount, 'reason' => $n->reason,
+                'issued_at' => $n->issued_at?->toDateString(), 'creator' => AttachmentResources::author($n->creator),
+            ])->values()),
+            'reminders' => $this->whenLoaded('reminders', fn () => $this->reminders->map(fn ($r) => [
+                'id' => $r->id, 'level' => $r->level, 'automatic' => $r->automatic,
+                'sent_at' => $r->sent_at?->toIso8601String(), 'sender' => AttachmentResources::author($r->sender),
             ])->values()),
             'creator' => $this->whenLoaded('creator', fn () => AttachmentResources::author($this->creator)),
             'issuer' => $this->whenLoaded('issuer', fn () => AttachmentResources::author($this->issuer)),

@@ -50,4 +50,10 @@ class QuoteDeposit extends Model
         return LogOptions::defaults()->logOnly(['label', 'amount', 'due_date', 'is_paid', 'paid_at'])
             ->logOnlyDirty()->dontLogEmptyChanges()->useLogName('quotes');
     }
+
+    /** Factures émises pour cet acompte. */
+    public function invoices(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Invoice::class, 'quote_deposit_id');
+    }
 }
