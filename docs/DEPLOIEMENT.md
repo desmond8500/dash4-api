@@ -134,3 +134,12 @@ INBOX_ADDRESS=demandes@yonkou.info
 
 Puis `php artisan optimize:clear && php artisan optimize`, et un essai : `php artisan inbox:fetch`.
 Les messages relevés sont marqués « lus » sur le serveur de mail ; ils restent dans la boîte.
+
+## 8. Mot de passe oublié, sauvegardes, relances
+
+- **Mot de passe oublié** : l'e-mail part avec les réglages `MAIL_…` (§ 6). Le lien mène au front web : `WEB_URL=https://dash4web.netlify.app` (ou le domaine du web) dans le `.env`.
+- **Sauvegardes** : `php artisan backup:run` chaque nuit à 2 h 30 (base), le dimanche avec les fichiers, par la tâche planifiée `schedule:run` (§ 4). Rangées dans `storage/app/private/backups`, gardées `BACKUP_KEEP_DAYS` jours (14 par défaut). Les télécharger régulièrement depuis la page **Sauvegardes** du web et les garder ailleurs.
+  Restauration de la base : `gunzip < dash4-base-AAAAMMJJ-HHMMSS.sql.gz | mysql -h HOTE -u UTILISATEUR -p BASE`.
+- **Relances de paiement** : `php artisan invoices:remind` chaque matin à 8 h 30. Paliers et envoi automatique au client dans **Entreprise et paramètres** (désactivé par défaut).
+- **Visites de maintenance** : créées chaque matin par `contracts:check` (7 h), un mois avant la date prévue.
+- Après une mise à jour qui ajoute une permission (ici `backups.manage`), relancer `php artisan db:seed --class=RolesAndPermissionsSeeder --force`.
