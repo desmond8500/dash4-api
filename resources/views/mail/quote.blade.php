@@ -5,7 +5,7 @@
     <div style="max-width: 640px;">
         {{-- $message est réservé par Laravel (objet du message, pour intégrer l'image) --}}
         @php [$messageText, $signatureText] = array_pad(explode("\n-- \n", $body, 2), 2, null); @endphp
-        {!! nl2br(e($messageText)) !!}
+        @markdown($messageText)
         @if ($signatureText)
             <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #374151;">
                 {!! nl2br(e($signatureText)) !!}

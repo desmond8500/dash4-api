@@ -46,7 +46,7 @@
     </td>
 </tr></table>
 
-@if ($project->description)<p class="pre" style="margin-top:4mm">{{ $project->description }}</p>@endif
+@if ($project->description)<div class="md" style="margin-top:4mm">@markdown($project->description)</div>@endif
 
 @if ($prices)
 <h2>Chiffres clés</h2>

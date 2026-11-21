@@ -49,8 +49,8 @@
 </table>
 @endif
 
-@if ($note->done)<div class="avoid-break" style="margin-top:5mm"><strong>Travaux réalisés</strong><div class="pre">{{ $note->done }}</div></div>@endif
-@if ($note->todo)<div class="avoid-break" style="margin-top:4mm"><strong>Reste à faire</strong><div class="pre">{{ $note->todo }}</div></div>@endif
+@if ($note->done)<div class="avoid-break" style="margin-top:5mm"><strong>Travaux réalisés</strong><div class="md">@markdown($note->done)</div></div>@endif
+@if ($note->todo)<div class="avoid-break" style="margin-top:4mm"><strong>Reste à faire</strong><div class="md">@markdown($note->todo)</div></div>@endif
 
 <table class="avoid-break" style="margin-top:10mm"><tr>
     <td style="width:48%; vertical-align:top" class="box">

@@ -32,7 +32,7 @@
     </td>
 </tr></table>
 
-@if ($quote->introduction)<p class="pre" style="margin-top:5mm">{{ $quote->introduction }}</p>@endif
+@if ($quote->introduction)<div class="md" style="margin-top:5mm">@markdown($quote->introduction)</div>@endif
 
 <table class="lines">
     <thead><tr>
@@ -106,7 +106,7 @@
 </div>
 @endif
 
-@if ($quote->payment_terms)<div class="avoid-break" style="margin-top:5mm"><strong>Modalités de paiement</strong><div class="pre">{{ $quote->payment_terms }}</div></div>@endif
+@if ($quote->payment_terms)<div class="avoid-break" style="margin-top:5mm"><strong>Modalités de paiement</strong><div class="md">@markdown($quote->payment_terms)</div></div>@endif
 
 <div class="avoid-break" style="margin-top:8mm">
     <table><tr>

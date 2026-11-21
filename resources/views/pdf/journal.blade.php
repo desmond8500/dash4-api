@@ -44,14 +44,14 @@
 @endif
 
 @if ($journal->summary)
-<div class="section"><h3>Résumé</h3><div class="pre">{{ $journal->summary }}</div></div>
+<div class="section"><h3>Résumé</h3><div class="md">@markdown($journal->summary)</div></div>
 @endif
 
 @foreach ($journal->sections as $section)
 @php($list = $sectionPhotos[$section->id] ?? collect())
 <div class="section{{ $list->isEmpty() ? ' avoid-break' : '' }}">
     <h3>{{ $section->title }}</h3>
-    @if ($section->body)<div class="pre">{{ $section->body }}</div>@endif
+    @if ($section->body)<div class="md">@markdown($section->body)</div>@endif
     @if ($list->isNotEmpty())
     <table class="photos">
         @foreach ($list->chunk(3) as $row)

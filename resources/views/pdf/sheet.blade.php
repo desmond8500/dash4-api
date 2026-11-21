@@ -34,6 +34,6 @@
     @endforelse
     </tbody>
 </table>
-@if ($sheet->notes)<div class="pre" style="margin-top:4mm">{{ $sheet->notes }}</div>@endif
+@if ($sheet->notes)<div class="md" style="margin-top:4mm">@markdown($sheet->notes)</div>@endif
 </body>
 </html>

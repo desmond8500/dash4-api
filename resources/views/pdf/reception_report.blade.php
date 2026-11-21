@@ -56,7 +56,7 @@
         <tbody>
         @foreach ($report->systems as $system)
             <tr>
-                <td><strong>{{ $system->name }}</strong>@if ($system->description)<div class="ref pre">{{ $system->description }}</div>@endif</td>
+                <td><strong>{{ $system->name }}</strong>@if ($system->description)<div class="ref md">@markdown($system->description)</div>@endif</td>
                 <td>{{ $system->building?->name ?? '—' }}</td>
                 <td>
                     @foreach ($system->equipment->whereNull('parent_id')->groupBy(fn ($e) => $e->type ?: $e->name) as $type => $items)
@@ -96,7 +96,7 @@
 @endif
 
 @if ($report->observations)
-<div class="section"><h3>Observations</h3><div class="pre">{{ $report->observations }}</div></div>
+<div class="section"><h3>Observations</h3><div class="md">@markdown($report->observations)</div></div>
 @endif
 
 <table class="sign-grid section avoid-break"><tr>

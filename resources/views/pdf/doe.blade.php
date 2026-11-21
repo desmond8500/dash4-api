@@ -42,7 +42,7 @@
 <h2>1. Bâtiments et locaux</h2>
 @forelse ($project->buildings as $b)
     <h3>{{ $b->name }}</h3>
-    @if ($b->description)<div class="pre muted">{{ $b->description }}</div>@endif
+    @if ($b->description)<div class="md muted">@markdown($b->description)</div>@endif
     <ul>
     @foreach ($b->levels as $l)
         <li><strong>{{ $l->name }}</strong>@if ($l->rooms->isNotEmpty()) : {{ $l->rooms->pluck('name')->join(', ') }}@endif</li>
@@ -55,7 +55,7 @@
 <h2>2. Systèmes installés et équipements</h2>
 @forelse ($project->installedSystems as $s)
     <h3>{{ $s->name }}@if ($s->building) — {{ $s->building->name }}@endif <span class="muted">({{ $s->progress }} %)</span></h3>
-    @if ($s->description)<div class="pre">{{ $s->description }}</div>@endif
+    @if ($s->description)<div class="md">@markdown($s->description)</div>@endif
     <table class="lines">
         <thead><tr><th>Équipement</th><th style="width:7%">Qté</th><th style="width:20%">Modèle / n° de série</th><th style="width:22%">Emplacement</th><th style="width:25%">Caractéristiques</th></tr></thead>
         <tbody>

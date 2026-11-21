@@ -49,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // @markdown($texte) : zones de texte mises en forme dans les PDF et les e-mails (HTML échappé)
+        \Illuminate\Support\Facades\Blade::directive('markdown', fn (string $expression) => "<?php echo \\App\\Support\\Markdown::html({$expression}); ?>");
+
         // Préférences : une catégorie de notifications coupée n'est pas envoyée
         \Illuminate\Support\Facades\Event::listen(\Illuminate\Notifications\Events\NotificationSending::class, [\App\Support\Preferences::class, 'filter']);
 

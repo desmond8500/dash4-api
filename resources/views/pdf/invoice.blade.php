@@ -43,7 +43,7 @@
     </td>
 </tr></table>
 
-@if ($invoice->introduction)<p class="pre" style="margin-top:5mm">{{ $invoice->introduction }}</p>@endif
+@if ($invoice->introduction)<div class="md" style="margin-top:5mm">@markdown($invoice->introduction)</div>@endif
 
 <table class="lines">
     <thead><tr>
@@ -106,6 +106,6 @@
 </div>
 @endif
 
-@if ($invoice->payment_terms)<div class="avoid-break" style="margin-top:5mm"><strong>Modalités de paiement</strong><div class="pre">{{ $invoice->payment_terms }}</div></div>@endif
+@if ($invoice->payment_terms)<div class="avoid-break" style="margin-top:5mm"><strong>Modalités de paiement</strong><div class="md">@markdown($invoice->payment_terms)</div></div>@endif
 </body>
 </html>

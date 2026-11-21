@@ -30,7 +30,7 @@
 </p>
 
 <h2>Prestations</h2>
-@if ($contract->description)<div class="pre">{{ $contract->description }}</div>@endif
+@if ($contract->description)<div class="md">@markdown($contract->description)</div>@endif
 @if ($contract->visits_per_year)<p>Visites de maintenance prévues : <strong>{{ $contract->visits_per_year }}</strong> par an.</p>@endif
 <table class="lines">
     <thead><tr><th>Désignation</th><th class="num" style="width:12%">Qté</th><th class="num" style="width:20%">Prix / période</th><th class="num" style="width:20%">Total</th></tr></thead>
@@ -52,7 +52,7 @@
 
 @if ($contract->terms)
 <h2>Conditions</h2>
-<div class="pre">{{ $contract->terms }}</div>
+<div class="md">@markdown($contract->terms)</div>
 @endif
 
 <table class="sign" style="margin-top:8mm"><tr>

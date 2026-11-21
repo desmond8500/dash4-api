@@ -12,7 +12,7 @@
 <title>Proposition technique {{ $quote->number }}</title>
 @include('pdf.partials.styles')
 <style>
-    .proposal-text { margin: 2mm 0 3mm; white-space: pre-line; }
+    .proposal-text { margin: 2mm 0 3mm; }
     h2 { font-size: 13px; color: #1e3a8a; margin: 6mm 0 1mm; border-bottom: 1px solid #c7d2fe; padding-bottom: 1mm; }
 </style>
 </head>
@@ -26,11 +26,11 @@
 <div style="margin-top:3mm"><strong>Objet :</strong> {{ $quote->title }}</div>
 @if ($options['show_client'] && $clientName)<div><strong>Client :</strong> {{ $clientName }}</div>@endif
 @if ($options['show_project'] && $quote->project)<div><strong>Projet :</strong> {{ $quote->project->name }}</div>@endif
-@if ($options['show_introduction'] && $quote->introduction)<p class="pre" style="margin-top:4mm">{{ $quote->introduction }}</p>@endif
+@if ($options['show_introduction'] && $quote->introduction)<div class="md" style="margin-top:4mm">@markdown($quote->introduction)</div>@endif
 
 @foreach ($quote->sections as $index => $section)
     <h2>{{ $index + 1 }}. {{ $section->title }}</h2>
-    @if ($section->proposal)<div class="proposal-text">{{ $section->proposal }}</div>@endif
+    @if ($section->proposal)<div class="proposal-text md">@markdown($section->proposal)</div>@endif
     @if ($options['show_lines'] && $section->lines->isNotEmpty())
         <table class="lines">
             <thead><tr>
