@@ -25,6 +25,8 @@ use App\Models\Quote;
 use App\Models\Task;
 use App\Models\TechShare;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehiclePaper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 
@@ -59,12 +61,15 @@ final class Attachable
         'sheets' => Sheet::class,
         'contracts' => Contract::class,
         'messages' => Message::class,
+        'vehicles' => Vehicle::class,
+        'vehicle-papers' => VehiclePaper::class,
     ];
 
     /** Fiches qui ont un fil de commentaires (pas les sections de journal, ni les commentaires eux-mêmes). */
     public const COMMENTABLE = [
         'clients', 'projects', 'quotes', 'invoices', 'articles', 'brands', 'providers', 'purchases', 'expenses',
         'tasks', 'client-requests', 'journals', 'tech-shares', 'installed-systems', 'equipment', 'reception-reports', 'contracts',
+        'vehicles',
     ];
 
     /** Nom de la fiche dans l'URL (« projects »…) à partir du modèle. */
@@ -105,6 +110,7 @@ final class Attachable
     {
         return match (true) {
             $parent instanceof JournalSection => $parent->journal,
+            $parent instanceof VehiclePaper => $parent->vehicle,
             $parent instanceof Comment => self::subject($parent->commentable()->withTrashed()->firstOrFail()),
             default => $parent,
         };

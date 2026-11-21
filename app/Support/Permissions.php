@@ -50,6 +50,8 @@ final class Permissions
         'tech_access_requests' => ['view', 'view.own', 'create', 'decide'],
         'badges' => ['view', 'create', 'update', 'delete'],
         'contracts' => ['view', 'create', 'update', 'delete'],
+        // Parc automobile ; `.own` : véhicules dont on est le conducteur attitré (lecture et relevés du compteur)
+        'vehicles' => ['view', 'view.own', 'create', 'update', 'delete'],
         'company' => ['view', 'update'],
         'users' => ['view', 'manage'],
         'settings' => ['view', 'update'],
@@ -145,6 +147,7 @@ final class Permissions
                 'tech_access_requests.view.own', 'tech_access_requests.decide',
                 'badges.view', 'badges.create', 'badges.update',
                 'contracts.view',
+                'vehicles.view.own',
                 'prices.view',
             ],
 
@@ -162,6 +165,7 @@ final class Permissions
                 'tasks.view.own', 'tasks.create', 'tasks.update.own',
                 'journals.view',
                 'contracts.view', 'contracts.create', 'contracts.update',
+                'vehicles.view.own',
                 'prices.view', 'costs.view',
             ],
 
@@ -178,6 +182,7 @@ final class Permissions
                 'accounting.view', 'accounting.create', 'accounting.update', 'accounting.delete',
                 'tasks.view.own', 'tasks.update.own',
                 'contracts.view',
+                'vehicles.view',
                 'company.view', 'company.update',
                 'settings.view',
                 'prices.view', 'costs.view', 'bank.view', 'bank.manage', 'signature.manage', 'exports.run', 'audit.view',
@@ -193,6 +198,7 @@ final class Permissions
                 'stock.view', 'stock.create', 'stock.update', 'stock.delete', 'stock.move',
                 'accounting.view.own', 'accounting.create.own',
                 'tasks.view.own', 'tasks.update.own',
+                'vehicles.view.own',
                 'costs.view', 'exports.run',
             ],
 
@@ -208,6 +214,7 @@ final class Permissions
                 'journals.view.own', 'journals.create', 'journals.update.own',
                 'tech_shares.view.own',
                 'tech_access_requests.view.own', 'tech_access_requests.create',
+                'vehicles.view.own',
             ],
         ];
     }

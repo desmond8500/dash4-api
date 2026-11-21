@@ -25,7 +25,7 @@ use Illuminate\Validation\Rules\Enum;
  */
 class ExpenseController extends Controller
 {
-    private const FULL = ['category', 'space:id,name', 'project:id,name', 'quote:id,number', 'provider:id,name', 'article:id,designation,reference', 'document', 'creator:id,firstname,lastname', 'decider:id,firstname,lastname'];
+    private const FULL = ['category', 'space:id,name', 'project:id,name', 'quote:id,number', 'provider:id,name', 'article:id,designation,reference', 'vehicle:id,name,plate', 'document', 'creator:id,firstname,lastname', 'decider:id,firstname,lastname'];
 
     /**
      * GET /api/v1/expenses — filtres : status (liste), mine=1, to_reimburse=1, expense_space_id, project_id,
@@ -41,6 +41,7 @@ class ExpenseController extends Controller
             ->when($request->boolean('to_reimburse'), fn ($q) => $q->where('advanced', true)->where('status', ExpenseStatus::Approved->value))
             ->when($request->filled('expense_space_id'), fn ($q) => $q->where('expense_space_id', $request->integer('expense_space_id')))
             ->when($request->filled('project_id'), fn ($q) => $q->where('project_id', $request->integer('project_id')))
+            ->when($request->filled('vehicle_id'), fn ($q) => $q->where('vehicle_id', $request->integer('vehicle_id')))
             ->when($request->filled('quote_id'), fn ($q) => $q->where('quote_id', $request->integer('quote_id')))
             ->when($request->filled('expense_category_id'), fn ($q) => $q->where('expense_category_id', $request->integer('expense_category_id')))
             ->when($request->filled('created_by'), fn ($q) => $q->where('created_by', $request->integer('created_by')))
@@ -218,13 +219,14 @@ class ExpenseController extends Controller
             'quote_id' => ['sometimes', 'nullable', 'integer', Rule::exists('quotes', 'id')->whereNull('deleted_at')],
             'provider_id' => ['sometimes', 'nullable', 'integer', Rule::exists('providers', 'id')->whereNull('deleted_at')],
             'article_id' => ['sometimes', 'nullable', 'integer', Rule::exists('articles', 'id')->whereNull('deleted_at')],
+            'vehicle_id' => ['sometimes', 'nullable', 'integer', Rule::exists('vehicles', 'id')->whereNull('deleted_at')],
             'payment_method' => ['sometimes', 'nullable', new Enum(PaymentMethod::class)],
             'advanced' => ['sometimes', 'boolean'],
             'is_paid' => ['sometimes', 'boolean'],
             'file' => ['sometimes', ...$this->fileRules()],
         ], [], [
             'label' => 'libellé', 'amount' => 'montant', 'spent_at' => 'date', 'expense_category_id' => 'catégorie',
-            'expense_space_id' => 'caisse', 'project_id' => 'projet', 'quote_id' => 'devis', 'provider_id' => 'fournisseur', 'article_id' => 'article',
+            'expense_space_id' => 'caisse', 'project_id' => 'projet', 'quote_id' => 'devis', 'provider_id' => 'fournisseur', 'article_id' => 'article', 'vehicle_id' => 'véhicule',
             'payment_method' => 'moyen de paiement', 'file' => 'justificatif',
         ]);
     }

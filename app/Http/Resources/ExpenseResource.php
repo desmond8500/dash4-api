@@ -30,6 +30,8 @@ class ExpenseResource extends JsonResource
             'quote' => $this->whenLoaded('quote', fn () => $this->quote ? ['id' => $this->quote->id, 'number' => $this->quote->number] : null),
             'article_id' => $this->article_id,
             'article' => $this->whenLoaded('article', fn () => $this->article ? ['id' => $this->article->id, 'designation' => $this->article->designation, 'reference' => $this->article->reference] : null),
+            'vehicle_id' => $this->vehicle_id,
+            'vehicle' => $this->whenLoaded('vehicle', fn () => $this->vehicle ? ['id' => $this->vehicle->id, 'name' => $this->vehicle->name, 'plate' => $this->vehicle->plate] : null),
             'provider_id' => $this->provider_id,
             'provider' => $this->whenLoaded('provider', fn () => $this->provider ? ['id' => $this->provider->id, 'name' => $this->provider->name] : null),
             'payment_method' => $this->payment_method ? ['value' => $this->payment_method->value, 'label' => $this->payment_method->label()] : null,

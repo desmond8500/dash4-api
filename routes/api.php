@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\ClientRequestLinkController;
 use App\Http\Controllers\Api\V1\BadgeController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ContractController;
+use App\Http\Controllers\Api\V1\VehicleController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\DeliveryNoteController;
@@ -218,6 +219,18 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('flat-rates', [ContractController::class, 'storeFlatRate']);
         Route::patch('flat-rates/{flatRate}', [ContractController::class, 'updateFlatRate']);
         Route::delete('flat-rates/{flatRate}', [ContractController::class, 'destroyFlatRate']);
+        // Parc automobile
+        Route::get('vehicles/options', [VehicleController::class, 'options']);
+        Route::apiResource('vehicles', VehicleController::class);
+        Route::post('vehicles/{vehicle}/papers', [VehicleController::class, 'storePaper']);
+        Route::patch('vehicles/{vehicle}/papers/{paper}', [VehicleController::class, 'updatePaper']);
+        Route::delete('vehicles/{vehicle}/papers/{paper}', [VehicleController::class, 'destroyPaper']);
+        Route::post('vehicles/{vehicle}/mileages', [VehicleController::class, 'storeMileage']);
+        Route::delete('vehicles/{vehicle}/mileages/{mileage}', [VehicleController::class, 'destroyMileage']);
+        Route::post('vehicles/{vehicle}/maintenances', [VehicleController::class, 'storeMaintenance']);
+        Route::patch('vehicles/{vehicle}/maintenances/{maintenance}', [VehicleController::class, 'updateMaintenance']);
+        Route::delete('vehicles/{vehicle}/maintenances/{maintenance}', [VehicleController::class, 'destroyMaintenance']);
+
         Route::apiResource('contracts', ContractController::class);
         Route::post('contracts/{contract}/invoice', [ContractController::class, 'invoice']);
         Route::get('contracts/{contract}/pdf', [ContractController::class, 'pdf']);

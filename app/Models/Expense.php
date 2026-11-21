@@ -19,7 +19,7 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 #[Fillable([
     'client_uuid', 'label', 'description', 'amount', 'spent_at', 'expense_category_id', 'expense_space_id',
-    'project_id', 'quote_id', 'provider_id', 'article_id', 'payment_method', 'advanced', 'is_paid',
+    'project_id', 'quote_id', 'provider_id', 'article_id', 'vehicle_id', 'payment_method', 'advanced', 'is_paid',
 ])]
 class Expense extends Model
 {
@@ -59,6 +59,11 @@ class Expense extends Model
     public function quote(): BelongsTo
     {
         return $this->belongsTo(Quote::class)->withTrashed();
+    }
+
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class)->withTrashed();
     }
 
     public function article(): BelongsTo

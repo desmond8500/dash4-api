@@ -15,6 +15,9 @@ Schedule::command('client-requests:remind')->hourly()->withoutOverlapping();
 // Contrats : échéances, reconductions, périodes à facturer — chaque matin.
 Schedule::command('contracts:check')->dailyAt('07:00')->withoutOverlapping();
 
+// Parc automobile : papiers qui expirent, entretiens à prévoir
+Schedule::command('fleet:check')->dailyAt('07:15')->withoutOverlapping();
+
 // Informations temporaires des techniciens : contenu effacé à l'expiration — toutes les 10 minutes.
 Schedule::command('tech-shares:expire')->everyTenMinutes()->withoutOverlapping();
 

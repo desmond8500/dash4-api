@@ -24,6 +24,7 @@ final class Preferences
         'stock' => 'Stock bas',
         'contracts' => 'Contrats de maintenance',
         'invoices' => 'Factures à relancer',
+        'fleet' => 'Parc automobile (papiers, entretiens)',
     ];
 
     /** Notification => catégorie. */
@@ -36,6 +37,7 @@ final class Preferences
         Notifications\ExpenseNotification::class => 'expenses',
         Notifications\LowStockNotification::class => 'stock',
         Notifications\ContractNotification::class => 'contracts',
+        Notifications\FleetNotification::class => 'fleet',
         Notifications\InvoiceReminderNotification::class => 'invoices',
     ];
 
