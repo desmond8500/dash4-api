@@ -16,7 +16,7 @@ class AssigneeController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         abort_unless(
-            $request->user()->canAny(['client_requests.update', 'tasks.assign', 'users.view', 'accounting.update', 'tech_shares.create']),
+            $request->user()->canAny(['client_requests.update', 'tasks.assign', 'users.view', 'accounting.update', 'tech_shares.create', 'vehicles.update']),
             403,
             "Vous n'avez pas le droit de faire cette action.",
         );
