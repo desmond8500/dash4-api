@@ -54,7 +54,7 @@ it('garde l\'aperçu fait par l\'éditeur et le met dans le PDF du plan et le DO
     expect(\App\Support\QuotePdf::planPages(\App\Models\Plan::find($plan['id'])))->toHaveCount(1);
 });
 
-it('refuse une icône SVG qui contient du code et réserve la bibliothèque', function () {
+it('refuse une icône SVG qui contient du code et réserve la gestion de la bibliothèque', function () {
     Sanctum::actingAs(userWithRole('manager'));
     $svg = UploadedFile::fake()->createWithContent('x.svg', '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><circle r="4"/></svg>');
     $this->post('/api/v1/plan-icons', ['name' => 'X', 'file' => $svg], ['Accept' => 'application/json'])->assertStatus(422);
@@ -62,8 +62,6 @@ it('refuse une icône SVG qui contient du code et réserve la bibliothèque', fu
     $id = $this->post('/api/v1/plan-icons', ['name' => 'Sirène', 'file' => $ok], ['Accept' => 'application/json'])->assertCreated()->json('data.id');
     $this->get("/api/v1/plan-icons/{$id}/file")->assertOk();
 
-    Sanctum::actingAs(userWithRole('accountant'));
-    $this->getJson('/api/v1/plan-icons')->assertForbidden();
     Sanctum::actingAs(userWithRole('technician'));
     $this->getJson('/api/v1/plan-icons')->assertOk();
     $this->postJson('/api/v1/plan-icons', ['name' => 'Y', 'symbol' => 'dot'])->assertForbidden();
