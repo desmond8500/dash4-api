@@ -23,8 +23,8 @@ class FleetNotification extends Notification
         $date = $this->date ? \Illuminate\Support\Carbon::parse($this->date)->format('d/m/Y') : null;
 
         [$title, $body] = match ($this->event) {
-            'paper_expired' => ["{$this->subject} expiré : {$name}", "Le papier « {$this->subject} » a expiré".($date ? " le {$date}" : '').' : à renouveler.'],
-            'paper_soon' => ["{$this->subject} à renouveler : {$name}", "Le papier « {$this->subject} » expire le {$date}."],
+            'paper_expired' => ["{$this->subject} à renouveler d'urgence : {$name}", "L'échéance du papier « {$this->subject} » est dépassée".($date ? " ({$date})" : '').'.'],
+            'paper_soon' => ["{$this->subject} à renouveler : {$name}", "Échéance du papier « {$this->subject} » : {$date}."],
             'maintenance_late' => ["{$this->subject} en retard : {$name}", "L'entretien « {$this->subject} » est dépassé".($date ? " (prévu le {$date})" : '').'.'],
             default => ["{$this->subject} à prévoir : {$name}", "L'entretien « {$this->subject} » approche".($date ? " (prévu le {$date})" : '').'.'],
         };
