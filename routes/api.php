@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DoeController;
 use App\Http\Controllers\Api\V1\InstalledSystemController;
 use App\Http\Controllers\Api\V1\PlanController;
+use App\Http\Controllers\Api\V1\PlanIconController;
 use App\Http\Controllers\Api\V1\QuantityController;
 use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\JournalController;
@@ -182,6 +183,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('plans/{plan}/file', [PlanController::class, 'file']);
         Route::post('plans/{plan}/markers', [PlanController::class, 'storeMarker']);
         Route::patch('plan-markers/{marker}', [PlanController::class, 'updateMarker']);
+        Route::post('plans/{plan}/render', [PlanController::class, 'storeRender']);
+        Route::get('plans/{plan}/render/{page}', [PlanController::class, 'render'])->whereNumber('page');
+        Route::get('plans/{plan}/pdf', [PlanController::class, 'pdf']);
+        // Bibliothèque d'icônes des plans
+        Route::get('plan-icons', [PlanIconController::class, 'index']);
+        Route::post('plan-icons', [PlanIconController::class, 'store']);
+        Route::match(['post', 'patch'], 'plan-icons/{planIcon}', [PlanIconController::class, 'update']);
+        Route::delete('plan-icons/{planIcon}', [PlanIconController::class, 'destroy']);
+        Route::get('plan-icons/{planIcon}/file', [PlanIconController::class, 'file']);
         Route::delete('plan-markers/{marker}', [PlanController::class, 'destroyMarker']);
         Route::get('projects/{project}/quantities', [QuantityController::class, 'index']);
         Route::post('projects/{project}/quantities', [QuantityController::class, 'store']);

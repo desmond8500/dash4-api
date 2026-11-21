@@ -21,7 +21,7 @@ class SiteController extends Controller
     public const TREE = [
         'buildings.levels.rooms',
         'installedSystems.system',
-        'installedSystems.equipment.article:id,designation,reference',
+        'installedSystems.equipment.article:id,designation,reference,plan_icon_id',
         'installedSystems.progressEntries.creator:id,firstname,lastname',
     ];
 

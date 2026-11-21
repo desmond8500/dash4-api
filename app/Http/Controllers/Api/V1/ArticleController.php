@@ -177,13 +177,14 @@ class ArticleController extends Controller
             'coefficient' => ['sometimes', 'numeric', 'min:0', 'max:1000'],
             'min_quantity' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999'],
             'storage_location_id' => ['sometimes', 'nullable', 'integer', Rule::exists('storage_locations', 'id')->whereNull('deleted_at')],
+            'plan_icon_id' => ['sometimes', 'nullable', 'integer', Rule::exists('plan_icons', 'id')->whereNull('deleted_at')],
             'weight' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999'],
             'is_active' => ['sometimes', 'boolean'],
             'initial_quantity' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999'],
         ], ['barcode.unique' => 'Ce code-barres est déjà celui d\'un autre article.'], [
             'designation' => 'désignation', 'reference' => 'référence', 'barcode' => 'code-barres', 'category' => 'catégorie',
             'brand_id' => 'marque', 'provider_id' => 'fournisseur', 'unit_cost' => 'coût', 'min_quantity' => 'seuil',
-            'storage_location_id' => 'emplacement', 'weight' => 'poids', 'initial_quantity' => 'quantité de départ',
+            'storage_location_id' => 'emplacement', 'plan_icon_id' => 'icône de plan', 'weight' => 'poids', 'initial_quantity' => 'quantité de départ',
         ]);
     }
 

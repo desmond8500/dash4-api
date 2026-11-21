@@ -30,6 +30,7 @@ class ArticleResource extends JsonResource
             'min_quantity' => $this->min_quantity,
             'is_low' => $this->isLow(),
             'storage_location_id' => $this->storage_location_id,
+            'plan_icon_id' => $this->plan_icon_id,
             'storage_location' => $this->whenLoaded('storageLocation', fn () => $this->storageLocation ? ['id' => $this->storageLocation->id, 'name' => $this->storageLocation->name, 'code' => $this->storageLocation->code] : null),
             // Nom de l'emplacement, pour l'affichage et la recherche
             'location' => $this->relationLoaded('storageLocation') ? $this->storageLocation?->name : null,

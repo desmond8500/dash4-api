@@ -21,7 +21,7 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 #[Fillable([
     'client_uuid', 'designation', 'reference', 'barcode', 'description', 'category', 'unit', 'brand_id', 'provider_id',
-    'unit_cost', 'coefficient', 'min_quantity', 'storage_location_id', 'weight', 'is_active',
+    'unit_cost', 'coefficient', 'min_quantity', 'storage_location_id', 'plan_icon_id', 'weight', 'is_active',
 ])]
 class Article extends Model
 {
@@ -46,6 +46,11 @@ class Article extends Model
             'weight' => 'float',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function planIcon(): BelongsTo
+    {
+        return $this->belongsTo(PlanIcon::class)->withTrashed();
     }
 
     public function brand(): BelongsTo

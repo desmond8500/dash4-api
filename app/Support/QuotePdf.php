@@ -193,9 +193,8 @@ final class QuotePdf
                 }
             }
         }
-        // Plans en image joints au dossier (5 Mo au plus chacun, 12 plans au plus)
-        $planImages = $project->plans->where('kind', 'image')->filter(fn ($p) => $p->size <= 5 * 1024 * 1024)->take(12)
-            ->mapWithKeys(fn ($p) => [$p->id => self::dataUri(Plan::DISK, $p->path)])->filter();
+        // Plans joints au dossier : aperçus de l'éditeur (repères et légende), sinon l'image d'origine
+        $planImages = $project->plans->take(20)->mapWithKeys(fn ($p) => [$p->id => self::planPages($p)])->filter();
 
         return Pdf::loadView('pdf.doe', [
             ...self::common(Company::current()),
@@ -286,6 +285,42 @@ final class QuotePdf
     }
 
     /** Image intégrée au PDF (data URI) : rien n'est chargé depuis l'extérieur. */
+    /**
+     * Pages d'un plan à mettre dans un PDF : les aperçus faits par l'éditeur (plan, repères visibles, légende),
+     * sinon le plan lui-même s'il est en image. Un plan PDF sans aperçu n'a pas d'image.
+     *
+     * @return list<string> images en data URI
+     */
+    public static function planPages(Plan $plan, int $maxBytes = 8 * 1024 * 1024): array
+    {
+        $pages = collect($plan->renders ?? [])->keys()->map(fn ($k) => (int) $k)->sort()->values()
+            ->map(fn (int $page) => $plan->renderPath($page))->filter()
+            ->filter(fn ($path) => Storage::disk(Plan::DISK)->size($path) <= $maxBytes)
+            ->map(fn ($path) => self::dataUri(Plan::DISK, $path))->filter()->values()->all();
+        if ($pages === [] && $plan->kind === 'image' && $plan->size <= $maxBytes) {
+            $raw = self::dataUri(Plan::DISK, $plan->path);
+            $pages = $raw ? [$raw] : [];
+        }
+
+        return $pages;
+    }
+
+    /** PDF d'un plan : ses pages avec repères et légende, puis la liste des équipements repérés. */
+    public static function plan(Plan $plan): DomPdf
+    {
+        $plan->load(['project.client', 'building', 'level', 'markers.equipment.installedSystem', 'markers.installedSystem', 'markers.equipment.article', 'markers.icon']);
+        $pages = self::planPages($plan);
+        $markers = $plan->markers->sortBy(fn ($m) => [$m->layerId() ?? PHP_INT_MAX, $m->page, $m->label ?? $m->equipment?->name])->values();
+
+        return Pdf::loadView('pdf.plan', [
+            ...self::common(Company::current()),
+            'plan' => $plan,
+            'pages' => $pages,
+            'markers' => $markers,
+            'landscape' => $plan->renders ? collect($plan->renders)->contains(fn ($r) => ($r['width'] ?? 0) > ($r['height'] ?? 0)) : false,
+        ])->setPaper('a4', $plan->renders && collect($plan->renders)->contains(fn ($r) => ($r['width'] ?? 0) > ($r['height'] ?? 0)) ? 'landscape' : 'portrait');
+    }
+
     public static function dataUri(string $disk, ?string $path): ?string
     {
         if (! $path || ! Storage::disk($disk)->exists($path)) {

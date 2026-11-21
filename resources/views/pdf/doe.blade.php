@@ -85,15 +85,19 @@
 
 <h2>3. Plans</h2>
 @forelse ($project->plans as $p)
-    <div class="{{ isset($planImages[$p->id]) ? 'plan page-break' : '' }}">
+    @php $pagesOf = $planImages[$p->id] ?? []; @endphp
+    @if ($pagesOf)
+        @foreach ($pagesOf as $i => $img)
+            <div class="plan page-break">
+                <h3>{{ $p->name }}@if (count($pagesOf) > 1) — page {{ $i + 1 }}@endif <span class="muted">{{ collect([$p->building?->name, $p->level?->name])->filter()->join(' › ') }}</span></h3>
+                <img src="{{ $img }}" alt="">
+            </div>
+        @endforeach
+        <p class="muted">{{ $p->markers->count() }} repère(s) sur ce plan.</p>
+    @else
         <h3>{{ $p->name }} <span class="muted">{{ collect([$p->building?->name, $p->level?->name])->filter()->join(' › ') }}</span></h3>
-        @if (isset($planImages[$p->id]))
-            <img src="{{ $planImages[$p->id] }}" alt="">
-            <p class="muted">{{ $p->markers->count() }} équipement(s) repéré(s) sur ce plan dans Dash4.</p>
-        @else
-            <p class="muted">Plan {{ strtoupper($p->kind) }} fourni à part ({{ $p->markers->count() }} repère(s)).</p>
-        @endif
-    </div>
+        <p class="muted">Plan {{ strtoupper($p->kind) }} : ouvrez-le une fois dans l'éditeur de plans de Dash4 pour qu'il apparaisse ici avec ses repères ({{ $p->markers->count() }} repère(s)).</p>
+    @endif
 @empty
     <p class="muted">Aucun plan.</p>
 @endforelse
