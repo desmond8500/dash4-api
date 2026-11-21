@@ -83,3 +83,13 @@ it('applique les droits du module clients aux contacts', function () {
     Sanctum::actingAs(userWithRole('sales'));
     $this->deleteJson("/api/v1/contacts/{$contact->id}")->assertForbidden();
 });
+
+it('trouve un contact par prénom et nom ou par une adresse e-mail secondaire', function () {
+    Sanctum::actingAs(userWithRole('sales'));
+    $awa = Contact::factory()->create(['firstname' => 'Awa', 'lastname' => 'Diop', 'email' => null]);
+    $awa->emails()->create(['address' => 'compta@sonatel.sn']);
+    Contact::factory()->create(['firstname' => 'Awa', 'lastname' => 'Ndiaye']);
+
+    $this->getJson('/api/v1/contacts?search=awa diop')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $awa->id);
+    $this->getJson('/api/v1/contacts?search=compta@sonatel')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $awa->id);
+});

@@ -23,11 +23,15 @@ class ContactController extends Controller
             ->visibleTo($request->user())
             ->with(['client:id,name', 'phones', 'emails'])
             ->when($request->filled('search'), function ($q) use ($request) {
-                $term = '%'.$request->string('search').'%';
-                $q->where(fn ($w) => $w->where('firstname', 'like', $term)
-                    ->orWhere('lastname', 'like', $term)
-                    ->orWhere('email', 'like', $term)
-                    ->orWhere('company', 'like', $term));
+                // Chaque mot doit se trouver dans le prénom, le nom, la société ou l'une des adresses e-mail
+                foreach (preg_split('/\s+/', trim($request->string('search')->toString())) as $word) {
+                    $term = '%'.$word.'%';
+                    $q->where(fn ($w) => $w->where('firstname', 'like', $term)
+                        ->orWhere('lastname', 'like', $term)
+                        ->orWhere('email', 'like', $term)
+                        ->orWhere('company', 'like', $term)
+                        ->orWhereHas('emails', fn ($e) => $e->where('address', 'like', $term)));
+                }
             })
             ->when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->integer('client_id')))
             ->orderBy('lastname')
