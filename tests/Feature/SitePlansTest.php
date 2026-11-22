@@ -84,3 +84,27 @@ it('rédige une fiche de zones et édite le DOE du chantier', function () {
     Sanctum::actingAs(userWithRole('accountant'));
     $this->get("/api/v1/projects/{$project->id}/doe")->assertForbidden();
 });
+
+it('liste tous les plans visibles, avec leur projet, pour le mobile', function () {
+    $pm = userWithRole('project_manager');
+    $tech = userWithRole('technician');
+    $mine = Project::factory()->create(['manager_id' => $pm->id, 'name' => 'Tour Alpha']);
+    $other = Project::factory()->create(['name' => 'Villa Beta']);
+    Task::factory()->create(['project_id' => $other->id])->assignees()->attach($tech->id);
+
+    Sanctum::actingAs(userWithRole('admin'));
+    foreach ([[$mine, 'RDC'], [$mine, 'Étage 1'], [$other, 'Sous-sol']] as [$project, $name]) {
+        $this->post("/api/v1/projects/{$project->id}/plans", ['file' => UploadedFile::fake()->image('p.png', 400, 300), 'name' => $name], ['Accept' => 'application/json'])->assertCreated();
+    }
+
+    Sanctum::actingAs($pm);
+    $this->getJson('/api/v1/plans')->assertOk()->assertJsonCount(2, 'data')->assertJsonPath('data.0.project.name', 'Tour Alpha');
+    $this->getJson('/api/v1/plans?search=Étage')->assertJsonCount(1, 'data');
+
+    // Le technicien : seulement les chantiers de ses tâches
+    Sanctum::actingAs($tech);
+    $this->getJson('/api/v1/plans')->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Sous-sol')->assertJsonPath('data.0.markers', []);
+
+    Sanctum::actingAs(userWithRole('accountant'));
+    $this->getJson('/api/v1/plans')->assertForbidden();
+});

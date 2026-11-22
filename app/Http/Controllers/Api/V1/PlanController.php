@@ -24,6 +24,35 @@ class PlanController extends Controller
     /** Repères avec ce qu'il faut pour l'icône et le calque. */
     public const MARKERS = ['markers.equipment:id,installed_system_id,article_id', 'markers.equipment.article:id,plan_icon_id'];
 
+    /**
+     * GET /api/v1/plans — tous les plans des chantiers visibles (mobile : liste et consultation hors ligne),
+     * avec le projet, le bâtiment et le niveau. `search` : nom du plan ou du projet.
+     */
+    public function all(Request $request): AnonymousResourceCollection
+    {
+        $user = $request->user();
+        abort_unless($user->canAny(['sites.view', 'sites.view.own']), 403, "Vous n'avez pas le droit de voir les plans.");
+        $search = trim((string) $request->query('search', ''));
+
+        $plans = \App\Models\Plan::query()
+            ->whereHas('project', function ($p) use ($user) {
+                $p->whereNull('deleted_at');
+                if ($user->can('sites.view')) {
+                    return;
+                }
+                $user->isTechnician()
+                    ? $p->whereIn('id', \App\Models\Task::query()->whereHas('assignees', fn ($a) => $a->whereKey($user->id))->select('project_id'))
+                    : $p->where(fn ($q) => $q->where('manager_id', $user->id)->orWhere('created_by', $user->id));
+            })
+            ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', "%{$search}%")->orWhereHas('project', fn ($p) => $p->where('name', 'like', "%{$search}%"))))
+            ->with([...self::MARKERS, 'project:id,name', 'building:id,name', 'level:id,name'])
+            ->orderBy('project_id')->orderBy('position')->orderBy('id')
+            ->limit(500)
+            ->get();
+
+        return PlanResource::collection($plans);
+    }
+
     public function index(Project $project): AnonymousResourceCollection
     {
         $this->authorize('viewSite', $project);

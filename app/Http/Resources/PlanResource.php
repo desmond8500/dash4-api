@@ -43,6 +43,9 @@ class PlanResource extends JsonResource
                 'legend_scale' => (float) $this->setting('legend_scale', 1),
             ],
             'renders' => $renders,
+            'project' => $this->whenLoaded('project', fn () => $this->project ? ['id' => $this->project->id, 'name' => $this->project->name] : null),
+            'building' => $this->whenLoaded('building', fn () => $this->building ? ['id' => $this->building->id, 'name' => $this->building->name] : null),
+            'level' => $this->whenLoaded('level', fn () => $this->level ? ['id' => $this->level->id, 'name' => $this->level->name] : null),
             'markers' => $this->whenLoaded('markers', fn () => $this->markers->map(fn ($m) => [
                 'id' => $m->id,
                 'client_uuid' => $m->client_uuid,

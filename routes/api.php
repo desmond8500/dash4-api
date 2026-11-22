@@ -178,6 +178,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('reception-reports/{receptionReport}/logos/{party}', [ReceptionReportController::class, 'storeLogo']);
         Route::delete('reception-reports/{receptionReport}/logos/{party}', [ReceptionReportController::class, 'destroyLogo']);
         Route::get('reception-reports/{receptionReport}/pdf', [ReceptionReportController::class, 'pdf']);
+        Route::get('plans', [PlanController::class, 'all']);
         Route::get('projects/{project}/plans', [PlanController::class, 'index']);
         Route::post('projects/{project}/plans', [PlanController::class, 'store']);
         Route::patch('plans/{plan}', [PlanController::class, 'update']);
