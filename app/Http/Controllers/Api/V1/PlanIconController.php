@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PlanIconResource;
 use App\Models\PlanIcon;
+use App\Support\PlanIconLibrary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -27,7 +28,7 @@ class PlanIconController extends Controller
     {
         abort_unless($request->user()->canAny(self::VIEW), 403, "Vous n'avez pas le droit de voir les icônes des plans.");
 
-        return PlanIconResource::collection(PlanIcon::query()->withCount('articles')->orderBy('category')->orderBy('name')->get());
+        return PlanIconResource::collection(PlanIcon::query()->withCount('articles')->orderBy('position')->orderBy('category')->orderBy('name')->get());
     }
 
     /** POST — `symbol` (intégré) ou `file` (image), avec `name`, `category`, `color`. */
@@ -77,6 +78,20 @@ class PlanIconController extends Controller
         return response()->json(['message' => 'Icône supprimée : les articles et repères qui l\'utilisaient reprennent l\'icône par défaut.']);
     }
 
+    /** POST /plan-icons/install — ajoute la bibliothèque standard (`reset=1` : remet les icônes standard à neuf). */
+    public function install(Request $request): JsonResponse
+    {
+        $this->manage($request);
+        $r = PlanIconLibrary::install($request->boolean('reset'), $request->user()->id);
+
+        return response()->json([
+            'data' => $r,
+            'message' => $r['created'] || $r['updated']
+                ? "Bibliothèque standard : {$r['created']} icône(s) ajoutée(s)".($r['updated'] ? ", {$r['updated']} remise(s) à neuf" : '').'.'
+                : 'La bibliothèque standard est déjà installée.',
+        ]);
+    }
+
     public function file(Request $request, PlanIcon $planIcon): StreamedResponse
     {
         abort_unless($request->user()->canAny(self::VIEW), 403);
@@ -115,7 +130,11 @@ class PlanIconController extends Controller
             'category' => ['sometimes', 'nullable', 'string', 'max:100'],
             'symbol' => ['sometimes', 'nullable', Rule::in(PlanIcon::SYMBOLS)],
             'color' => ['sometimes', 'nullable', 'string', 'max:20', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
+            'code' => ['sometimes', 'nullable', 'string', 'max:6'],
+            'text_color' => ['sometimes', 'nullable', 'string', 'max:20', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
+            'secondary_color' => ['sometimes', 'nullable', 'string', 'max:20', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
+            'position' => ['sometimes', 'integer', 'min:0', 'max:65000'],
             'file' => ['sometimes', 'file', 'max:1024', 'mimes:png,jpg,jpeg,webp,svg'],
-        ], ['file.max' => "L'icône ne doit pas dépasser 1 Mo.", 'color.regex' => 'Couleur au format #rrggbb.'], ['name' => 'nom', 'category' => 'catégorie', 'symbol' => 'symbole', 'file' => 'image']);
+        ], ['file.max' => "L'icône ne doit pas dépasser 1 Mo.", 'color.regex' => 'Couleur au format #rrggbb.', 'text_color.regex' => 'Couleur au format #rrggbb.', 'secondary_color.regex' => 'Couleur au format #rrggbb.'], ['name' => 'nom', 'category' => 'catégorie', 'symbol' => 'symbole', 'file' => 'image', 'code' => 'code', 'text_color' => 'couleur du texte', 'secondary_color' => 'seconde couleur']);
     }
 }

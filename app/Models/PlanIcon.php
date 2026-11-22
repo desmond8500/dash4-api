@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
  * Icône de la bibliothèque des plans : un symbole intégré (dessiné par l'application, colorable) ou une
  * image envoyée. Un article peut avoir son icône : ses équipements la prennent sur les plans.
  */
-#[Fillable(['name', 'category', 'symbol', 'color'])]
+#[Fillable(['name', 'category', 'symbol', 'code', 'color', 'text_color', 'secondary_color', 'position'])]
 class PlanIcon extends Model
 {
     use SoftDeletes;
@@ -22,6 +22,7 @@ class PlanIcon extends Model
     public const SYMBOLS = [
         'dot', 'square', 'triangle', 'diamond', 'star', 'arrow', 'camera', 'dome', 'smoke', 'heat', 'motion', 'contact', 'siren',
         'keypad', 'call_point', 'reader', 'door', 'speaker', 'wifi', 'panel', 'light', 'socket', 'extinguisher', 'sprinkler',
+        'rounded', 'rect', 'beacon', 'monitor', 'maglock', 'phone', 'hose_reel', 'assembly', 'exit',
     ];
 
     public function articles(): \Illuminate\Database\Eloquent\Relations\HasMany

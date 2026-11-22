@@ -189,6 +189,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         // Bibliothèque d'icônes des plans
         Route::get('plan-icons', [PlanIconController::class, 'index']);
         Route::post('plan-icons', [PlanIconController::class, 'store']);
+        Route::post('plan-icons/install', [PlanIconController::class, 'install']);
         Route::match(['post', 'patch'], 'plan-icons/{planIcon}', [PlanIconController::class, 'update']);
         Route::delete('plan-icons/{planIcon}', [PlanIconController::class, 'destroy']);
         Route::get('plan-icons/{planIcon}/file', [PlanIconController::class, 'file']);

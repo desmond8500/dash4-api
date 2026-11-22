@@ -67,3 +67,25 @@ it('refuse une icône SVG qui contient du code et réserve la gestion de la bibl
     $this->getJson('/api/v1/plan-icons')->assertOk();
     $this->postJson('/api/v1/plan-icons', ['name' => 'Y', 'symbol' => 'dot'])->assertForbidden();
 });
+
+it('installe la bibliothèque standard de la légende sans écraser les changements', function () {
+    Sanctum::actingAs(userWithRole('manager'));
+    $total = count(\App\Support\PlanIconLibrary::defaults());
+
+    $this->postJson('/api/v1/plan-icons/install')->assertOk()->assertJsonPath('data.created', $total);
+    $nc2 = $this->getJson('/api/v1/plan-icons')->assertJsonCount($total, 'data')->collect('data')->firstWhere('slug', 'nc2');
+    expect($nc2)->toMatchArray(['code' => 'NC2', 'symbol' => 'dot', 'name' => 'Extincteur CO2 2 kg', 'category' => 'Extincteurs'])
+        ->and($nc2['secondary_color'])->not->toBeNull();
+
+    $this->patchJson("/api/v1/plan-icons/{$nc2['id']}", ['name' => 'CO2 2 kg', 'code' => 'CO2'])->assertJsonPath('data.code', 'CO2');
+    $this->postJson('/api/v1/plan-icons/install')->assertJsonPath('data.created', 0)->assertJsonPath('data.unchanged', $total);
+    $this->getJson('/api/v1/plan-icons')->assertJsonPath('data.'.collect($this->getJson('/api/v1/plan-icons')->json('data'))->search(fn ($i) => $i['slug'] === 'nc2').'.code', 'CO2');
+
+    $this->postJson('/api/v1/plan-icons/install', ['reset' => true])->assertJsonPath('data.updated', $total);
+    expect(\App\Models\PlanIcon::where('slug', 'nc2')->value('code'))->toBe('NC2');
+
+    // Les codes tiennent dans la colonne (6 caractères) et les clés sont uniques
+    $defaults = collect(\App\Support\PlanIconLibrary::defaults());
+    expect($defaults->pluck('slug')->duplicates())->toBeEmpty()
+        ->and($defaults->every(fn ($d) => mb_strlen($d['code'] ?? '') <= 6 && in_array($d['symbol'], \App\Models\PlanIcon::SYMBOLS, true)))->toBeTrue();
+});
