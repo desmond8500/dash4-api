@@ -203,6 +203,7 @@ it('liste les personnes à qui confier une demande, sans être gestionnaire des 
     $names = collect($this->getJson('/api/v1/assignees')->assertOk()->json('data'))->pluck('full_name');
     expect($names->implode(' '))->toContain('Fatou')->toContain('Moussa')->not->toContain('Inactif');
 
+    // Un technicien choisit ses co-intervenants dans un rapport
     Sanctum::actingAs(userWithRole('technician'));
-    $this->getJson('/api/v1/assignees')->assertForbidden();
+    $this->getJson('/api/v1/assignees')->assertOk();
 });
