@@ -285,6 +285,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('quote-sections/{section}/lines', [QuoteLineController::class, 'store']);
         Route::post('quote-sections/{section}/lines/order', [QuoteLineController::class, 'reorder']);
         Route::patch('quote-lines/{line}', [QuoteLineController::class, 'update']);
+        Route::patch('quote-lines/{line}/article', [QuoteLineController::class, 'link']);
+        Route::post('quotes/{quote}/link-articles', [QuoteLineController::class, 'linkAll']);
         Route::delete('quote-lines/{line}', [QuoteLineController::class, 'destroy']);
 
         // Stock : marques, fournisseurs, articles, mouvements

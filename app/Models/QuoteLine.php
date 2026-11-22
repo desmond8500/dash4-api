@@ -41,6 +41,12 @@ class QuoteLine extends Model
         });
     }
 
+    /** Article du stock lié (fiche, photo) ; garde l'article même supprimé du stock. */
+    public function article(): BelongsTo
+    {
+        return $this->belongsTo(Article::class)->withTrashed();
+    }
+
     public function section(): BelongsTo
     {
         return $this->belongsTo(QuoteSection::class, 'quote_section_id');
