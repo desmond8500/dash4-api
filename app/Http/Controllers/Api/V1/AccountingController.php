@@ -23,13 +23,24 @@ class AccountingController extends Controller
         ]]);
     }
 
-    /** GET /api/v1/accounting/ledger — `from`, `to`, `project_id`, `direction`, `source`, `page`, `per_page`. */
+    /** GET /api/v1/accounting/ledger — `from`, `to`, `project_id`, `direction`, `source`, `search`, `page`, `per_page`. */
     public function ledger(Request $request): JsonResponse
     {
         [$from, $to, $project] = $this->period($request);
         $entries = Ledger::entries($from, $to, $project)
             ->when($request->filled('direction'), fn ($c) => $c->where('direction', (string) $request->string('direction')))
             ->when($request->filled('source'), fn ($c) => $c->filter(fn ($e) => $e['source']['type'] === (string) $request->string('source')))
+            ->when($request->filled('search'), function ($c) use ($request) {
+                // Chaque mot dans le libellé, la catégorie ou le projet (accents et majuscules ignorés)
+                $fold = fn (?string $v) => mb_strtolower(\Illuminate\Support\Str::ascii((string) $v));
+                $words = array_filter(preg_split('/\s+/', $fold($request->string('search')->toString())));
+
+                return $c->filter(function ($e) use ($fold, $words) {
+                    $hay = $fold(implode(' ', [$e['label'] ?? '', $e['category'] ?? '', $e['project']['name'] ?? '']));
+
+                    return collect($words)->every(fn ($w) => str_contains($hay, $w));
+                });
+            })
             ->values();
         $perPage = max(1, min(200, $request->integer('per_page', 50)));
         $page = max(1, $request->integer('page', 1));

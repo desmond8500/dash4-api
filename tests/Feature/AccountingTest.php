@@ -121,6 +121,9 @@ it('fait le bilan : paiements de factures, dépenses validées, achats reçus, t
     expect($this->getJson("/api/v1/accounting/summary?project_id={$project->id}")->json('data'))->toMatchArray(['in' => 150000, 'out' => 20000]);
     $this->getJson('/api/v1/accounting/ledger?direction=in')->assertJsonCount(2, 'data')
         ->assertJsonPath('data.0.source.type', fn ($t) => in_array($t, ['invoice', 'transaction'], true));
+    // Recherche dans le journal : libellé, catégorie ou projet, accents ignorés
+    $this->getJson('/api/v1/accounting/ledger?search=loyer')->assertJsonCount(1, 'data')->assertJsonPath('data.0.label', 'Loyer bureau');
+    $this->getJson('/api/v1/accounting/ledger?search=achats')->assertJsonCount(1, 'data');
 });
 
 it('reprend les dépenses du devis dans les dépenses', function () {
