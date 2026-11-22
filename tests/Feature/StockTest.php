@@ -179,3 +179,15 @@ it('range les articles par emplacement', function () {
     $this->getJson('/api/v1/storage-locations')->assertOk();
     $this->postJson('/api/v1/storage-locations', ['name' => 'X'])->assertForbidden();
 });
+
+it('cherche dans les mouvements de stock par article ou par motif', function () {
+    Sanctum::actingAs(userWithRole('storekeeper'));
+    $dome = \App\Models\Article::factory()->create(['designation' => 'Caméra dôme', 'reference' => 'DS-1']);
+    $cable = \App\Models\Article::factory()->create(['designation' => 'Câble UTP']);
+    $this->postJson("/api/v1/articles/{$dome->id}/movements", ['type' => 'in', 'quantity' => 5, 'reason' => 'Livraison Sonatel'])->assertSuccessful();
+    $this->postJson("/api/v1/articles/{$cable->id}/movements", ['type' => 'in', 'quantity' => 100, 'reason' => 'Inventaire'])->assertSuccessful();
+
+    $this->getJson('/api/v1/stock-movements?search=ds-1')->assertJsonCount(1, 'data')->assertJsonPath('data.0.article.id', $dome->id);
+    $this->getJson('/api/v1/stock-movements?search=sonatel')->assertJsonCount(1, 'data');
+    $this->getJson('/api/v1/stock-movements?search=inventaire utp')->assertJsonCount(1, 'data')->assertJsonPath('data.0.article.id', $cable->id);
+});

@@ -28,6 +28,15 @@ class StockMovementController extends Controller
             ->when($request->filled('type'), fn ($q) => $q->whereIn('type', explode(',', (string) $request->string('type'))))
             ->when($request->filled('from'), fn ($q) => $q->whereDate('moved_at', '>=', $request->date('from')))
             ->when($request->filled('to'), fn ($q) => $q->whereDate('moved_at', '<=', $request->date('to')))
+            // Recherche mot par mot : article (désignation, référence), motif, projet
+            ->when($request->filled('search'), function ($q) use ($request) {
+                foreach (preg_split('/\s+/', trim($request->string('search')->toString())) as $word) {
+                    $term = '%'.$word.'%';
+                    $q->where(fn ($w) => $w->where('reason', 'like', $term)
+                        ->orWhereHas('article', fn ($a) => $a->withTrashed()->where(fn ($x) => $x->where('designation', 'like', $term)->orWhere('reference', 'like', $term)))
+                        ->orWhereHas('project', fn ($p) => $p->where('name', 'like', $term)));
+                }
+            })
             ->latest('moved_at')->orderByDesc('id');
 
         return StockMovementResource::collection($query->paginate(SyncQuery::perPage($request, 50)));
