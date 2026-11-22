@@ -11,7 +11,10 @@
     h2 { font-size: 13pt; margin: 6mm 0 2mm; border-bottom: 1px solid #ddd; padding-bottom: 1mm; }
     h3 { font-size: 11pt; margin: 4mm 0 1.5mm; }
     .page-break { page-break-before: always; }
-    .plan img { max-width: 100%; max-height: 230mm; }
+    /* Plans centrés sur la page, horizontalement et verticalement */
+    .plan-frame { width: 100%; height: 225mm; border-collapse: collapse; }
+    .plan-frame td { text-align: center; vertical-align: middle; padding: 0; }
+    .plan-frame img { max-width: 100%; max-height: 222mm; }
     .chars { font-size: 8px; color: #374151; }
     .cover { margin-top: 40mm; text-align: center; }
     .cover h1 { font-size: 22pt; }
@@ -90,7 +93,7 @@
         @foreach ($pagesOf as $i => $img)
             <div class="plan page-break">
                 <h3>{{ $p->name }}@if (count($pagesOf) > 1) — page {{ $i + 1 }}@endif <span class="muted">{{ collect([$p->building?->name, $p->level?->name])->filter()->join(' › ') }}</span></h3>
-                <img src="{{ $img }}" alt="">
+                <table class="plan-frame"><tr><td><img src="{{ $img }}" alt=""></td></tr></table>
             </div>
         @endforeach
         <p class="muted">{{ $p->markers->count() }} repère(s) sur ce plan.</p>

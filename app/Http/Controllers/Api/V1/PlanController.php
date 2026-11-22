@@ -72,6 +72,10 @@ class PlanController extends Controller
             'settings.hidden_layers.*' => ['string', 'max:20'],
             'settings.legend' => ['sometimes', 'boolean'],
             'settings.labels' => ['sometimes', 'boolean'],
+            'settings.legend_position' => ['sometimes', Rule::in(['below', 'right', 'overlay'])],
+            'settings.legend_x' => ['sometimes', 'numeric', 'between:0,1'],
+            'settings.legend_y' => ['sometimes', 'numeric', 'between:0,1'],
+            'settings.legend_scale' => ['sometimes', 'numeric', 'between:0.5,2.5'],
             ...$this->placeRules($plan->project),
         ]);
         if (isset($data['settings'])) {

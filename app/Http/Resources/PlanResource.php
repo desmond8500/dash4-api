@@ -36,6 +36,11 @@ class PlanResource extends JsonResource
                 'hidden_layers' => array_values($this->setting('hidden_layers', [])),
                 'legend' => (bool) $this->setting('legend', true),
                 'labels' => (bool) $this->setting('labels', true),
+                // Légende : sous le plan, à droite, ou posée sur le plan (coin haut gauche en position relative)
+                'legend_position' => $this->setting('legend_position', 'below'),
+                'legend_x' => (float) $this->setting('legend_x', 0.7),
+                'legend_y' => (float) $this->setting('legend_y', 0.7),
+                'legend_scale' => (float) $this->setting('legend_scale', 1),
             ],
             'renders' => $renders,
             'markers' => $this->whenLoaded('markers', fn () => $this->markers->map(fn ($m) => [

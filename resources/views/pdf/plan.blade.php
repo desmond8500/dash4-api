@@ -8,7 +8,10 @@
     h1 { font-size: 15pt; margin: 0 0 1mm; }
     h2 { font-size: 12pt; margin: 5mm 0 2mm; }
     .page-break { page-break-before: always; }
-    .sheet img { max-width: 100%; max-height: {{ $landscape ? '150mm' : '225mm' }}; }
+    /* Plan centré sur la page, horizontalement et verticalement */
+    .plan-frame { width: 100%; height: {{ $landscape ? '150mm' : '232mm' }}; border-collapse: collapse; }
+    .plan-frame td { text-align: center; vertical-align: middle; padding: 0; }
+    .plan-frame img { max-width: 100%; max-height: {{ $landscape ? '148mm' : '230mm' }}; }
     table.list td, table.list th { font-size: 8.5px; padding: 1.2mm 1.5mm; }
 </style>
 </head>
@@ -25,7 +28,7 @@
 @forelse ($pages as $i => $img)
     <div class="sheet {{ $i > 0 ? 'page-break' : '' }}">
         @if (count($pages) > 1)<p class="muted">Page {{ $i + 1 }} / {{ count($pages) }}</p>@endif
-        <img src="{{ $img }}" alt="">
+        <table class="plan-frame"><tr><td><img src="{{ $img }}" alt=""></td></tr></table>
     </div>
 @empty
     <p class="muted">Ce plan n'a pas encore d'aperçu : ouvrez-le dans l'éditeur de plans de Dash4, l'aperçu se crée tout seul.</p>

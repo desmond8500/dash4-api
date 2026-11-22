@@ -35,7 +35,12 @@ it('donne aux repères l\'icône de l\'article, leur calque, taille et rotation'
     $this->patchJson("/api/v1/plan-markers/{$marker['id']}", ['size' => 2])->assertJsonValidationErrors('size');
 
     $this->patchJson("/api/v1/plans/{$plan['id']}", ['settings' => ['hidden_layers' => [(string) $systemId], 'legend' => false]])
-        ->assertJsonPath('data.settings.hidden_layers', [(string) $systemId])->assertJsonPath('data.settings.legend', false);
+        ->assertJsonPath('data.settings.hidden_layers', [(string) $systemId])->assertJsonPath('data.settings.legend', false)
+        ->assertJsonPath('data.settings.legend_position', 'below');
+    $this->patchJson("/api/v1/plans/{$plan['id']}", ['settings' => ['legend_position' => 'overlay', 'legend_x' => 0.05, 'legend_y' => 0.8, 'legend_scale' => 1.5]])
+        ->assertJsonPath('data.settings.legend_position', 'overlay')->assertJsonPath('data.settings.legend_x', 0.05)
+        ->assertJsonPath('data.settings.hidden_layers', [(string) $systemId]);
+    $this->patchJson("/api/v1/plans/{$plan['id']}", ['settings' => ['legend_position' => 'top', 'legend_x' => 2]])->assertJsonValidationErrors(['settings.legend_position', 'settings.legend_x']);
 });
 
 it('garde l\'aperçu fait par l\'éditeur et le met dans le PDF du plan et le DOE', function () {
