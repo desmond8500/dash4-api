@@ -50,6 +50,7 @@ it('garde l\'aperçu fait par l\'éditeur et le met dans le PDF du plan et le DO
         ->assertOk()->assertJsonPath('data.renders.0.path', "plans/{$plan['id']}/render/1");
     $this->get("/api/v1/plans/{$plan['id']}/render/1")->assertOk();
 
+    $this->postJson("/api/v1/plans/{$plan['id']}/markers", ['x' => 0.5, 'y' => 0.5, 'label' => 'Regard'])->assertCreated();
     $this->get("/api/v1/plans/{$plan['id']}/pdf")->assertOk()->assertHeader('content-type', 'application/pdf');
     expect(\App\Support\QuotePdf::planPages(\App\Models\Plan::find($plan['id'])))->toHaveCount(1);
 });
