@@ -168,6 +168,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('system-progress/{progress}', [InstalledSystemController::class, 'destroyProgress']);
         Route::post('installed-systems/{installedSystem}/equipment', [InstalledSystemController::class, 'storeEquipment']);
         Route::patch('equipment/{equipment}', [InstalledSystemController::class, 'updateEquipment']);
+        Route::post('equipment/{equipment}/split', [InstalledSystemController::class, 'splitEquipment']);
         Route::delete('equipment/{equipment}', [InstalledSystemController::class, 'destroyEquipment']);
         Route::get('projects/{project}/reception-reports', [ReceptionReportController::class, 'index']);
         Route::post('projects/{project}/reception-reports', [ReceptionReportController::class, 'store']);

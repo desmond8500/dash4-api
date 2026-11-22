@@ -80,3 +80,32 @@ it('refuse les lignes d’un autre devis, un devis sans projet et un compte sans
     Sanctum::actingAs(userWithRole('technician'));
     $this->postJson("/api/v1/quotes/{$quote->id}/site-equipment", ['groups' => [['system_name' => 'X', 'line_ids' => [$nvr->id]]]])->assertForbidden();
 });
+
+it('éclate un groupe d’équipements en appareils identiques, juste après l’original', function () {
+    $pm = userWithRole('project_manager');
+    $project = Project::factory()->create(['manager_id' => $pm->id]);
+    Sanctum::actingAs($pm);
+    $systemId = $this->postJson("/api/v1/projects/{$project->id}/installed-systems", ['name' => 'Vidéo'])->json('data.systems.0.id');
+    $this->postJson("/api/v1/installed-systems/{$systemId}/equipment", [
+        'name' => 'Caméra dôme', 'model' => 'DS-2CD', 'serial_number' => 'SN-1', 'quantity' => 3, 'status' => 'installed',
+        'characteristics' => [['label' => 'Résolution', 'value' => '4 MP']],
+    ]);
+    $site = $this->postJson("/api/v1/installed-systems/{$systemId}/equipment", ['name' => 'NVR'])->json('data');
+    $group = $site['systems'][0]['equipment'][0];
+
+    $site = $this->postJson("/api/v1/equipment/{$group['id']}/split")->assertOk()->json('data');
+    $list = collect($site['systems'][0]['equipment']);
+    expect($list->pluck('name')->all())->toBe(['Caméra dôme', 'Caméra dôme', 'Caméra dôme', 'NVR'])
+        ->and($list->take(3)->pluck('quantity')->unique()->all())->toBe([1])
+        ->and($list->pluck('serial_number')->take(3)->all())->toBe(['SN-1', null, null])
+        ->and($list[2]['characteristics'])->toBe([['label' => 'Résolution', 'value' => '4 MP']])
+        ->and($list[2]['status']['value'])->toBe('installed')
+        ->and($list[2]['model'])->toBe('DS-2CD')
+        ->and($site['equipment_count'])->toBe(4);
+
+    // Rejouer (file d'attente du mobile) : rien ne change
+    expect($this->postJson("/api/v1/equipment/{$group['id']}/split")->json('data.systems.0.equipment'))->toHaveCount(4);
+
+    Sanctum::actingAs(userWithRole('technician'));
+    $this->postJson("/api/v1/equipment/{$group['id']}/split")->assertForbidden();
+});

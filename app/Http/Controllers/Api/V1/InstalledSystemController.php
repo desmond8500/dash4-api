@@ -119,6 +119,33 @@ class InstalledSystemController extends Controller
         return $this->site($system->project);
     }
 
+    /**
+     * POST /api/v1/equipment/{id}/split — éclate un groupe (quantité N) en N appareils de quantité 1,
+     * avec les mêmes informations (article, type, modèle, emplacement, état, caractéristiques, notes, ligne du devis).
+     * Le n° de série reste sur le premier ; les sous-équipements et les pièces jointes restent sur le premier.
+     * Rejouer l'action sur un appareil déjà à 1 ne change rien.
+     */
+    public function splitEquipment(Equipment $equipment): SiteResource
+    {
+        $system = $equipment->installedSystem;
+        $this->authorize('manageSite', $system->project);
+        $copies = $equipment->quantity - 1;
+        abort_if($copies > 499, 422, 'Plus de 500 unités : éclatez un groupe plus petit.');
+        if ($copies > 0) {
+            DB::transaction(function () use ($equipment, $system, $copies) {
+                // Les copies se placent juste après l'original
+                $system->equipment()->where('position', '>', $equipment->position)->increment('position', $copies);
+                $fields = $equipment->only(['parent_id', 'article_id', 'quote_line_id', 'level_id', 'room_id', 'name', 'type', 'model', 'status', 'characteristics', 'description']);
+                for ($i = 1; $i <= $copies; $i++) {
+                    $system->equipment()->create($fields + ['quantity' => 1, 'serial_number' => null, 'position' => $equipment->position + $i]);
+                }
+                $equipment->update(['quantity' => 1]);
+            });
+        }
+
+        return $this->site($system->project);
+    }
+
     public function destroyEquipment(Equipment $equipment): SiteResource
     {
         $project = $equipment->installedSystem->project;
