@@ -154,7 +154,7 @@ it('laisse le comptable choisir les membres d\'une caisse parmi les comptes acti
 
 it('donne à une dépense liée à un devis le projet de ce devis', function () {
     $project = Project::factory()->create();
-    $quote = \App\Models\Quote::factory()->create(['project_id' => $project->id, 'client_id' => $project->client_id]);
+    $quote = \App\Models\Quote::factory()->create(['project_id' => $project->id]);
     Sanctum::actingAs(userWithRole('project_manager'));
 
     $this->postJson('/api/v1/expenses', ['label' => 'Câble', 'amount' => 8000, 'spent_at' => now()->toDateString(), 'quote_id' => $quote->id])
