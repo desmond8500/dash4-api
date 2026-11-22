@@ -38,7 +38,7 @@
         <thead><tr><th>Système</th><th>Équipement / repère</th><th>Modèle</th><th>N° de série</th><th>Page</th></tr></thead>
         <tbody>
         @foreach ($markers as $m)
-            @php $system = $m->installedSystem ?? $m->equipment?->installedSystem; @endphp
+            @php($system = $m->installedSystem ?? $m->equipment?->installedSystem)
             <tr>
                 <td>{{ $system?->name ?? '—' }}</td>
                 <td>{{ $m->label ?: ($m->equipment?->name ?? 'Repère') }}@if ($m->label && $m->equipment) <span class="muted">({{ $m->equipment->name }})</span>@endif</td>

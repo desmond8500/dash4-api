@@ -85,7 +85,7 @@
 
 <h2>3. Plans</h2>
 @forelse ($project->plans as $p)
-    @php $pagesOf = $planImages[$p->id] ?? []; @endphp
+    @php($pagesOf = $planImages[$p->id] ?? [])
     @if ($pagesOf)
         @foreach ($pagesOf as $i => $img)
             <div class="plan page-break">
