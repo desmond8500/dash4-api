@@ -80,6 +80,14 @@ class ExpenseController extends Controller
         }
         $user = $request->user();
         $this->ensureSpaceAllowed($request, $data['expense_space_id'] ?? null);
+        $data = $this->withProjectOfQuote($data);
+        // Une dépense de terrain se rattache à un projet ou à un devis (un véhicule pour les frais du parc).
+        // La comptabilité (accounting.view) peut saisir des frais généraux sans rattachement.
+        abort_if(
+            ! $user->can('accounting.view') && empty($data['project_id']) && empty($data['quote_id']) && empty($data['vehicle_id']),
+            422,
+            'Liez la dépense à un projet ou à un devis.',
+        );
 
         $expense = DB::transaction(function () use ($data, $request, $user) {
             $expense = new Expense(array_diff_key($data, ['file' => true]));
@@ -141,6 +149,19 @@ class ExpenseController extends Controller
         $expense->delete();
 
         return response()->json(['message' => 'Dépense supprimée.']);
+    }
+
+    /** Devis choisi sans projet : la dépense prend le projet du devis. */
+    private function withProjectOfQuote(array $data): array
+    {
+        if (! empty($data['quote_id']) && empty($data['project_id'])) {
+            $projectId = \App\Models\Quote::whereKey($data['quote_id'])->value('project_id');
+            if ($projectId) {
+                $data['project_id'] = $projectId;
+            }
+        }
+
+        return $data;
     }
 
     public function approve(Request $request, Expense $expense): ExpenseResource

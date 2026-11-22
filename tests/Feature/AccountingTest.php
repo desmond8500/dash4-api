@@ -18,10 +18,15 @@ it('fait valider puis rembourser une dépense avancée par un technicien', funct
     Storage::fake('local');
     $tech = userWithRole('technician');
     $accountant = userWithRole('accountant');
+    $site = Project::factory()->create();
     Sanctum::actingAs($tech);
 
+    // Sur le terrain, une dépense se rattache à un projet ou à un devis
+    $this->postJson('/api/v1/expenses', ['label' => 'Taxi', 'amount' => 5000, 'spent_at' => now()->toDateString()])
+        ->assertStatus(422)->assertJsonPath('message', 'Liez la dépense à un projet ou à un devis.');
+
     $expense = $this->post('/api/v1/expenses', [
-        'label' => 'Taxi chantier Almadies', 'amount' => 5000, 'spent_at' => now()->toDateString(), 'advanced' => '1',
+        'label' => 'Taxi chantier Almadies', 'amount' => 5000, 'spent_at' => now()->toDateString(), 'advanced' => '1', 'project_id' => $site->id,
         'payment_method' => 'cash', 'expense_category_id' => ExpenseCategory::where('name', 'Transport')->value('id'),
         'file' => UploadedFile::fake()->image('recu.jpg'), 'client_uuid' => (string) Str::uuid(),
     ], ['Accept' => 'application/json'])->assertCreated()->json('data');
@@ -79,7 +84,7 @@ it('alimente une caisse et calcule son solde', function () {
         ->assertJsonPath('data.balance', 100000)->assertJsonPath('data.fundings.0.method.label', 'Espèces');
 
     Sanctum::actingAs($tech);
-    $base = ['spent_at' => now()->toDateString(), 'expense_space_id' => $space['id']];
+    $base = ['spent_at' => now()->toDateString(), 'expense_space_id' => $space['id'], 'project_id' => Project::factory()->create()->id];
     $this->postJson('/api/v1/expenses', [...$base, 'label' => 'Câble', 'amount' => 30000])->assertCreated();
     $this->postJson('/api/v1/expenses', [...$base, 'label' => 'Avancé', 'amount' => 7000, 'advanced' => true])->assertCreated();
     $this->getJson("/api/v1/expense-spaces/{$space['id']}")->assertJson(['data' => ['funded' => 100000, 'spent' => 30000, 'pending' => 30000, 'balance' => 70000]]);
@@ -145,4 +150,13 @@ it('reprend les dépenses du devis dans les dépenses', function () {
 it('laisse le comptable choisir les membres d\'une caisse parmi les comptes actifs', function () {
     Sanctum::actingAs(userWithRole('accountant'));
     $this->getJson('/api/v1/assignees')->assertOk();
+});
+
+it('donne à une dépense liée à un devis le projet de ce devis', function () {
+    $project = Project::factory()->create();
+    $quote = \App\Models\Quote::factory()->create(['project_id' => $project->id, 'client_id' => $project->client_id]);
+    Sanctum::actingAs(userWithRole('project_manager'));
+
+    $this->postJson('/api/v1/expenses', ['label' => 'Câble', 'amount' => 8000, 'spent_at' => now()->toDateString(), 'quote_id' => $quote->id])
+        ->assertCreated()->assertJsonPath('data.project_id', $project->id)->assertJsonPath('data.quote_id', $quote->id);
 });
