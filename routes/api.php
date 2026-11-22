@@ -40,6 +40,7 @@ use App\Http\Controllers\Api\V1\ProjectLogoController;
 use App\Http\Controllers\Api\V1\ProviderController;
 use App\Http\Controllers\Api\V1\PurchaseController;
 use App\Http\Controllers\Api\V1\QuoteController;
+use App\Http\Controllers\Api\V1\QuoteSiteController;
 use App\Http\Controllers\Api\V1\QuoteEmailController;
 use App\Http\Controllers\Api\V1\QuoteLineController;
 use App\Http\Controllers\Api\V1\QuoteMoneyController;
@@ -253,6 +254,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::apiResource('quotes', QuoteController::class);
         Route::post('quotes/{quote}/status', [QuoteController::class, 'status']);
         Route::post('quotes/{quote}/duplicate', [QuoteController::class, 'duplicate']);
+        Route::post('quotes/{quote}/site-equipment', [QuoteSiteController::class, 'store']);
         Route::get('quotes/{quote}/pdf', [QuoteController::class, 'pdf'])->name('quotes.pdf');
         Route::post('quotes/{quote}/signed-copy', [QuoteController::class, 'signedCopy']);
         Route::get('quotes/{quote}/proposal-pdf', [QuoteController::class, 'proposalPdf'])->name('quotes.proposal-pdf');

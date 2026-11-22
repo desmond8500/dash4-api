@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * `characteristics` : couples libellé / valeur (adresse IP, ports, identifiants…).
  */
 #[Fillable([
-    'client_uuid', 'parent_id', 'article_id', 'level_id', 'room_id', 'name', 'type', 'model', 'serial_number',
+    'client_uuid', 'parent_id', 'article_id', 'quote_line_id', 'level_id', 'room_id', 'name', 'type', 'model', 'serial_number',
     'quantity', 'status', 'characteristics', 'description', 'position',
 ])]
 class Equipment extends Model

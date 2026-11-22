@@ -29,6 +29,7 @@ class EquipmentResource extends JsonResource
             'position' => $this->position,
             'article_id' => $this->article_id,
             'article' => $this->whenLoaded('article', fn () => $this->article ? ['id' => $this->article->id, 'designation' => $this->article->designation, 'reference' => $this->article->reference, 'plan_icon_id' => $this->article->plan_icon_id] : null),
+            'quote_line_id' => $this->quote_line_id,
             'level_id' => $this->level_id,
             'room_id' => $this->room_id,
             'documents_count' => $this->whenCounted('documents'),
