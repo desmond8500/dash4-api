@@ -5,7 +5,7 @@ namespace App\Support;
 use App\Enums\AccountType;
 
 /**
- * Liste des permissions et des 7 profils de Dash4.
+ * Liste des permissions et des 7 profils de Dash4, plus le compte « Lecture seule » (démonstrations).
  *
  * Source : PROFILS_PERMISSIONS.md (validé le 17 novembre 2026), §4, §5 et §7.
  * Format des permissions : `module.action`, le suffixe `.own` limite aux éléments de l'utilisateur.
@@ -19,6 +19,8 @@ final class Permissions
     public const ROLE_ACCOUNTANT = 'accountant';
     public const ROLE_STOREKEEPER = 'storekeeper';
     public const ROLE_TECHNICIAN = 'technician';
+    /** Lecture seule (démonstrations, maquettes) : voit tout sauf les coûts et la banque, ne modifie rien. */
+    public const ROLE_VIEWER = 'viewer';
 
     /** Libellés affichés dans l'interface. */
     public const ROLE_LABELS = [
@@ -29,6 +31,7 @@ final class Permissions
         self::ROLE_ACCOUNTANT => 'Comptable',
         self::ROLE_STOREKEEPER => 'Magasinier',
         self::ROLE_TECHNICIAN => 'Technicien',
+        self::ROLE_VIEWER => 'Lecture seule',
     ];
 
     /** Actions disponibles par module (§7). */
@@ -206,6 +209,12 @@ final class Permissions
                 'vehicles.view.own',
                 'tools.view', 'tools.create', 'tools.update', 'tools.delete', 'tools.lend',
                 'costs.view', 'exports.run',
+            ],
+
+            // Toutes les permissions de consultation, et les prix de vente ; aucune écriture
+            // (en plus, le middleware ReadOnlyViewer refuse toute requête qui modifie quelque chose).
+            self::ROLE_VIEWER => [
+                ...array_values(array_filter($all, fn (string $p) => str_ends_with($p, '.view') && ! in_array($p, ['costs.view', 'bank.view', 'audit.view'], true))),
             ],
 
             self::ROLE_TECHNICIAN => [

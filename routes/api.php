@@ -87,7 +87,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::post('auth/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1');
     Route::post('auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1');
 
-    Route::middleware(['auth:sanctum', EnsureUserIsActive::class])->group(function () {
+    Route::middleware(['auth:sanctum', EnsureUserIsActive::class, \App\Http\Middleware\ReadOnlyViewer::class])->group(function () {
         Route::get('auth/me', [AuthController::class, 'me'])->name('auth.me');
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
