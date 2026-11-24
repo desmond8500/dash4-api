@@ -237,12 +237,17 @@ class ToolController extends Controller
         return new ToolResource($tool->refresh()->load(self::full()));
     }
 
-    /** POST /api/v1/tools/{tool}/loans/{loan}/return — retour de l'outil, avec son état constaté. */
+    /**
+     * POST /api/v1/tools/{tool}/loans/{loan}/return — retour de l'outil, avec son état constaté.
+     * Un retour déjà enregistré n'est pas refait (retour rejoué depuis la file d'attente du téléphone) : la fiche est renvoyée telle quelle.
+     */
     public function returnTool(Request $request, Tool $tool, ToolLoan $loan): ToolResource
     {
         $this->authorize('lend', $tool);
         abort_unless($loan->tool_id === $tool->id, 404);
-        abort_if($loan->returned_at !== null, 422, 'Ce prêt est déjà rendu.');
+        if ($loan->returned_at !== null) {
+            return new ToolResource($tool->load(self::full()));
+        }
         $data = $request->validate([
             'returned_at' => ['nullable', 'date'],
             'condition' => ['nullable', Rule::in(array_keys(Tools::CONDITIONS))],

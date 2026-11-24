@@ -39,6 +39,9 @@ it('crée des outils depuis un article, les prête, refuse un second prêt et en
     $loan = ToolLoan::query()->first();
     $this->postJson("/api/v1/tools/{$id}/loans/{$loan->id}/return", ['condition' => 'repair', 'return_notes' => 'Mandrin abîmé'])
         ->assertOk()->assertJsonPath('data.status.value', 'unavailable')->assertJsonPath('data.loans.0.return_condition.value', 'repair');
+    // Retour rejoué (file d'attente du téléphone) : rien ne change
+    $this->postJson("/api/v1/tools/{$id}/loans/{$loan->id}/return", ['condition' => 'good'])
+        ->assertOk()->assertJsonPath('data.condition.value', 'repair');
     // En réparation : on ne peut plus le prêter
     $this->postJson("/api/v1/tools/{$id}/loans", ['borrower_name' => 'Sous-traitant Diop'])->assertStatus(422);
 });
