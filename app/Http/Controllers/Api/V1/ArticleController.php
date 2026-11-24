@@ -103,6 +103,33 @@ class ArticleController extends Controller
         return $this->full($article);
     }
 
+    /**
+     * POST /api/v1/articles/{id}/duplicate — copie l'article (désignation, catégorie, coût, coefficient,
+     * marque, fournisseur, emplacement, icône…) sans son code-barres, son image ni sa quantité (stock à 0).
+     */
+    public function duplicate(Request $request, Article $article): JsonResponse
+    {
+        $this->authorize('view', $article);
+        $this->authorize('create', Article::class);
+
+        $copy = DB::transaction(function () use ($article, $request) {
+            $copy = new Article([
+                ...$article->only([
+                    'designation', 'description', 'category', 'unit', 'brand_id', 'provider_id',
+                    'unit_cost', 'coefficient', 'min_quantity', 'storage_location_id', 'plan_icon_id', 'weight',
+                ]),
+                'designation' => $article->designation.' (copie)',
+                'is_active' => true,
+            ]);
+            $copy->created_by = $request->user()->id;
+            $copy->save();
+
+            return $copy;
+        });
+
+        return $this->full($copy)->response()->setStatusCode(201);
+    }
+
     /** Corbeille : l'article reste dans l'historique des mouvements et des devis. */
     public function destroy(Article $article): JsonResponse
     {

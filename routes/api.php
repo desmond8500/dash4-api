@@ -316,6 +316,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::apiResource('storage-locations', StorageLocationController::class)->parameters(['storage-locations' => 'location']);
         Route::get('articles/summary', [ArticleController::class, 'summary'])->name('articles.summary');
         Route::apiResource('articles', ArticleController::class);
+        Route::post('articles/{article}/duplicate', [ArticleController::class, 'duplicate']);
         Route::post('articles/{article}/image', [ArticleController::class, 'storeImage']);
         Route::delete('articles/{article}/image', [ArticleController::class, 'destroyImage']);
         Route::put('articles/{article}/dependencies', [ArticleController::class, 'dependencies']);

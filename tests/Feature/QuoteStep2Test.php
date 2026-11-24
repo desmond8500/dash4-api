@@ -1,6 +1,7 @@
 <?php
 
 use App\Mail\QuoteMail;
+use App\Models\Article;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Contact;
@@ -73,6 +74,30 @@ it('crée et modifie un modèle avec ses lignes, et garde les modèles d\'un sys
 
     $this->deleteJson("/api/v1/quote-systems/{$system}")->assertOk();
     $this->getJson('/api/v1/quote-systems')->assertJsonPath('data.templates_without_system.0.id', $id);
+});
+
+it('lie une ligne de modèle à un article du stock, photo comprise, même si l\'article est supprimé ensuite', function () {
+    Storage::fake('public');
+    Sanctum::actingAs(userWithRole('manager'));
+    $article = Article::factory()->create(['designation' => 'Caméra IP 4 MP']);
+    $article->forceFill(['image_path' => 'articles/camera.jpg'])->save();
+
+    $template = $this->postJson('/api/v1/quote-templates', [
+        'name' => 'Kit caméra',
+        'lines' => [['article_id' => $article->id, 'designation' => $article->designation, 'unit_cost' => 50000, 'coefficient' => 1.5]],
+    ])->assertCreated()->json('data');
+    expect($template['lines'][0]['article_id'])->toBe($article->id)
+        ->and($template['lines'][0]['article']['designation'])->toBe('Caméra IP 4 MP')
+        ->and($template['lines'][0]['article']['image_url'])->toContain('articles/camera.jpg')
+        ->and($template['lines'][0]['article']['deleted'])->toBeFalse();
+
+    $article->delete();
+    $this->getJson("/api/v1/quote-templates/{$template['id']}")
+        ->assertJsonPath('data.lines.0.article.deleted', true)
+        ->assertJsonPath('data.lines.0.article.designation', 'Caméra IP 4 MP');
+
+    $this->postJson('/api/v1/quote-templates', ['name' => 'X', 'lines' => [['article_id' => 999999, 'designation' => 'Y']]])
+        ->assertJsonValidationErrors('lines.0.article_id');
 });
 
 it('laisse le chef de projet insérer un modèle sans voir ni gérer les coûts', function () {

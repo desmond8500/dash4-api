@@ -27,6 +27,22 @@ it('crée un article avec marque, fournisseur et stock de départ', function () 
     $this->deleteJson("/api/v1/brands/{$brand['id']}")->assertStatus(422);
 });
 
+it('duplique un article sans son code-barres, son image ni sa quantité', function () {
+    Sanctum::actingAs(userWithRole('storekeeper'));
+    $article = Article::factory()->inStock(8)->create([
+        'designation' => 'Caméra dôme 4 MP', 'barcode' => '6941264099999', 'unit_cost' => 35000, 'coefficient' => 1.6,
+    ]);
+
+    $copy = $this->postJson("/api/v1/articles/{$article->id}/duplicate")->assertCreated()->json('data');
+
+    expect($copy)->toMatchArray(['designation' => 'Caméra dôme 4 MP (copie)', 'unit_cost' => 35000, 'coefficient' => 1.6, 'quantity' => 0, 'barcode' => null, 'image_url' => null])
+        ->and($copy['id'])->not->toBe($article->id);
+    $this->getJson('/api/v1/articles')->assertJsonCount(2, 'data');
+
+    Sanctum::actingAs(userWithRole('technician'));
+    $this->postJson("/api/v1/articles/{$article->id}/duplicate")->assertForbidden();
+});
+
 it('ne montre jamais ni prix ni coût à un technicien, et le prix sans le coût à un chef de projet', function () {
     $article = Article::factory()->inStock(3)->create();
 

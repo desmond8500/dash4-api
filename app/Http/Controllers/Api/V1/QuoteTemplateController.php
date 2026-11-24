@@ -13,6 +13,7 @@ use App\Support\QuoteEditing;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
@@ -200,6 +201,7 @@ class QuoteTemplateController extends Controller
             'icon' => ['sometimes', 'nullable', 'string', 'max:50'],
             'quote_system_id' => ['sometimes', 'nullable', 'integer', Rule::exists('quote_systems', 'id')->whereNull('deleted_at')],
             'lines' => ['sometimes', 'array', 'max:500'],
+            'lines.*.article_id' => ['nullable', 'integer', Rule::exists('articles', 'id')],
             'lines.*.designation' => ['required', 'string', 'max:255'],
             'lines.*.reference' => ['nullable', 'string', 'max:2000'],
             'lines.*.category' => ['sometimes', new Enum(QuoteLineCategory::class)],
@@ -207,7 +209,7 @@ class QuoteTemplateController extends Controller
             'lines.*.quantity' => ['sometimes', 'numeric', 'min:0'],
             'lines.*.unit_cost' => ['sometimes', 'numeric', 'min:0'],
             'lines.*.coefficient' => ['sometimes', 'numeric', 'min:0', 'max:1000'],
-        ], [], ['name' => 'nom du modèle', 'quote_system_id' => 'système', 'lines.*.designation' => 'désignation']);
+        ], [], ['name' => 'nom du modèle', 'quote_system_id' => 'système', 'lines.*.article_id' => 'article', 'lines.*.designation' => 'désignation']);
     }
 
     private static function templateSummary(QuoteTemplate $t): array
@@ -223,9 +225,20 @@ class QuoteTemplateController extends Controller
         return [
             ...$template->only(['id', 'quote_system_id', 'name', 'description', 'icon']),
             'system' => $template->system?->only(['id', 'name']),
-            'lines' => $template->lines()->get()->map(fn ($l) => [
+            'lines' => $template->lines()->with('article')->get()->map(fn ($l) => [
                 'id' => $l->id,
                 'position' => $l->position,
+                'article_id' => $l->article_id,
+                // Article du stock lié : fiche consultable, photo à gauche de la ligne
+                'article' => $l->article ? [
+                    'id' => $l->article->id,
+                    'designation' => $l->article->designation,
+                    'reference' => $l->article->reference,
+                    'image_url' => $l->article->image_path ? Storage::disk('public')->url($l->article->image_path) : null,
+                    'quantity' => $l->article->quantity,
+                    'unit' => $l->article->unit,
+                    'deleted' => $l->article->trashed(),
+                ] : null,
                 'designation' => $l->designation,
                 'reference' => $l->reference,
                 'category' => ['value' => $l->category->value, 'label' => $l->category->label()],
