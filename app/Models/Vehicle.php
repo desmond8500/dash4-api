@@ -37,6 +37,11 @@ class Vehicle extends Model
         ];
     }
 
+    public function photoUrl(): ?string
+    {
+        return $this->photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->photo_path) : null;
+    }
+
     public function driver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'driver_id');

@@ -21,6 +21,10 @@ class ToolResource extends JsonResource
             'code' => $this->code,
             'title' => Tools::title($this->resource),
             'serial_number' => $this->serial_number,
+            // Photo de l'outil, sinon celle de son article (pour le reconnaître dans les listes)
+            'photo_url' => $this->resource->photoUrl(),
+            'image_url' => $this->resource->photoUrl() ?? ($this->relationLoaded('article') && $this->article?->image_path
+                ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->article->image_path) : null),
             'article_id' => $this->article_id,
             'article' => $this->whenLoaded('article', fn () => $this->article ? [
                 'id' => $this->article->id,

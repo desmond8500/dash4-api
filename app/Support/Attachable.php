@@ -134,7 +134,17 @@ final class Attachable
             return;
         }
         $parent = self::subject($parent);
-        Gate::forUser($user)->authorize($parent instanceof Task ? 'progress' : 'update', $parent);
+        Gate::forUser($user)->authorize(self::addAbility($parent), $parent);
+    }
+
+    /** Droit d'ajouter sur la fiche : les personnes affectées à une tâche, le conducteur d'un véhicule (photos). */
+    private static function addAbility(Model $parent): string
+    {
+        return match (true) {
+            $parent instanceof Task => 'progress',
+            $parent instanceof Vehicle => 'addPhotos',
+            default => 'update',
+        };
     }
 
     /**
@@ -156,7 +166,7 @@ final class Attachable
         }
         $parent = self::subject($parent);
         $allowed = $gate->allows('delete', $parent)
-            || ($attachment->created_by === $user->id && $gate->allows($parent instanceof Task ? 'progress' : 'update', $parent));
+            || ($attachment->created_by === $user->id && $gate->allows(self::addAbility($parent), $parent));
 
         abort_unless($allowed, 403, "Vous n'avez pas le droit de faire cette action.");
     }

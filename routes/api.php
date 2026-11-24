@@ -235,6 +235,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::patch('flat-rates/{flatRate}', [ContractController::class, 'updateFlatRate']);
         Route::delete('flat-rates/{flatRate}', [ContractController::class, 'destroyFlatRate']);
         // Parc automobile
+        // Photo principale d'un véhicule ou d'un outil
+        Route::post('{type}/{id}/photo', [\App\Http\Controllers\Api\V1\RecordPhotoController::class, 'store'])->whereIn('type', ['vehicles', 'tools'])->whereNumber('id');
+        Route::delete('{type}/{id}/photo', [\App\Http\Controllers\Api\V1\RecordPhotoController::class, 'destroy'])->whereIn('type', ['vehicles', 'tools'])->whereNumber('id');
         // Outillage et prêts
         Route::get('tools/options', [ToolController::class, 'options']);
         Route::get('tool-loans', [ToolController::class, 'loans']);

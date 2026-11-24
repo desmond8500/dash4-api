@@ -32,6 +32,11 @@ class Tool extends Model
         ];
     }
 
+    public function photoUrl(): ?string
+    {
+        return $this->photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->photo_path) : null;
+    }
+
     public function article(): BelongsTo
     {
         return $this->belongsTo(Article::class)->withTrashed();

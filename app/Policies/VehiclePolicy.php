@@ -36,6 +36,12 @@ class VehiclePolicy
         return $user->can('vehicles.delete');
     }
 
+    /** Photos du véhicule (principale et galerie) : qui gère le parc, ou le conducteur attitré (état, dégâts). */
+    public function addPhotos(User $user, Vehicle $vehicle): bool
+    {
+        return $this->recordMileage($user, $vehicle);
+    }
+
     /** Relever le compteur : qui gère le parc, ou le conducteur attitré. */
     public function recordMileage(User $user, Vehicle $vehicle): bool
     {
