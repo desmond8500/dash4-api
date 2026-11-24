@@ -25,6 +25,7 @@ final class Preferences
         'contracts' => 'Contrats de maintenance',
         'invoices' => 'Factures à relancer',
         'fleet' => 'Parc automobile (papiers, entretiens)',
+        'tools' => 'Outillage (prêts et retours)',
     ];
 
     /** Notification => catégorie. */
@@ -38,6 +39,7 @@ final class Preferences
         Notifications\LowStockNotification::class => 'stock',
         Notifications\ContractNotification::class => 'contracts',
         Notifications\FleetNotification::class => 'fleet',
+        Notifications\ToolLoanNotification::class => 'tools',
         Notifications\InvoiceReminderNotification::class => 'invoices',
     ];
 

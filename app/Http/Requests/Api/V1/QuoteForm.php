@@ -32,6 +32,8 @@ class QuoteForm extends FormRequest
             'discount_rate' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'bank_account_id' => ['sometimes', 'nullable', 'integer', Rule::exists('bank_accounts', 'id')->whereNull('deleted_at')],
             'show_signature' => ['sometimes', 'boolean'],
+            // Devis neutre : PDF sans les informations de l'entreprise
+            'is_neutral' => ['sometimes', 'boolean'],
             'is_favorite' => ['sometimes', 'boolean'],
             // Proposition technique : ce qui apparaît sur son PDF
             'proposal_options' => ['sometimes', 'array:'.implode(',', array_keys(Quote::PROPOSAL_DEFAULTS))],

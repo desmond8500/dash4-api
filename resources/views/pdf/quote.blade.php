@@ -13,7 +13,7 @@
 @include('pdf.partials.styles')
 </head>
 <body>
-@include('pdf.partials.header_footer', ['bank' => $quote->bankAccount])
+@include('pdf.partials.header_footer', ['bank' => $neutral ? null : $quote->bankAccount, 'neutral' => $neutral])
 
 <table class="meta"><tr>
     <td style="width:55%">
@@ -117,6 +117,6 @@
     </tr></table>
 </div>
 
-@if ($company->terms)<div style="page-break-before: always"><strong>Conditions générales</strong><div class="pre" style="font-size:8.5px">{{ $company->terms }}</div></div>@endif
+@if ($company->terms && ! $neutral)<div style="page-break-before: always"><strong>Conditions générales</strong><div class="pre" style="font-size:8.5px">{{ $company->terms }}</div></div>@endif
 </body>
 </html>

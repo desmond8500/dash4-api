@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\ClientRequestLinkController;
 use App\Http\Controllers\Api\V1\BadgeController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\ContractController;
+use App\Http\Controllers\Api\V1\ToolController;
 use App\Http\Controllers\Api\V1\VehicleController;
 use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
@@ -234,6 +235,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::patch('flat-rates/{flatRate}', [ContractController::class, 'updateFlatRate']);
         Route::delete('flat-rates/{flatRate}', [ContractController::class, 'destroyFlatRate']);
         // Parc automobile
+        // Outillage et prêts
+        Route::get('tools/options', [ToolController::class, 'options']);
+        Route::get('tool-loans', [ToolController::class, 'loans']);
+        Route::apiResource('tools', ToolController::class);
+        Route::post('tools/{tool}/loans', [ToolController::class, 'lend']);
+        Route::patch('tools/{tool}/loans/{loan}', [ToolController::class, 'updateLoan']);
+        Route::delete('tools/{tool}/loans/{loan}', [ToolController::class, 'destroyLoan']);
+        Route::post('tools/{tool}/loans/{loan}/return', [ToolController::class, 'returnTool']);
+        Route::post('tools/{tool}/loans/{loan}/remind', [ToolController::class, 'remind']);
         Route::get('vehicles/options', [VehicleController::class, 'options']);
         Route::apiResource('vehicles', VehicleController::class);
         Route::post('vehicles/{vehicle}/papers', [VehicleController::class, 'storePaper']);

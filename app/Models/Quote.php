@@ -20,7 +20,7 @@ use Spatie\Activitylog\Support\LogOptions;
 #[Fillable([
     'client_uuid', 'client_id', 'project_id', 'title', 'introduction', 'payment_terms', 'notes',
     'issued_at', 'valid_until', 'tax_mode', 'vat_rate', 'brs_rate', 'discount_rate',
-    'bank_account_id', 'show_signature', 'is_favorite', 'proposal_options',
+    'bank_account_id', 'show_signature', 'is_neutral', 'is_favorite', 'proposal_options',
 ])]
 class Quote extends Model
 {
@@ -33,6 +33,7 @@ class Quote extends Model
         'brs_rate' => 5,
         'discount_rate' => 0,
         'show_signature' => true,
+        'is_neutral' => false,
         'is_favorite' => false,
         'subtotal' => 0,
         'discount_amount' => 0,
@@ -57,6 +58,7 @@ class Quote extends Model
             'tax_amount' => 'integer',
             'total' => 'integer',
             'show_signature' => 'boolean',
+            'is_neutral' => 'boolean',
             'proposal_options' => 'array',
             'is_favorite' => 'boolean',
             'sent_at' => 'datetime',

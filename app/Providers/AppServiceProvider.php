@@ -93,6 +93,7 @@ class AppServiceProvider extends ServiceProvider
             'conversation' => \App\Models\Conversation::class,
             'vehicle' => \App\Models\Vehicle::class,
             'vehicle_paper' => \App\Models\VehiclePaper::class,
+            'tool' => \App\Models\Tool::class,
         ]);
 
         // En développement : erreur si on essaie d'enregistrer un attribut non autorisé

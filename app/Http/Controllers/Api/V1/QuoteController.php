@@ -79,9 +79,9 @@ class QuoteController extends Controller
         $this->authorize('update', $quote);
         $data = $request->validated();
 
-        // Favori, notes internes et proposition technique : toujours possibles ;
+        // Favori, notes internes, proposition technique et devis neutre (présentation du PDF) : toujours possibles ;
         // le reste seulement sur un brouillon ou un devis envoyé
-        if (array_diff(array_keys($data), ['is_favorite', 'notes', 'proposal_options']) !== []) {
+        if (array_diff(array_keys($data), ['is_favorite', 'notes', 'proposal_options', 'is_neutral']) !== []) {
             QuoteEditing::ensureEditable($quote);
         }
         if (isset($data['proposal_options'])) {
@@ -158,11 +158,14 @@ class QuoteController extends Controller
         return (new QuoteResource($copy->refresh()->load(QuoteEditing::FULL)))->response()->setStatusCode(201);
     }
 
-    /** GET /api/v1/quotes/{id}/pdf — téléchargement (inline=1 : affichage dans le navigateur). */
+    /**
+     * GET /api/v1/quotes/{id}/pdf — téléchargement (inline=1 : affichage dans le navigateur).
+     * `neutral=1` / `neutral=0` : version neutre ou non pour ce téléchargement, sans changer le réglage du devis.
+     */
     public function pdf(Request $request, Quote $quote): Response
     {
         $this->authorize('export', $quote);
-        $pdf = QuotePdf::quote($quote);
+        $pdf = QuotePdf::quote($quote, $request->has('neutral') ? $request->boolean('neutral') : null);
         $filename = $quote->number.'.pdf';
 
         return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);

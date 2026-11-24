@@ -1,4 +1,10 @@
-{{-- En-tête et pied de page des PDF : logo, coordonnées, mentions légales (et banque si $bank). --}}
+{{-- En-tête et pied de page des PDF : logo, coordonnées, mentions légales (et banque si $bank).
+     $neutral : document neutre, sans aucune information de l'entreprise (seulement le numéro de page). --}}
+@if ($neutral ?? false)
+<footer>
+    <div class="page">Page </div>
+</footer>
+@else
 <header>
     <table><tr>
         <td style="width:50%">@if ($logo && ($showLogo ?? true))<img class="logo" src="{{ $logo }}" alt="">@else<strong style="font-size:14px">{{ $company->name }}</strong>@endif</td>
@@ -19,3 +25,4 @@
     @if ($company->legal_mentions)<br>{{ $company->legal_mentions }}@endif
     <div class="page">Page </div>
 </footer>
+@endif

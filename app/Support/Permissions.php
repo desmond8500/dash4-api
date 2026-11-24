@@ -52,6 +52,8 @@ final class Permissions
         'contracts' => ['view', 'create', 'update', 'delete'],
         // Parc automobile ; `.own` : véhicules dont on est le conducteur attitré (lecture et relevés du compteur)
         'vehicles' => ['view', 'view.own', 'create', 'update', 'delete'],
+        // Outillage ; `.own` : outils qu'on a en prêt ; `lend` : prêter, enregistrer les retours, relancer
+        'tools' => ['view', 'view.own', 'create', 'update', 'delete', 'lend'],
         'company' => ['view', 'update'],
         'users' => ['view', 'manage'],
         'settings' => ['view', 'update'],
@@ -148,6 +150,7 @@ final class Permissions
                 'badges.view', 'badges.create', 'badges.update',
                 'contracts.view',
                 'vehicles.view.own',
+                'tools.view', 'tools.lend',
                 'prices.view',
             ],
 
@@ -166,6 +169,7 @@ final class Permissions
                 'journals.view',
                 'contracts.view', 'contracts.create', 'contracts.update',
                 'vehicles.view.own',
+                'tools.view.own',
                 'prices.view', 'costs.view',
             ],
 
@@ -183,6 +187,7 @@ final class Permissions
                 'tasks.view.own', 'tasks.update.own',
                 'contracts.view',
                 'vehicles.view',
+                'tools.view',
                 'company.view', 'company.update',
                 'settings.view',
                 'prices.view', 'costs.view', 'bank.view', 'bank.manage', 'signature.manage', 'exports.run', 'audit.view',
@@ -199,6 +204,7 @@ final class Permissions
                 'accounting.view.own', 'accounting.create.own',
                 'tasks.view.own', 'tasks.update.own',
                 'vehicles.view.own',
+                'tools.view', 'tools.create', 'tools.update', 'tools.delete', 'tools.lend',
                 'costs.view', 'exports.run',
             ],
 
@@ -215,6 +221,7 @@ final class Permissions
                 'tech_shares.view.own',
                 'tech_access_requests.view.own', 'tech_access_requests.create',
                 'vehicles.view.own',
+                'tools.view.own',
             ],
         ];
     }

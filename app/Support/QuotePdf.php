@@ -24,7 +24,8 @@ use Illuminate\Support\Facades\Storage;
 /** PDF du devis, de sa proposition technique et de ses bordereaux. */
 final class QuotePdf
 {
-    public static function quote(Quote $quote): DomPdf
+    /** @param bool|null $neutral version neutre (sans les informations de l'entreprise) ; null : réglage du devis */
+    public static function quote(Quote $quote, ?bool $neutral = null): DomPdf
     {
         $quote->load([
             'client.phones', 'client.emails', 'project', 'bankAccount',
@@ -32,11 +33,13 @@ final class QuotePdf
             'deposits' => fn ($q) => $q->where('show_on_pdf', true),
         ]);
         $company = Company::current();
-        $signatureOn = $quote->show_signature && ($company->signatureSettings()['quote'] ?? true);
+        $neutral ??= (bool) $quote->is_neutral;
+        $signatureOn = ! $neutral && $quote->show_signature && ($company->signatureSettings()['quote'] ?? true);
 
         return Pdf::loadView('pdf.quote', [
             ...self::common($company),
             'quote' => $quote,
+            'neutral' => $neutral,
             'signature' => $signatureOn ? self::dataUri('local', $company->signature_path) : null,
             'stamp' => $signatureOn ? self::dataUri('local', $company->stamp_path) : null,
         ])->setPaper('a4');

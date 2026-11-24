@@ -63,13 +63,14 @@ final class Attachable
         'messages' => Message::class,
         'vehicles' => Vehicle::class,
         'vehicle-papers' => VehiclePaper::class,
+        'tools' => \App\Models\Tool::class,
     ];
 
     /** Fiches qui ont un fil de commentaires (pas les sections de journal, ni les commentaires eux-mêmes). */
     public const COMMENTABLE = [
         'clients', 'projects', 'quotes', 'invoices', 'articles', 'brands', 'providers', 'purchases', 'expenses',
         'tasks', 'client-requests', 'journals', 'tech-shares', 'installed-systems', 'equipment', 'reception-reports', 'contracts',
-        'vehicles',
+        'vehicles', 'tools',
     ];
 
     /** Nom de la fiche dans l'URL (« projects »…) à partir du modèle. */

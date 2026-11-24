@@ -42,6 +42,7 @@ class QuoteResource extends JsonResource
                 ? ['id' => $this->bankAccount->id, 'bank_name' => $this->bankAccount->bank_name, 'label' => $this->bankAccount->label]
                 : null),
             'show_signature' => $this->show_signature,
+            'is_neutral' => $this->is_neutral,
             'is_favorite' => $this->is_favorite,
             $this->mergeWhen($prices, fn () => [
                 'subtotal' => $this->subtotal,
