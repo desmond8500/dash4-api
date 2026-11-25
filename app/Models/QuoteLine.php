@@ -19,6 +19,7 @@ class QuoteLine extends Model
         'coefficient' => 1,
         'unit_price' => 0,
         'line_total' => 0,
+        'show_in_quantities' => true,
     ];
 
     protected function casts(): array
@@ -30,6 +31,7 @@ class QuoteLine extends Model
             'coefficient' => 'float',
             'unit_price' => 'integer',
             'line_total' => 'integer',
+            'show_in_quantities' => 'boolean',
         ];
     }
 

@@ -31,6 +31,7 @@ class QuoteLineResource extends JsonResource
             'designation' => $this->designation,
             'reference' => $this->reference,
             'comment' => $this->comment,
+            'show_in_quantities' => (bool) ($this->show_in_quantities ?? true),
             'category' => ['value' => $this->category->value, 'label' => $this->category->label()],
             'unit' => $this->unit,
             'quantity' => $this->quantity,

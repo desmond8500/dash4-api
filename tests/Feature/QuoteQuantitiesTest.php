@@ -90,3 +90,24 @@ it('ouvre le quantitatif au chef de projet du devis, pas à un autre chef de pro
     Sanctum::actingAs($other);
     $this->get("/api/v1/quotes/{$quoteId}/quantities?format=csv")->assertForbidden();
 });
+
+it('retire du quantitatif les lignes choisies, même sur un devis accepté, et garde ce choix à la duplication', function () {
+    Sanctum::actingAs(userWithRole('sales'));
+    [$quoteId] = quantitiesQuote();
+    $this->postJson("/api/v1/quotes/{$quoteId}/status", ['status' => 'accepted'])->assertOk();
+    $lines = collect($this->getJson("/api/v1/quotes/{$quoteId}")->json('data.sections'))->flatMap(fn ($s) => $s['lines']);
+    $cable = $lines->firstWhere('designation', 'Câble 2 paires');
+    expect($cable['show_in_quantities'])->toBeTrue();
+
+    $this->postJson("/api/v1/quotes/{$quoteId}/quantities/lines", ['hidden' => [$cable['id']]])->assertOk();
+    $csv = $this->get("/api/v1/quotes/{$quoteId}/quantities?format=csv")->assertOk()->streamedContent();
+    expect($csv)->not->toContain('Câble 2 paires')->toContain('Détecteur optique');
+
+    $copy = $this->postJson("/api/v1/quotes/{$quoteId}/duplicate")->assertCreated()->json('data');
+    $copyCable = collect($copy['sections'])->flatMap(fn ($s) => $s['lines'])->firstWhere('designation', 'Câble 2 paires');
+    expect($copyCable['show_in_quantities'])->toBeFalse();
+
+    // Tout remettre
+    $this->postJson("/api/v1/quotes/{$quoteId}/quantities/lines", ['hidden' => []])->assertOk();
+    expect($this->get("/api/v1/quotes/{$quoteId}/quantities?format=csv")->streamedContent())->toContain('Câble 2 paires');
+});

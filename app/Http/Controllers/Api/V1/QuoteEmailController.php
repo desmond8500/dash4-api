@@ -18,29 +18,58 @@ use Illuminate\Http\Request;
  */
 class QuoteEmailController extends Controller
 {
-    /** GET /api/v1/quotes/{id}/email-draft — destinataires proposés (client et contacts), objet et message. */
+    /**
+     * GET /api/v1/quotes/{id}/email-draft — destinataires proposés (contacts liés au devis d'abord, puis client
+     * et contacts du client), objet et message. `document=proposal` : envoi de la proposition technique seule.
+     */
     public function draft(Request $request, Quote $quote): JsonResponse
     {
-        $this->authorize('export', $quote);
+        $proposal = $this->authorizeDocument($request, $quote, false);
 
-        return response()->json(['data' => DocumentMailer::draft(
-            $quote->client,
-            $request->user(),
-            "Devis {$quote->number} — {$quote->title}",
-            "Bonjour,\n\nVeuillez trouver ci-joint notre devis {$quote->number} pour « {$quote->title} ».\n\n"
-                .'Nous restons à votre disposition pour toute question.',
-        )]);
+        $draft = $proposal
+            ? DocumentMailer::draft(
+                $quote->client,
+                $request->user(),
+                "Proposition technique {$quote->number} — {$quote->title}",
+                "Bonjour,\n\nVeuillez trouver ci-jointe notre proposition technique pour « {$quote->title} ».\n\n"
+                    .'Nous restons à votre disposition pour en discuter.',
+            )
+            : DocumentMailer::draft(
+                $quote->client,
+                $request->user(),
+                "Devis {$quote->number} — {$quote->title}",
+                "Bonjour,\n\nVeuillez trouver ci-joint notre devis {$quote->number} pour « {$quote->title} ».\n\n"
+                    .'Nous restons à votre disposition pour toute question.',
+            );
+
+        // Contacts liés au devis en premier, avec leur rôle
+        $linked = $quote->linkedContacts()->with('contact.emails')->get()
+            ->flatMap(fn ($l) => collect([$l->contact->email])->concat($l->contact->emails->pluck('address'))->filter()
+                ->map(fn ($address) => ['email' => $address, 'name' => $l->contact->full_name, 'label' => $l->role ?: $l->contact->job_title]));
+        $draft['suggestions'] = $linked->concat($draft['suggestions'])->unique('email')->values();
+
+        return response()->json(['data' => $draft]);
     }
 
     /**
-     * POST /api/v1/quotes/{id}/send — `to` (liste d'adresses), `cc`, `subject`, `message`, `signature_id`,
-     * `attach_proposal` (joint aussi la proposition technique). Un brouillon passe à « Envoyé ».
+     * POST /api/v1/quotes/{id}/send — `to` (liste d'adresses), `cc`, `subject`, `message`, `signature_id`.
+     * Devis (par défaut) : `attach_proposal` joint aussi la proposition technique ; un brouillon passe à « Envoyé ».
+     * `document=proposal` : la proposition technique seule, sans changer le statut du devis.
      */
     public function send(Request $request, Quote $quote): QuoteResource
     {
-        $this->authorize('export', $quote);
-        $this->authorize('update', $quote);
-        $data = DocumentMailer::validate($request, ['attach_proposal' => ['sometimes', 'boolean']]);
+        $proposal = $this->authorizeDocument($request, $quote, true);
+        $data = DocumentMailer::validate($request, [
+            'attach_proposal' => ['sometimes', 'boolean'],
+            'document' => ['sometimes', 'in:quote,proposal'],
+        ]);
+
+        if ($proposal) {
+            $files = [['name' => 'Proposition technique '.$quote->number.'.pdf', 'data' => QuotePdf::proposal($quote)->output()]];
+            DocumentMailer::send($quote, $data, $files, $request->user(), "Proposition technique {$quote->number}");
+
+            return new QuoteResource($quote->refresh()->load(QuoteEditing::FULL));
+        }
 
         $files = [['name' => $quote->number.'.pdf', 'data' => QuotePdf::quote($quote)->output()]];
         if ($request->boolean('attach_proposal')) {
@@ -56,5 +85,29 @@ class QuoteEmailController extends Controller
         $quote->save();
 
         return new QuoteResource($quote->refresh()->load(QuoteEditing::FULL));
+    }
+
+    /**
+     * Devis : voir les prix (export). Proposition technique : voir le devis, et les prix seulement si la
+     * proposition les affiche. Envoyer demande en plus de pouvoir modifier le devis.
+     *
+     * @return bool true pour la proposition technique
+     */
+    private function authorizeDocument(Request $request, Quote $quote, bool $sending): bool
+    {
+        $proposal = $request->input('document') === 'proposal';
+        if ($proposal) {
+            $this->authorize('view', $quote);
+            if ($quote->proposalOptions()['show_prices']) {
+                $this->authorize('export', $quote);
+            }
+        } else {
+            $this->authorize('export', $quote);
+        }
+        if ($sending) {
+            $this->authorize('update', $quote);
+        }
+
+        return $proposal;
     }
 }

@@ -389,3 +389,38 @@ it('intègre vraiment l\'image dans le message envoyé', function () {
     $sent = app('mailer')->getSymfonyTransport()->messages()->first()->getOriginalMessage();
     expect($sent->getHtmlBody())->toContain('src="cid:');
 });
+
+it('envoie la proposition technique seule, sans changer le statut, avec les contacts du devis proposés en premier', function () {
+    Mail::fake();
+    Sanctum::actingAs(userWithRole('sales'));
+    $quote = quoteWithLines();
+    $architect = Contact::factory()->create(['firstname' => 'Awa', 'lastname' => 'Ndiaye', 'email' => 'awa@archi.sn']);
+    $this->postJson("/api/v1/quotes/{$quote['id']}/contacts", ['contact_id' => $architect->id, 'role' => 'Architecte'])->assertCreated();
+
+    $this->getJson("/api/v1/quotes/{$quote['id']}/email-draft?document=proposal")->assertOk()
+        ->assertJsonPath('data.subject', "Proposition technique {$quote['number']} — Vidéosurveillance")
+        ->assertJsonPath('data.suggestions.0.email', 'awa@archi.sn')
+        ->assertJsonPath('data.suggestions.0.label', 'Architecte');
+
+    $this->postJson("/api/v1/quotes/{$quote['id']}/send", [
+        'document' => 'proposal', 'to' => ['awa@archi.sn'], 'subject' => 'Proposition', 'message' => 'Bonjour',
+    ])->assertOk()
+        ->assertJsonPath('data.status.value', 'draft')
+        ->assertJsonPath('data.emails.0.attachments', ['Proposition technique '.$quote['number'].'.pdf']);
+
+    Mail::assertSent(QuoteMail::class, fn (QuoteMail $mail) => $mail->hasTo('awa@archi.sn') && count($mail->attachments()) === 1);
+});
+
+it('laisse le chef de projet envoyer la proposition technique sans prix de son devis', function () {
+    Mail::fake();
+    $chef = userWithRole('project_manager');
+    Sanctum::actingAs($chef);
+    $client = Client::factory()->create();
+    $quote = $this->postJson('/api/v1/quotes', ['client_id' => $client->id, 'title' => 'Alarme'])->assertCreated()->json('data');
+
+    $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['document' => 'proposal', 'to' => ['a@b.sn'], 'subject' => 'X', 'message' => 'Y'])->assertOk();
+
+    // Le comptable voit le devis mais ne peut pas le modifier : pas d'envoi
+    Sanctum::actingAs(userWithRole('accountant'));
+    $this->postJson("/api/v1/quotes/{$quote['id']}/send", ['document' => 'proposal', 'to' => ['a@b.sn'], 'subject' => 'X', 'message' => 'Y'])->assertForbidden();
+});

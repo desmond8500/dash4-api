@@ -10,7 +10,8 @@ use Illuminate\Support\Collection;
 
 /**
  * Quantitatif d'un devis : désignations et quantités, sans prix ni coût, sans les lignes
- * « Main-d'œuvre / forfait ». Toutes les sections visibles, ou une seule section.
+ * « Main-d'œuvre / forfait », ni les lignes retirées du quantitatif (`show_in_quantities`).
+ * Toutes les sections visibles, ou une seule section.
  * Le récapitulatif additionne les lignes identiques (même article, sinon même désignation,
  * référence et unité) de toutes les sections.
  */
@@ -26,7 +27,7 @@ final class QuoteQuantities
             : $quote->sections()->where('is_visible', true)->orderBy('position')->orderBy('id')->with('lines')->get();
 
         $this->sections = $sections
-            ->each(fn (QuoteSection $s) => $s->setRelation('lines', $s->lines->reject(fn (QuoteLine $l) => self::isFlatRate($l))->values()))
+            ->each(fn (QuoteSection $s) => $s->setRelation('lines', $s->lines->reject(fn (QuoteLine $l) => self::isFlatRate($l) || ! $l->show_in_quantities)->values()))
             ->filter(fn (QuoteSection $s) => $s->lines->isNotEmpty())
             ->values();
     }

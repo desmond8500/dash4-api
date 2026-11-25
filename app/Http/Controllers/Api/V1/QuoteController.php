@@ -146,9 +146,9 @@ class QuoteController extends Controller
             foreach ($quote->sections()->with('lines')->get() as $section) {
                 $newSection = $copy->sections()->create($section->only(['title', 'position', 'is_visible']));
                 foreach ($section->lines as $line) {
-                    $newSection->lines()->create($line->only([
+                    $newSection->lines()->make($line->only([
                         'position', 'article_id', 'designation', 'reference', 'comment', 'category', 'unit', 'quantity', 'unit_cost', 'coefficient',
-                    ]));
+                    ]))->forceFill(['show_in_quantities' => $line->show_in_quantities])->save();
                 }
             }
             foreach ($quote->linkedContacts as $link) {
@@ -214,6 +214,27 @@ class QuoteController extends Controller
         $pdf = QuotePdf::quantities($quantities, $request->has('neutral') ? $request->boolean('neutral') : null);
 
         return $request->boolean('inline') ? $pdf->stream($filename.'.pdf') : $pdf->download($filename.'.pdf');
+    }
+
+    /**
+     * POST /api/v1/quotes/{id}/quantities/lines — `hidden` : lignes à retirer du quantitatif (les autres y sont).
+     * Possible même sur un devis accepté : ne change ni les montants ni le contenu du devis.
+     */
+    public function quantitiesLines(Request $request, Quote $quote): QuoteResource
+    {
+        $this->authorize('update', $quote);
+        $hidden = $request->validate(['hidden' => ['present', 'array'], 'hidden.*' => ['integer']], [], ['hidden' => 'lignes'])['hidden'];
+
+        $lines = \App\Models\QuoteLine::query()->whereIn('quote_section_id', $quote->sections()->pluck('id'));
+        DB::transaction(function () use ($lines, $hidden) {
+            (clone $lines)->update(['show_in_quantities' => true]);
+            if ($hidden !== []) {
+                (clone $lines)->whereIn('id', $hidden)->update(['show_in_quantities' => false]);
+            }
+        });
+        $quote->touch();
+
+        return new QuoteResource($quote->refresh()->load(QuoteEditing::FULL));
     }
 
     /** GET /api/v1/quotes/{id}/proposal-pdf — proposition technique. */
