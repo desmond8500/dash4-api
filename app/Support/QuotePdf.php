@@ -58,6 +58,20 @@ final class QuotePdf
         ])->setPaper('a4');
     }
 
+    /** Quantitatif (sans prix ni forfaits) de tout le devis ou d'une section. */
+    public static function quantities(QuoteQuantities $quantities, ?bool $neutral = null): DomPdf
+    {
+        $quote = $quantities->quote->loadMissing(['client', 'project']);
+        $company = Company::current();
+
+        return Pdf::loadView('pdf.quote_quantities', [
+            ...self::common($company),
+            'quote' => $quote,
+            'quantities' => $quantities,
+            'neutral' => $neutral ?? (bool) $quote->is_neutral,
+        ])->setPaper('a4');
+    }
+
     public static function deliveryNote(DeliveryNote $note): DomPdf
     {
         $note->load(['quote.client.phones', 'quote.project', 'lines']);

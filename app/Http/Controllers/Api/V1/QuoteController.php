@@ -11,6 +11,7 @@ use App\Models\Quote;
 use App\Support\DocumentNumber;
 use App\Support\QuoteEditing;
 use App\Support\QuotePdf;
+use App\Support\QuoteQuantities;
 use App\Support\SyncQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -169,6 +170,46 @@ class QuoteController extends Controller
         $filename = $quote->number.'.pdf';
 
         return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
+    }
+
+    /**
+     * GET /api/v1/quotes/{id}/quantities — quantitatif sans prix et sans les forfaits (main-d'œuvre) :
+     * toutes les sections visibles, ou `section_id` pour une seule. `format=pdf` (défaut) ou `csv` ;
+     * `inline=1` et `neutral=0|1` comme pour le PDF du devis. Aucun prix : ouvert à qui voit le devis.
+     */
+    public function quantities(Request $request, Quote $quote): Response
+    {
+        $this->authorize('view', $quote);
+        $data = $request->validate([
+            'format' => ['nullable', 'in:pdf,csv'],
+            'section_id' => ['nullable', 'integer'],
+        ], [], ['format' => 'format', 'section_id' => 'section']);
+
+        $section = null;
+        if (isset($data['section_id'])) {
+            $section = $quote->sections()->whereKey($data['section_id'])->first();
+            abort_unless($section, 404, 'Section introuvable dans ce devis.');
+        }
+        $quantities = new QuoteQuantities($quote, $section);
+        $filename = $quantities->filename();
+
+        if (($data['format'] ?? 'pdf') === 'csv') {
+            [$headers, $rows] = $quantities->table();
+
+            return response()->streamDownload(function () use ($headers, $rows) {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF");
+                fputcsv($out, $headers, ';', '"', '');
+                foreach ($rows as $row) {
+                    fputcsv($out, $row, ';', '"', '');
+                }
+                fclose($out);
+            }, $filename.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }
+
+        $pdf = QuotePdf::quantities($quantities, $request->has('neutral') ? $request->boolean('neutral') : null);
+
+        return $request->boolean('inline') ? $pdf->stream($filename.'.pdf') : $pdf->download($filename.'.pdf');
     }
 
     /** GET /api/v1/quotes/{id}/proposal-pdf — proposition technique. */

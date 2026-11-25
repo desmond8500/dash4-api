@@ -271,7 +271,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('quotes/{quote}/duplicate', [QuoteController::class, 'duplicate']);
         Route::post('quotes/{quote}/site-equipment', [QuoteSiteController::class, 'store']);
         Route::get('quotes/{quote}/pdf', [QuoteController::class, 'pdf'])->name('quotes.pdf');
-        Route::post('quotes/{quote}/signed-copy', [QuoteController::class, 'signedCopy']);
+        Route::get('quotes/{quote}/quantities', [QuoteController::class, 'quantities'])->name('quotes.quantities');
+        Route::post('quotes/{quote}/signed-copy',[QuoteController::class, 'signedCopy']);
         Route::get('quotes/{quote}/proposal-pdf', [QuoteController::class, 'proposalPdf'])->name('quotes.proposal-pdf');
         Route::get('quotes/{quote}/email-draft', [QuoteEmailController::class, 'draft']);
         Route::post('quotes/{quote}/send', [QuoteEmailController::class, 'send']);
