@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\QuoteLineCategory;
 use App\Models\Company;
 use App\Models\DeliveryNote;
 use App\Models\Document;
@@ -45,17 +46,61 @@ final class QuotePdf
         ])->setPaper('a4');
     }
 
-    /** Proposition technique : description de chaque section, lignes sans prix (ou avec, au choix). */
+    /**
+     * Proposition technique, comme les « Détails techniques » de Dash3 : une page par section imprimée,
+     * son texte, puis ses équipements (centrales et organes seulement, par catégorie) avec la photo,
+     * la référence, la description et la fiche technique de l'article, le commentaire de la ligne et la quantité.
+     */
     public static function proposal(Quote $quote): DomPdf
     {
-        $quote->load(['client', 'project', 'sections' => fn ($q) => $q->where('is_visible', true), 'sections.lines']);
+        $quote->load([
+            'client', 'project',
+            'sections' => fn ($q) => $q->where('is_visible', true)->orderBy('position')->orderBy('id'),
+            'sections.lines.article.links',
+        ]);
         $company = Company::current();
+
+        $sections = $quote->sections
+            ->each(fn ($s) => $s->setRelation('lines', self::proposalLines($s->lines)))
+            ->filter(fn ($s) => $s->proposal || $s->lines->isNotEmpty())
+            ->values();
+
+        // Photos des articles intégrées au PDF : 3 Mo chacune et 60 au plus
+        $photos = $sections->flatMap(fn ($s) => $s->lines->pluck('article'))->filter(fn ($a) => $a?->image_path)
+            ->unique('id')->take(60)
+            ->mapWithKeys(function ($article) {
+                $disk = Storage::disk('public');
+                $ok = $disk->exists($article->image_path) && $disk->size($article->image_path) <= 3 * 1024 * 1024;
+
+                return [$article->id => $ok ? self::dataUri('public', $article->image_path) : null];
+            })->filter()->all();
 
         return Pdf::loadView('pdf.proposal', [
             ...self::common($company),
             'quote' => $quote,
+            'sections' => $sections,
+            'photos' => $photos,
             'options' => $quote->proposalOptions(),
         ])->setPaper('a4');
+    }
+
+    /**
+     * Lignes reprises dans la proposition technique (règle de Dash3 : priorité < 5) : centrales et organes,
+     * triés par catégorie en gardant l'ordre du devis dans chaque catégorie.
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\QuoteLine>  $lines
+     * @return \Illuminate\Support\Collection<int, \App\Models\QuoteLine>
+     */
+    public static function proposalLines($lines)
+    {
+        $order = [QuoteLineCategory::Central->value => 0, QuoteLineCategory::Device->value => 1];
+
+        return $lines->values()
+            ->filter(fn ($l) => isset($order[$l->category->value]))
+            ->map(fn ($l, $i) => [$l, $i])
+            ->sortBy(fn ($pair) => [$order[$pair[0]->category->value], $pair[1]])
+            ->map(fn ($pair) => $pair[0])
+            ->values();
     }
 
     /** Quantitatif (sans prix ni forfaits) de tout le devis ou d'une section. */
