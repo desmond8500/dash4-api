@@ -13,6 +13,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /** Fiches techniques d'un chantier (zones d'alarme, lecteurs, détecteurs…) avec leur PDF. */
 class SheetController extends Controller
@@ -76,7 +77,7 @@ class SheetController extends Controller
     {
         $this->authorize('view', $sheet);
         $pdf = QuotePdf::sheet($sheet);
-        $name = 'Fiche — '.mb_substr($sheet->title, 0, 80).'.pdf';
+        $name = PdfName::sheet($sheet->loadMissing('project.client'));
 
         return $request->boolean('inline') ? $pdf->stream($name) : $pdf->download($name);
     }

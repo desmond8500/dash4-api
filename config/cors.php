@@ -18,7 +18,8 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    // Nom des fichiers téléchargés (PDF « Client - Objet - Référence »), lu par le web et le mobile
+    'exposed_headers' => ['Content-Disposition'],
 
     'max_age' => 0,
 

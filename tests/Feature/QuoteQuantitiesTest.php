@@ -36,7 +36,7 @@ it('exporte le quantitatif de tout le devis en CSV, sans forfaits, sans prix, sa
     $csv = $response->streamedContent();
 
     expect($response->headers->get('content-type'))->toContain('text/csv')
-        ->and($response->headers->get('content-disposition'))->toContain('Quantitatif DEV-')
+        ->and($response->headers->get('content-disposition'))->toContain('Quantitatif - ')->toContain('Alarme incendie - DEV-')
         ->and($csv)->toStartWith("\xEF\xBB\xBF")
         ->toContain('Section;Catégorie;Désignation;Référence;Unité;Quantité')
         ->toContain('"Bâtiment A";Organe;"Détecteur optique";DO-100;;12')

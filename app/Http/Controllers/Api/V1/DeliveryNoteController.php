@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /**
  * Bordereaux de livraison ou de travaux (Dash3 : invoice_bls), numérotés BL-2026-0001, sans prix.
@@ -151,7 +152,7 @@ class DeliveryNoteController extends Controller
     {
         $this->authorize('view', $note->quote);
         $pdf = QuotePdf::deliveryNote($note);
-        $filename = $note->number.'.pdf';
+        $filename = PdfName::deliveryNote($note->loadMissing('quote.client'));
 
         return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
     }

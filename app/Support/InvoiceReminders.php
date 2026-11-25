@@ -67,7 +67,7 @@ final class InvoiceReminders
         $email = DocumentMailer::send(
             $invoice,
             $data,
-            [['name' => $invoice->number.'.pdf', 'data' => QuotePdf::invoice($invoice)->output()]],
+            [['name' => PdfName::invoice($invoice->loadMissing('client')), 'data' => QuotePdf::invoice($invoice)->output()]],
             $user,
             "Relance n° {$level} de la facture {$invoice->number}",
         );

@@ -103,15 +103,10 @@ final class QuoteQuantities
         return [$headers, $rows];
     }
 
-    /** Nom du fichier, sans extension. */
-    public function filename(): string
+    /** Nom du fichier : « Quantitatif - Client - Objet - Référence[ - Section].ext ». */
+    public function filename(string $extension = 'pdf'): string
     {
-        $name = 'Quantitatif '.$this->quote->number;
-        if ($this->section) {
-            $name .= ' - '.preg_replace('/[\\\\\/:*?"<>|]+/', ' ', (string) $this->section->title);
-        }
-
-        return trim(preg_replace('/\s+/', ' ', $name));
+        return PdfName::quote($this->quote->loadMissing('client'), 'Quantitatif', $this->section?->title, $extension);
     }
 
     /** Quantité au format français pour un tableur (virgule décimale, sans zéros inutiles). */

@@ -246,7 +246,10 @@ it('envoie le devis par e-mail avec le PDF, le passe à « Envoyé » et garde l
     ])->assertOk()
         ->assertJsonPath('data.status.value', 'sent')
         ->assertJsonPath('data.emails.0.to', ['client@example.sn'])
-        ->assertJsonPath('data.emails.0.attachments', [$quote['number'].'.pdf', 'Proposition technique '.$quote['number'].'.pdf']);
+        ->assertJsonPath('data.emails.0.attachments', [
+            "Hôtel Teranga - Vidéosurveillance - {$quote['number']}.pdf",
+            "Proposition technique - Hôtel Teranga - Vidéosurveillance - {$quote['number']}.pdf",
+        ]);
 
     Mail::assertSent(QuoteMail::class, fn (QuoteMail $mail) => $mail->hasTo('client@example.sn')
         && $mail->hasCc('direction@example.sn')
@@ -406,7 +409,7 @@ it('envoie la proposition technique seule, sans changer le statut, avec les cont
         'document' => 'proposal', 'to' => ['awa@archi.sn'], 'subject' => 'Proposition', 'message' => 'Bonjour',
     ])->assertOk()
         ->assertJsonPath('data.status.value', 'draft')
-        ->assertJsonPath('data.emails.0.attachments', ['Proposition technique '.$quote['number'].'.pdf']);
+        ->assertJsonPath('data.emails.0.attachments', ["Proposition technique - Hôtel Teranga - Vidéosurveillance - {$quote['number']}.pdf"]);
 
     Mail::assertSent(QuoteMail::class, fn (QuoteMail $mail) => $mail->hasTo('awa@archi.sn') && count($mail->attachments()) === 1);
 });

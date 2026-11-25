@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /**
  * Journaux d'intervention : sections, intervenants, photos (documents), position, PDF.
@@ -123,7 +124,7 @@ class JournalController extends Controller
     {
         $this->authorize('view', $journal);
         $pdf = QuotePdf::journal($journal);
-        $name = 'Rapport '.$journal->date->format('Y-m-d').' — '.mb_substr($journal->title, 0, 60).'.pdf';
+        $name = PdfName::journal($journal->loadMissing(['client', 'project.client']));
 
         return $request->boolean('inline') ? $pdf->stream($name) : $pdf->download($name);
     }
@@ -171,7 +172,7 @@ class JournalController extends Controller
     {
         $this->authorize('update', $journal);
         $data = DocumentMailer::validate($request);
-        $name = 'Rapport '.$journal->date->format('Y-m-d').'.pdf';
+        $name = PdfName::journal($journal->loadMissing(['client', 'project.client']));
         DocumentMailer::send($journal, $data, [['name' => $name, 'data' => QuotePdf::journal($journal)->output()]], $request->user(), "Rapport « {$journal->title} »");
 
         return new JournalResource($journal->refresh()->load(self::FULL)->loadCount('documents'));

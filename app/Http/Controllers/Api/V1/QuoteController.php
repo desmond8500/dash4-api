@@ -19,6 +19,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 class QuoteController extends Controller
 {
@@ -171,7 +172,7 @@ class QuoteController extends Controller
     {
         $this->authorize('export', $quote);
         $pdf = QuotePdf::quote($quote, $request->has('neutral') ? $request->boolean('neutral') : null);
-        $filename = $quote->number.'.pdf';
+        $filename = PdfName::quote($quote->loadMissing('client'));
 
         return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
     }
@@ -208,12 +209,12 @@ class QuoteController extends Controller
                     fputcsv($out, $row, ';', '"', '');
                 }
                 fclose($out);
-            }, $filename.'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+            }, $quantities->filename('csv'), ['Content-Type' => 'text/csv; charset=UTF-8']);
         }
 
         $pdf = QuotePdf::quantities($quantities, $request->has('neutral') ? $request->boolean('neutral') : null);
 
-        return $request->boolean('inline') ? $pdf->stream($filename.'.pdf') : $pdf->download($filename.'.pdf');
+        return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
     }
 
     /**
@@ -246,7 +247,7 @@ class QuoteController extends Controller
             $this->authorize('export', $quote);
         }
         $pdf = QuotePdf::proposal($quote);
-        $filename = 'Proposition technique '.$quote->number.'.pdf';
+        $filename = PdfName::quote($quote->loadMissing('client'), 'Proposition technique');
 
         return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
     }

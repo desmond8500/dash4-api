@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Support\QuotePdf;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /** GET /api/v1/projects/{project}/doe — dossier des ouvrages exécutés, en PDF, à partir du chantier. */
 class DoeController extends Controller
@@ -15,7 +16,7 @@ class DoeController extends Controller
     {
         $this->authorize('viewSite', $project);
         $pdf = QuotePdf::doe($project);
-        $name = 'DOE — '.mb_substr($project->name, 0, 80).'.pdf';
+        $name = PdfName::project($project->loadMissing('client'), 'DOE');
 
         return $request->boolean('inline') ? $pdf->stream($name) : $pdf->download($name);
     }

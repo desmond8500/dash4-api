@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /**
  * Contrats de maintenance (`contracts.*`) et forfaits. Chaque période devient une facture brouillon
@@ -134,7 +135,7 @@ class ContractController extends Controller
         $this->authorize('view', $contract);
         abort_unless($request->user()->can('prices.view'), 403, "Vous n'avez pas le droit de voir les montants de ce contrat.");
         $pdf = QuotePdf::contract($contract);
-        $name = "Contrat {$contract->number}.pdf";
+        $name = PdfName::contract($contract->loadMissing('client'));
 
         return $request->boolean('inline') ? $pdf->stream($name) : $pdf->download($name);
     }

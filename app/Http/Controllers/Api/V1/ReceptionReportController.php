@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /** Procès-verbaux de réception d'un chantier (`sites.*`) : parties et logos, systèmes, réserves, PDF. */
 class ReceptionReportController extends Controller
@@ -110,7 +111,7 @@ class ReceptionReportController extends Controller
     {
         $this->authorize('view', $receptionReport);
         $pdf = QuotePdf::receptionReport($receptionReport);
-        $name = 'PV de réception '.$receptionReport->date->format('Y-m-d').' — '.mb_substr($receptionReport->title, 0, 60).'.pdf';
+        $name = PdfName::receptionReport($receptionReport->loadMissing('project.client'));
 
         return $request->boolean('inline') ? $pdf->stream($name) : $pdf->download($name);
     }

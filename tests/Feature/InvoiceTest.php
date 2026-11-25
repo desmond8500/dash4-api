@@ -256,7 +256,7 @@ it('envoie une facture émise par e-mail avec son PDF et la garde dans l\'histor
 
     $this->getJson("/api/v1/invoices/{$invoice['id']}/email-draft")->assertJsonPath('data.subject', "Facture {$number} — Facture");
     $this->postJson("/api/v1/invoices/{$invoice['id']}/send", ['to' => ['compta@teranga.sn'], 'subject' => 'Facture', 'message' => 'Bonjour'])
-        ->assertOk()->assertJsonPath('data.emails.0.attachments', ["{$number}.pdf"]);
+        ->assertOk()->assertJsonPath('data.emails.0.attachments', fn ($files) => count($files) === 1 && str_ends_with($files[0], " - Facture - {$number}.pdf"));
 
     Mail::assertSent(QuoteMail::class, fn (QuoteMail $m) => $m->hasTo('compta@teranga.sn') && $m->document instanceof Invoice);
 });

@@ -11,6 +11,7 @@ use App\Support\QuoteEditing;
 use App\Support\QuotePdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Support\PdfName;
 
 /**
  * Envoi d'un devis par e-mail (envoi immédiat : pas de file d'attente permanente sur l'hébergement).
@@ -65,15 +66,15 @@ class QuoteEmailController extends Controller
         ]);
 
         if ($proposal) {
-            $files = [['name' => 'Proposition technique '.$quote->number.'.pdf', 'data' => QuotePdf::proposal($quote)->output()]];
+            $files = [['name' => PdfName::quote($quote->loadMissing('client'), 'Proposition technique'), 'data' => QuotePdf::proposal($quote)->output()]];
             DocumentMailer::send($quote, $data, $files, $request->user(), "Proposition technique {$quote->number}");
 
             return new QuoteResource($quote->refresh()->load(QuoteEditing::FULL));
         }
 
-        $files = [['name' => $quote->number.'.pdf', 'data' => QuotePdf::quote($quote)->output()]];
+        $files = [['name' => PdfName::quote($quote->loadMissing('client')), 'data' => QuotePdf::quote($quote)->output()]];
         if ($request->boolean('attach_proposal')) {
-            $files[] = ['name' => 'Proposition technique '.$quote->number.'.pdf', 'data' => QuotePdf::proposal($quote)->output()];
+            $files[] = ['name' => PdfName::quote($quote, 'Proposition technique'), 'data' => QuotePdf::proposal($quote)->output()];
         }
 
         DocumentMailer::send($quote, $data, $files, $request->user(), "Devis {$quote->number}");

@@ -13,6 +13,7 @@ use App\Models\Task;
 use App\Support\QuotePdf;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /**
  * GET /api/v1/projects/{project}/summary-pdf — résumé du projet en une ou deux pages : client, devis,
@@ -55,7 +56,7 @@ class ProjectSummaryController extends Controller
             'systems' => $systems,
             'journals' => $journals,
         ]);
-        $name = 'Résumé — '.mb_substr($project->name, 0, 80).'.pdf';
+        $name = PdfName::project($project->loadMissing('client'), 'Résumé');
 
         return $request->boolean('inline') ? $pdf->stream($name) : $pdf->download($name);
     }

@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /**
  * Factures et paiements. Brouillon modifiable sans numéro ; à l'émission (invoices.issue),
@@ -290,7 +291,7 @@ class InvoiceController extends Controller
     {
         $this->authorize('view', $invoice);
         $pdf = QuotePdf::invoice($invoice);
-        $filename = ($invoice->number ?? 'Brouillon facture '.$invoice->id).'.pdf';
+        $filename = PdfName::invoice($invoice->loadMissing('client'));
 
         return $request->boolean('inline') ? $pdf->stream($filename) : $pdf->download($filename);
     }
@@ -317,7 +318,7 @@ class InvoiceController extends Controller
         $this->authorize('update', $invoice);
         abort_if($invoice->isDraft(), 422, 'Émettez la facture avant de l\'envoyer.');
         $data = DocumentMailer::validate($request);
-        $files = [['name' => $invoice->number.'.pdf', 'data' => QuotePdf::invoice($invoice)->output()]];
+        $files = [['name' => PdfName::invoice($invoice->loadMissing('client')), 'data' => QuotePdf::invoice($invoice)->output()]];
 
         DocumentMailer::send($invoice, $data, $files, $request->user(), "Facture {$invoice->number}");
 

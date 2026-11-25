@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /** Avoirs : annulent tout ou partie d'une facture émise (invoices.issue). */
 class CreditNoteController extends Controller
@@ -53,6 +54,8 @@ class CreditNoteController extends Controller
         $this->authorize('view', $creditNote->invoice);
         $pdf = QuotePdf::creditNote($creditNote);
 
-        return $request->boolean('inline') ? $pdf->stream("{$creditNote->number}.pdf") : $pdf->download("{$creditNote->number}.pdf");
+        $name = PdfName::creditNote($creditNote->loadMissing(['client', 'invoice.client']));
+
+        return $request->boolean('inline') ? $pdf->stream($name) : $pdf->download($name);
     }
 }

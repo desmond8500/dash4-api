@@ -20,6 +20,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
+use App\Support\PdfName;
 
 /**
  * Achats : brouillon → commandé → reçu en partie → reçu (ou annulé).
@@ -257,7 +258,9 @@ class PurchaseController extends Controller
         abort_unless($request->user()->can('costs.view'), 403, "Vous n'avez pas accès aux prix d'achat.");
         $pdf = QuotePdf::purchaseOrder($purchase);
 
-        return $request->boolean('inline') ? $pdf->stream($purchase->number.'.pdf') : $pdf->download($purchase->number.'.pdf');
+        $name = PdfName::purchase($purchase->loadMissing('provider'));
+
+        return $request->boolean('inline') ? $pdf->stream($name) : $pdf->download($name);
     }
 
     /** Ligne choisie dans le stock : désignation, référence, unité et coût de l'article, sauf ce qui est envoyé. */

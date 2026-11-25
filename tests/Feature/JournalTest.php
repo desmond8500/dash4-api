@@ -118,7 +118,7 @@ it('envoie le rapport par e-mail avec son PDF et le garde dans l\'historique', f
     $this->getJson("/api/v1/journals/{$journal['id']}/email-draft")->assertOk()
         ->assertJsonPath('data.subject', "Rapport d'intervention du 19/11/2026 — Maintenance");
     $this->postJson("/api/v1/journals/{$journal['id']}/send", ['to' => ['client@exemple.sn'], 'subject' => 'Rapport', 'message' => 'Bonjour'])
-        ->assertOk()->assertJsonPath('data.emails.0.attachments', ['Rapport 2026-11-19.pdf']);
+        ->assertOk()->assertJsonPath('data.emails.0.attachments', ["Rapport - {$client->name} - Maintenance - 2026-11-19.pdf"]);
 
     \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\QuoteMail::class, fn ($m) => $m->hasTo('client@exemple.sn') && $m->document instanceof Journal);
 

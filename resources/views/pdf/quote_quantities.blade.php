@@ -7,7 +7,7 @@
 <html lang="fr">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<title>{{ $quantities->filename() }}</title>
+<title>{{ basename($quantities->filename(), '.pdf') }}</title>
 @include('pdf.partials.styles')
 <style>
     h2 { font-size: 13px; color: #1e3a8a; margin: 6mm 0 1mm; border-bottom: 1px solid #c7d2fe; padding-bottom: 1mm; }
