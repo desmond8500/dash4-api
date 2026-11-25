@@ -41,5 +41,6 @@ it('applique les décisions du 17 novembre 2026', function () {
 it('relance le seeder sans doublon', function () {
     $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
 
-    expect(Role::count())->toBe(7);
+    // Les 7 profils et le compte « Lecture seule »
+    expect(Role::count())->toBe(count(\App\Support\Permissions::ROLE_LABELS));
 });

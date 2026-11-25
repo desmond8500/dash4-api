@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ReadOnlyViewer
 {
-    private const ALLOWED_WRITES = ['auth.logout'];
+    private const ALLOWED_WRITES = ['api.v1.auth.logout'];
 
     public function handle(Request $request, Closure $next): Response
     {
