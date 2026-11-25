@@ -73,4 +73,14 @@ return [
         'address' => env('INBOX_ADDRESS'),
     ],
 
+
+    /*
+    | Outils pratiques (calculs, conversions) : le calcul se fait dans le web et le mobile (paquet
+    | @dash4/shared) ; l'API garde seulement leurs liens avec les marques, fournisseurs et articles.
+    | Un nouvel outil s'ajoute ici et dans PRACTICAL_TOOLS de @dash4/shared, avec le même code.
+    */
+    'practical_tools' => [
+        'galaxy-dimension-text' => 'Texte pour centrale Galaxy Dimension',
+    ],
+
 ];

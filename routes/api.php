@@ -309,6 +309,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('quote-lines/{line}', [QuoteLineController::class, 'destroy']);
 
         // Stock : marques, fournisseurs, articles, mouvements
+        // Outils pratiques (calculs, conversions) et leurs liens avec marques, fournisseurs, articles
+        Route::get('practical-tools', [\App\Http\Controllers\Api\V1\PracticalToolController::class, 'index']);
+        Route::get('practical-tools/for/{type}/{id}', [\App\Http\Controllers\Api\V1\PracticalToolController::class, 'forRecord'])
+            ->where(['type' => 'articles|brands|providers', 'id' => '[0-9]+']);
+        Route::post('practical-tools/{tool}/links', [\App\Http\Controllers\Api\V1\PracticalToolController::class, 'store']);
+        Route::delete('practical-tool-links/{link}', [\App\Http\Controllers\Api\V1\PracticalToolController::class, 'destroy']);
         Route::apiResource('brands', BrandController::class);
         Route::post('brands/{brand}/logo', [StockLogoController::class, 'storeBrand']);
         Route::delete('brands/{brand}/logo', [StockLogoController::class, 'destroyBrand']);
