@@ -151,6 +151,10 @@ class QuoteController extends Controller
                     ]));
                 }
             }
+            foreach ($quote->linkedContacts as $link) {
+                $copy->linkedContacts()->make($link->only(['contact_id', 'role', 'position']))
+                    ->forceFill(['created_by' => $request->user()->id])->save();
+            }
             $copy->recalculate();
 
             return $copy;

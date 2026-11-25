@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\QuoteStatus;
 use App\Enums\TaxMode;
 use App\Models\Concerns\HasAttachments;
+use App\Models\Concerns\HasLinkedContacts;
 use App\Support\TaxCalculator;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,7 +25,7 @@ use Spatie\Activitylog\Support\LogOptions;
 ])]
 class Quote extends Model
 {
-    use HasAttachments, HasFactory, LogsActivity, SoftDeletes;
+    use HasAttachments, HasFactory, HasLinkedContacts, LogsActivity, SoftDeletes;
 
     protected $attributes = [
         'status' => 'draft',

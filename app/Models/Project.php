@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ProjectStatus;
 use App\Models\Concerns\HasAttachments;
+use App\Models\Concerns\HasLinkedContacts;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +21,7 @@ use Spatie\Activitylog\Support\LogOptions;
 ])]
 class Project extends Model
 {
-    use HasAttachments, HasFactory, LogsActivity, SoftDeletes;
+    use HasAttachments, HasFactory, HasLinkedContacts, LogsActivity, SoftDeletes;
 
     protected $attributes = [
         'status' => 'in_progress',

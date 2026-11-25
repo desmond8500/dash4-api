@@ -411,6 +411,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('{type}/{id}/comments', [CommentController::class, 'store'])->middleware('throttle:60,1');
             Route::get('{type}/{id}/mentionable', [CommentController::class, 'mentionable']);
         });
+        // Contacts liés à un projet ou à un devis (rôle sur la fiche)
+        Route::where(['type' => 'projects|quotes', 'id' => '[0-9]+'])->group(function () {
+            Route::get('{type}/{id}/contacts', [\App\Http\Controllers\Api\V1\RecordContactController::class, 'index']);
+            Route::post('{type}/{id}/contacts', [\App\Http\Controllers\Api\V1\RecordContactController::class, 'store']);
+            Route::post('{type}/{id}/contacts/order', [\App\Http\Controllers\Api\V1\RecordContactController::class, 'reorder']);
+        });
+        Route::patch('record-contacts/{recordContact}', [\App\Http\Controllers\Api\V1\RecordContactController::class, 'update']);
+        Route::delete('record-contacts/{recordContact}', [\App\Http\Controllers\Api\V1\RecordContactController::class, 'destroy']);
         Route::patch('comments/{comment}', [CommentController::class, 'update']);
         Route::delete('comments/{comment}', [CommentController::class, 'destroy']);
         Route::patch('notes/{note}', [NoteController::class, 'update']);
