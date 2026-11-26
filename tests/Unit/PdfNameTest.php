@@ -6,7 +6,8 @@ it('nomme un PDF « Client - Objet - Référence », sans morceaux vides ni cara
     expect(PdfName::make(['Hôtel Teranga', 'Vidéosurveillance', 'DEV-2026-0001']))->toBe('Hôtel Teranga - Vidéosurveillance - DEV-2026-0001.pdf')
         ->and(PdfName::make(['Proposition technique', 'SARL A/B', 'Alarme : RDC', null]))->toBe('Proposition technique - SARL A B - Alarme RDC.pdf')
         ->and(PdfName::make([null, '', '  ']))->toBe('Document.pdf')
-        ->and(PdfName::make(['Client', 'Objet'], 'csv'))->toBe('Client - Objet.csv');
+        ->and(PdfName::make(['Client', 'Objet'], 'csv'))->toBe('Client - Objet.csv')
+        ->and(PdfName::make(['Moreno Vallet S.A.', 'Maintenance', '2026-11-19']))->toBe('Moreno Vallet S.A. - Maintenance - 2026-11-19.pdf');
 });
 
 it('raccourcit un objet trop long', function () {

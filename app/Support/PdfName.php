@@ -95,6 +95,7 @@ final class PdfName
             $value = rtrim(mb_substr($value, 0, self::MAX_PART - 1)).'…';
         }
 
-        return trim($value, ' .-');
+        // Les points restent (« S.A. ») ; seuls les espaces et tirets en bordure partent
+        return trim($value, ' -');
     }
 }
