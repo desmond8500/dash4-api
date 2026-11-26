@@ -35,15 +35,7 @@ class PlanController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         $plans = \App\Models\Plan::query()
-            ->whereHas('project', function ($p) use ($user) {
-                $p->whereNull('deleted_at');
-                if ($user->can('sites.view')) {
-                    return;
-                }
-                $user->isTechnician()
-                    ? $p->whereIn('id', \App\Models\Task::query()->whereHas('assignees', fn ($a) => $a->whereKey($user->id))->select('project_id'))
-                    : $p->where(fn ($q) => $q->where('manager_id', $user->id)->orWhere('created_by', $user->id));
-            })
+            ->whereHas('project', fn ($p) => $p->whereNull('deleted_at')->siteVisibleTo($user))
             ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', "%{$search}%")->orWhereHas('project', fn ($p) => $p->where('name', 'like', "%{$search}%"))))
             ->with([...self::MARKERS, 'project:id,name', 'building:id,name', 'level:id,name'])
             ->orderBy('project_id')->orderBy('position')->orderBy('id')

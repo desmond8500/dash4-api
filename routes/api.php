@@ -146,6 +146,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('client-requests/{clientRequest}/convert', ClientRequestConvertController::class)->name('client-requests.convert');
 
         Route::apiResource('projects', ProjectController::class);
+        // Techniciens affectés à un projet : accès à sa partie chantier seulement
+        Route::get('projects/{project}/technicians', [\App\Http\Controllers\Api\V1\ProjectTechnicianController::class, 'index']);
+        Route::put('projects/{project}/technicians', [\App\Http\Controllers\Api\V1\ProjectTechnicianController::class, 'update']);
+        Route::get('site-projects', [\App\Http\Controllers\Api\V1\ProjectTechnicianController::class, 'sites']);
         // Suivi de chantier : bâtiments, systèmes installés, équipements, avancement, PV de réception
         Route::get('projects/{project}/summary-pdf', \App\Http\Controllers\Api\V1\ProjectSummaryController::class);
         Route::get('projects/{project}/site', [SiteController::class, 'show']);

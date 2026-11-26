@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Models\Project;
-use App\Models\Task;
 use App\Models\User;
 
 class ProjectPolicy
@@ -40,20 +39,12 @@ class ProjectPolicy
 
     /**
      * Suivi de chantier (bâtiments, systèmes, équipements, PV) — permissions `sites.*`.
-     * `sites.view.own` : ses projets (chef de projet) ; pour un technicien, les projets de ses tâches.
+     * `sites.view.own` : ses projets (chef de projet) ; pour un technicien, les projets où il est affecté
+     * ou a une tâche (voir Project::scopeSiteVisibleTo).
      */
     public function viewSite(User $user, Project $project): bool
     {
-        if ($user->can('sites.view')) {
-            return true;
-        }
-        if (! $user->can('sites.view.own')) {
-            return false;
-        }
-
-        return $user->isTechnician()
-            ? Task::query()->where('project_id', $project->id)->whereHas('assignees', fn ($a) => $a->whereKey($user->id))->exists()
-            : $project->isOwnedBy($user);
+        return Project::query()->siteVisibleTo($user)->whereKey($project->getKey())->withTrashed()->exists();
     }
 
     /** Créer et modifier : `sites.update`, ou `sites.update.own` sur ses projets (jamais un technicien). */

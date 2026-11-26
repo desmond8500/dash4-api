@@ -17,7 +17,7 @@ final class Preferences
     /** Catégorie => libellé affiché. */
     public const CATEGORIES = [
         'mentions' => 'Mentions dans les commentaires',
-        'tasks' => 'Tâches qui me sont confiées',
+        'tasks' => 'Tâches et chantiers qui me sont confiés',
         'requests' => 'Demandes clients',
         'tech' => 'Espace technicien (informations, demandes d\'accès)',
         'expenses' => 'Dépenses',
@@ -32,6 +32,7 @@ final class Preferences
     private const CLASSES = [
         Notifications\CommentMentionNotification::class => 'mentions',
         Notifications\TaskAssignedNotification::class => 'tasks',
+        Notifications\SiteAssignedNotification::class => 'tasks',
         Notifications\ClientRequestNotification::class => 'requests',
         Notifications\TechShareNotification::class => 'tech',
         Notifications\AccessRequestNotification::class => 'tech',

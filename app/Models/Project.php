@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -43,6 +44,12 @@ class Project extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class)->withTrashed();
+    }
+
+    /** Techniciens affectés : ils voient la partie chantier du projet, rien d'autre. */
+    public function technicians(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_technicians')->withTimestamps()->orderBy('lastname')->orderBy('firstname');
     }
 
     public function manager(): BelongsTo
@@ -111,6 +118,28 @@ class Project extends Model
         }
 
         return $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Projets dont l'utilisateur voit le chantier (bâtiments, plans, systèmes, équipements, PV, DOE) :
+     * `sites.view` : tous ; technicien (`sites.view.own`) : ceux où il est affecté ou a une tâche ;
+     * autre compte avec `sites.view.own` : ses projets.
+     */
+    public function scopeSiteVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->can('sites.view')) {
+            return $query;
+        }
+        if (! $user->can('sites.view.own')) {
+            return $query->whereRaw('1 = 0');
+        }
+        if ($user->isTechnician()) {
+            return $query->where(fn ($q) => $q
+                ->whereIn('id', fn ($s) => $s->select('project_id')->from('project_technicians')->where('user_id', $user->id))
+                ->orWhereIn('id', Task::query()->whereNotNull('project_id')->whereHas('assignees', fn ($a) => $a->whereKey($user->id))->select('project_id')));
+        }
+
+        return $query->where(fn ($q) => $q->where('manager_id', $user->id)->orWhere('created_by', $user->id));
     }
 
     public function getActivitylogOptions(): LogOptions
