@@ -145,7 +145,7 @@ class QuoteController extends Controller
             ])->save();
 
             foreach ($quote->sections()->with('lines')->get() as $section) {
-                $newSection = $copy->sections()->create($section->only(['title', 'position', 'is_visible']));
+                $newSection = $copy->sections()->create($section->only(['title', 'position', 'is_visible', 'proposal']));
                 foreach ($section->lines as $line) {
                     $newSection->lines()->make($line->only([
                         'position', 'article_id', 'designation', 'reference', 'comment', 'category', 'unit', 'quantity', 'unit_cost', 'coefficient',

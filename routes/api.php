@@ -299,6 +299,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('quote-sections/{section}/save-as-template', [QuoteTemplateController::class, 'fromSection']);
         Route::post('quotes/{quote}/sections', [QuoteSectionController::class, 'store']);
         Route::post('quotes/{quote}/sections/order', [QuoteSectionController::class, 'reorder']);
+        Route::post('quote-sections/{section}/duplicate', [QuoteSectionController::class, 'duplicate']);
         Route::patch('quote-sections/{section}', [QuoteSectionController::class, 'update']);
         Route::delete('quote-sections/{section}', [QuoteSectionController::class, 'destroy']);
         Route::post('quote-sections/{section}/lines', [QuoteLineController::class, 'store']);
