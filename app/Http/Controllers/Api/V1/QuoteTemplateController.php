@@ -111,6 +111,47 @@ class QuoteTemplateController extends Controller
         return response()->json(['data' => $this->full($request, $template->refresh())]);
     }
 
+    /**
+     * POST /api/v1/quote-templates/{id}/refresh-from-articles — reprend le coût et le coefficient actuels
+     * des articles du stock liés aux lignes. Ignore les lignes sans article, les articles supprimés
+     * et ceux dont le coût n'est pas renseigné (0), pour ne pas effacer un coût saisi dans le modèle.
+     */
+    public function refreshFromArticles(Request $request, QuoteTemplate $template): JsonResponse
+    {
+        $this->allowManage($request);
+
+        $updated = 0;
+        $skipped = 0;
+        DB::transaction(function () use ($template, &$updated, &$skipped) {
+            $lines = $template->lines()->whereNotNull('article_id')->with('article')->get();
+            foreach ($lines as $line) {
+                $article = $line->article;
+                if (! $article || $article->trashed() || $article->unit_cost <= 0) {
+                    $skipped++;
+
+                    continue;
+                }
+                if (round($line->unit_cost, 2) === round($article->unit_cost, 2) && round($line->coefficient, 4) === round($article->coefficient, 4)) {
+                    continue;
+                }
+                $line->update(['unit_cost' => $article->unit_cost, 'coefficient' => $article->coefficient]);
+                $updated++;
+            }
+        });
+
+        $message = $updated ? "{$updated} ligne(s) mise(s) à jour depuis le stock." : 'Les coûts et coefficients sont déjà à jour.';
+        if ($skipped) {
+            $message .= " {$skipped} ligne(s) ignorée(s) : article supprimé ou sans coût.";
+        }
+
+        return response()->json([
+            'data' => $this->full($request, $template->refresh()),
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'message' => $message,
+        ]);
+    }
+
     public function destroy(Request $request, QuoteTemplate $template): JsonResponse
     {
         $this->allowManage($request);

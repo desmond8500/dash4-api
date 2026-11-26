@@ -300,6 +300,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('quote-templates', [QuoteTemplateController::class, 'store']);
         Route::patch('quote-templates/{template}', [QuoteTemplateController::class, 'update']);
         Route::delete('quote-templates/{template}', [QuoteTemplateController::class, 'destroy']);
+        Route::post('quote-templates/{template}/refresh-from-articles', [QuoteTemplateController::class, 'refreshFromArticles']);
         Route::post('quote-sections/{section}/save-as-template', [QuoteTemplateController::class, 'fromSection']);
         Route::post('quotes/{quote}/sections', [QuoteSectionController::class, 'store']);
         Route::post('quotes/{quote}/sections/order', [QuoteSectionController::class, 'reorder']);

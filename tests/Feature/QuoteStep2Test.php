@@ -121,6 +121,37 @@ it('laisse le chef de projet insérer un modèle sans voir ni gérer les coûts'
     expect(QuoteTemplate::count())->toBe(1);
 });
 
+it('met à jour le coût et le coefficient des lignes d\'un modèle depuis les articles liés', function () {
+    Sanctum::actingAs(userWithRole('manager'));
+    $camera = Article::factory()->create(['designation' => 'Caméra IP 4 MP', 'unit_cost' => 62000, 'coefficient' => 1.6]);
+    $nvr = Article::factory()->create(['designation' => 'Enregistreur', 'unit_cost' => 150000, 'coefficient' => 1.4]);
+    $noCost = Article::factory()->create(['designation' => 'Support', 'unit_cost' => 0, 'coefficient' => 1]);
+    $removed = Article::factory()->create(['designation' => 'Ancien câble', 'unit_cost' => 400, 'coefficient' => 2]);
+
+    $template = $this->postJson('/api/v1/quote-templates', ['name' => 'Kit', 'lines' => [
+        ['article_id' => $camera->id, 'designation' => 'Caméra', 'quantity' => 4, 'unit_cost' => 50000, 'coefficient' => 1.5],
+        ['article_id' => $nvr->id, 'designation' => 'Enregistreur', 'unit_cost' => 150000, 'coefficient' => 1.4],
+        ['article_id' => $noCost->id, 'designation' => 'Support', 'unit_cost' => 5000, 'coefficient' => 1.3],
+        ['article_id' => $removed->id, 'designation' => 'Câble', 'unit_cost' => 300, 'coefficient' => 2],
+        ['designation' => 'Pose', 'unit_cost' => 100000, 'coefficient' => 1],
+    ]])->json('data.id');
+    $removed->delete();
+
+    $response = $this->postJson("/api/v1/quote-templates/{$template}/refresh-from-articles")->assertOk()
+        ->assertJsonPath('updated', 1)
+        ->assertJsonPath('skipped', 2);
+    $lines = $response->json('data.lines');
+    expect($lines[0]['unit_cost'])->toEqual(62000)->and($lines[0]['coefficient'])->toEqual(1.6)->and($lines[0]['quantity'])->toEqual(4)
+        ->and($lines[2]['unit_cost'])->toEqual(5000)   // article sans coût : coût du modèle gardé
+        ->and($lines[3]['unit_cost'])->toEqual(300)    // article supprimé : ignoré
+        ->and($lines[4]['unit_cost'])->toEqual(100000); // ligne sans article
+
+    $this->postJson("/api/v1/quote-templates/{$template}/refresh-from-articles")->assertJsonPath('updated', 0);
+
+    Sanctum::actingAs(userWithRole('project_manager'));
+    $this->postJson("/api/v1/quote-templates/{$template}/refresh-from-articles")->assertForbidden();
+});
+
 // --- Proposition technique -------------------------------------------------------------
 
 it('écrit la proposition technique par section et règle son PDF', function () {
