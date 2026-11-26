@@ -21,6 +21,8 @@ final class Settings
         // {YYYY} année, {YY} année sur 2 chiffres, {MM} mois, {####} numéro (autant de chiffres que de #)
         // Relances de paiement : paliers en jours après l'échéance ; envoi automatique au client désactivé par défaut
         'reminders' => ['auto' => false, 'days' => [7, 15, 30]],
+        // Articles achetés à l'étranger : taux du dollar (l'euro est à parité fixe), taxe en % et frais de port en F CFA
+        'import_costs' => ['usd_rate' => 600, 'tax_rate' => 20, 'shipping' => 10000],
         'numbering' => [
             'quote' => 'DEV-{YYYY}-{####}',
             'invoice' => 'FAC-{YYYY}-{####}',
@@ -53,6 +55,7 @@ final class Settings
         // Formats : on complète ceux qui manquent avec les valeurs par défaut
         $settings['numbering'] = array_replace(self::DEFAULTS['numbering'], $stored['numbering'] ?? []);
         $settings['reminders'] = array_replace(self::DEFAULTS['reminders'], $stored['reminders'] ?? []);
+        $settings['import_costs'] = array_replace(self::DEFAULTS['import_costs'], $stored['import_costs'] ?? []);
 
         return $settings;
     }

@@ -41,6 +41,9 @@ class ArticleResource extends JsonResource
             $this->mergeWhen((bool) $user?->can('costs.view'), fn () => [
                 'unit_cost' => $this->unit_cost,
                 'coefficient' => $this->coefficient,
+                // Prix d'achat à l'étranger (le coût ci-dessus en est calculé)
+                'foreign_price' => $this->foreign_price,
+                'foreign_currency' => $this->foreign_currency,
                 'stock_value' => (int) round(max(0, $this->quantity) * $this->unit_cost),
             ]),
             'dependencies' => $this->whenLoaded('dependencies', fn () => $this->dependencies->map(fn ($d) => [

@@ -324,6 +324,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('providers/{provider}/logo', [StockLogoController::class, 'destroyProvider']);
         Route::apiResource('storage-locations', StorageLocationController::class)->parameters(['storage-locations' => 'location']);
         Route::get('articles/summary', [ArticleController::class, 'summary'])->name('articles.summary');
+        Route::get('articles/import-costs', [ArticleController::class, 'importCosts']);
         Route::apiResource('articles', ArticleController::class);
         Route::post('articles/{article}/duplicate', [ArticleController::class, 'duplicate']);
         Route::post('articles/{article}/image', [ArticleController::class, 'storeImage']);

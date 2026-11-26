@@ -7,6 +7,7 @@ use App\Enums\StockMovementType;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ArticleResource;
 use App\Models\Article;
+use App\Support\ImportCost;
 use App\Support\Stock;
 use App\Support\SyncQuery;
 use Illuminate\Http\JsonResponse;
@@ -45,6 +46,22 @@ class ArticleController extends Controller
         SyncQuery::apply($query, $request);
 
         return ArticleResource::collection($query->paginate(SyncQuery::perPage($request, 50)))->additional(SyncQuery::meta());
+    }
+
+    /**
+     * GET /api/v1/articles/import-costs — paramètres du coût des articles achetés à l'étranger (costs.view),
+     * pour que le formulaire affiche le coût en F CFA pendant la saisie.
+     */
+    public function importCosts(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->can('costs.view'), 403, "Vous n'avez pas le droit de faire cette action.");
+        $usd = ImportCost::parameters('USD');
+
+        return response()->json(['data' => [
+            'rates' => ['EUR' => ImportCost::EUR_RATE, 'USD' => $usd['rate']],
+            'tax_rate' => $usd['tax_rate'],
+            'shipping' => $usd['shipping'],
+        ]]);
     }
 
     /** GET /api/v1/articles/summary — nombre d'articles, stock bas, valeur du stock (costs.view). */
@@ -116,7 +133,7 @@ class ArticleController extends Controller
             $copy = new Article([
                 ...$article->only([
                     'designation', 'description', 'category', 'unit', 'brand_id', 'provider_id',
-                    'unit_cost', 'coefficient', 'min_quantity', 'storage_location_id', 'plan_icon_id', 'weight',
+                    'unit_cost', 'coefficient', 'foreign_price', 'foreign_currency', 'min_quantity', 'storage_location_id', 'plan_icon_id', 'weight',
                 ]),
                 'designation' => $article->designation.' (copie)',
                 'is_active' => true,
@@ -181,12 +198,35 @@ class ArticleController extends Controller
 
     private function ensureCanEditCosts(Request $request, array $data): void
     {
-        if (array_intersect(array_keys($data), ['unit_cost', 'coefficient']) !== []) {
+        if (array_intersect(array_keys($data), ['unit_cost', 'coefficient', 'foreign_price', 'foreign_currency']) !== []) {
             abort_unless($request->user()->can('costs.view'), 403, 'Vous ne pouvez pas saisir les coûts.');
         }
     }
 
     private function validated(Request $request, ?Article $article): array
+    {
+        return $this->withImportCost($this->rules($request, $article), $article);
+    }
+
+    /**
+     * Prix en devise renseigné : le coût d'achat en F CFA en est calculé (il remplace celui saisi).
+     * Prix effacé : la devise aussi ; le coût reste tel quel.
+     */
+    private function withImportCost(array $data, ?Article $article): array
+    {
+        if (! array_key_exists('foreign_price', $data) && ! array_key_exists('foreign_currency', $data)) {
+            return $data;
+        }
+        $price = array_key_exists('foreign_price', $data) ? $data['foreign_price'] : $article?->foreign_price;
+        if ($price === null || $price === '') {
+            return [...$data, 'foreign_price' => null, 'foreign_currency' => null];
+        }
+        $currency = $data['foreign_currency'] ?? $article?->foreign_currency ?? 'EUR';
+
+        return [...$data, 'foreign_price' => (float) $price, 'foreign_currency' => $currency, 'unit_cost' => ImportCost::cfa((float) $price, $currency)];
+    }
+
+    private function rules(Request $request, ?Article $article): array
     {
         $creating = $article === null;
 
@@ -202,6 +242,9 @@ class ArticleController extends Controller
             'provider_id' => ['sometimes', 'nullable', 'integer', Rule::exists('providers', 'id')->whereNull('deleted_at')],
             'unit_cost' => ['sometimes', 'numeric', 'min:0', 'max:999999999999'],
             'coefficient' => ['sometimes', 'numeric', 'min:0', 'max:1000'],
+            // Acheté à l'étranger : prix en euro ou en dollar ; le coût en F CFA en est calculé (taxe et frais de port compris)
+            'foreign_price' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:999999999'],
+            'foreign_currency' => ['sometimes', 'nullable', 'required_with:foreign_price', 'in:EUR,USD'],
             'min_quantity' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999'],
             'storage_location_id' => ['sometimes', 'nullable', 'integer', Rule::exists('storage_locations', 'id')->whereNull('deleted_at')],
             'plan_icon_id' => ['sometimes', 'nullable', 'integer', Rule::exists('plan_icons', 'id')->whereNull('deleted_at')],
@@ -211,6 +254,7 @@ class ArticleController extends Controller
         ], ['barcode.unique' => 'Ce code-barres est déjà celui d\'un autre article.'], [
             'designation' => 'désignation', 'reference' => 'référence', 'barcode' => 'code-barres', 'category' => 'catégorie',
             'brand_id' => 'marque', 'provider_id' => 'fournisseur', 'unit_cost' => 'coût', 'min_quantity' => 'seuil',
+            'foreign_price' => 'prix en devise', 'foreign_currency' => 'devise',
             'storage_location_id' => 'emplacement', 'plan_icon_id' => 'icône de plan', 'weight' => 'poids', 'initial_quantity' => 'quantité de départ',
         ]);
     }

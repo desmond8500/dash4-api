@@ -34,6 +34,10 @@ class SettingsController extends Controller
             'reminders.auto' => ['sometimes', 'boolean'],
             'reminders.days' => ['sometimes', 'array', 'min:1', 'max:5'],
             'reminders.days.*' => ['integer', 'between:1,365', 'distinct'],
+            'import_costs' => ['sometimes', 'array:usd_rate,tax_rate,shipping'],
+            'import_costs.usd_rate' => ['sometimes', 'numeric', 'gt:0', 'max:100000'],
+            'import_costs.tax_rate' => ['sometimes', 'numeric', 'min:0', 'max:500'],
+            'import_costs.shipping' => ['sometimes', 'numeric', 'min:0', 'max:100000000'],
             'numbering' => ['sometimes', 'array:'.implode(',', array_keys(Settings::DOCUMENT_TYPES))],
             // Un numéro {####} obligatoire ; lettres, chiffres, tirets, barres, points et {YYYY} {YY} {MM}
             'numbering.*' => ['string', 'max:40', 'regex:/\{#{1,8}\}/', 'regex:/^([A-Za-z0-9\-\/_. ]|\{YYYY\}|\{YY\}|\{MM\}|\{#{1,8}\})+$/'],
@@ -41,6 +45,7 @@ class SettingsController extends Controller
             'numbering.*.regex' => 'Le format doit contenir un numéro, par exemple {####}, et seulement des lettres, chiffres, - / _ . et {YYYY} {YY} {MM}.',
         ], [
             'currency' => 'devise', 'vat_rate' => 'taux de TVA', 'brs_rate' => 'taux de BRS', 'default_tax' => 'taxe par défaut',
+            'import_costs.usd_rate' => 'taux du dollar', 'import_costs.tax_rate' => 'taxe à l\'import', 'import_costs.shipping' => 'frais de port',
         ]);
 
         if (isset($data['reminders'])) {
@@ -49,6 +54,9 @@ class SettingsController extends Controller
             sort($days);
             $data['reminders']['days'] = array_values($days);
             $data['reminders']['auto'] = (bool) $data['reminders']['auto'];
+        }
+        if (isset($data['import_costs'])) {
+            $data['import_costs'] = array_map('floatval', array_replace(Settings::get('import_costs'), $data['import_costs']));
         }
         if (isset($data['numbering'])) {
             $data['numbering'] = array_replace(Settings::get('numbering'), $data['numbering']);
