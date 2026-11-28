@@ -20,7 +20,7 @@ class QuoteForm extends FormRequest
 
         return [
             'client_uuid' => $creating ? ['nullable', 'uuid'] : ['prohibited'],
-            'client_id' => [$required, 'integer', Rule::exists('clients', 'id')->whereNull('deleted_at')],
+            'client_id' => [$required, 'integer', Rule::exists('clients', 'id')->whereNull('deleted_at'), $this->keepsProject()],
             'client_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'project_id' => ['sometimes', 'nullable', 'integer', Rule::exists('projects', 'id')->whereNull('deleted_at'), $this->projectOfClient()],
             'title' => [$required, 'string', 'max:255'],
@@ -47,6 +47,20 @@ class QuoteForm extends FormRequest
             'proposal_options.show_prices' => ['sometimes', 'boolean'],
             'proposal_options.show_footer' => ['sometimes', 'boolean'],
         ];
+    }
+
+    /** Changer de client sans toucher au projet : le projet actuel doit appartenir au nouveau client. */
+    private function keepsProject(): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) {
+            $quote = $this->route('quote');
+            if (! $quote instanceof Quote || $this->has('project_id') || ! $quote->project_id || (int) $value === $quote->client_id) {
+                return;
+            }
+            if (Project::whereKey($quote->project_id)->value('client_id') !== (int) $value) {
+                $fail("Le projet du devis n'appartient pas à ce client : retirez-le ou choisissez un projet du nouveau client.");
+            }
+        };
     }
 
     /** Le projet choisi doit appartenir au client du devis. */
