@@ -389,7 +389,10 @@ final class QuotePdf
             return null;
         }
         $mime = Storage::disk($disk)->mimeType($path) ?: 'image/png';
+        $bytes = Storage::disk($disk)->get($path);
+        // Photo de téléphone : redressée selon son orientation EXIF (DomPDF l'ignore)
+        $fixed = PdfImage::normalize($bytes, $mime);
 
-        return 'data:'.$mime.';base64,'.base64_encode(Storage::disk($disk)->get($path));
+        return 'data:'.($fixed ? 'image/jpeg' : $mime).';base64,'.base64_encode($fixed ?? $bytes);
     }
 }
