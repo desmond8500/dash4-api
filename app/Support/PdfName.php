@@ -33,7 +33,7 @@ final class PdfName
 
     public static function quote(Quote $quote, ?string $type = null, ?string $suffix = null, string $extension = 'pdf'): string
     {
-        return self::make([$type, $quote->client?->name, $quote->title, $quote->number, $suffix], $extension);
+        return self::make([$type, $quote->clientDisplayName(), $quote->title, $quote->number, $suffix], $extension);
     }
 
     public static function invoice(Invoice $invoice): string

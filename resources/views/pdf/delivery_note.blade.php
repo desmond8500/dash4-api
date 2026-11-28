@@ -21,7 +21,7 @@
     </td>
     <td>
         <div class="box">
-            <strong>{{ $quote->client?->name }}</strong><br>
+            <strong>{{ $quote->clientDisplayName() }}</strong><br>
             @if ($quote->client?->address)<span class="pre">{{ $quote->client->address }}</span><br>@endif
             @if ($quote->client?->phones->first()){{ $quote->client->phones->first()->number }}@endif
         </div>

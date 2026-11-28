@@ -25,6 +25,8 @@ class QuoteResource extends JsonResource
             'title' => $this->title,
             'status' => ['value' => $this->status->value, 'label' => $this->status->label()],
             'client_id' => $this->client_id,
+            // Nom propre au devis (null : celui de la fiche client)
+            'client_name' => $this->client_name,
             'client' => $this->whenLoaded('client', fn () => $this->client ? ['id' => $this->client->id, 'name' => $this->client->name] : null),
             'project_id' => $this->project_id,
             'project' => $this->whenLoaded('project', fn () => $this->project ? ['id' => $this->project->id, 'name' => $this->project->name] : null),

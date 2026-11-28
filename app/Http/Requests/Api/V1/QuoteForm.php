@@ -21,6 +21,7 @@ class QuoteForm extends FormRequest
         return [
             'client_uuid' => $creating ? ['nullable', 'uuid'] : ['prohibited'],
             'client_id' => [$required, 'integer', Rule::exists('clients', 'id')->whereNull('deleted_at')],
+            'client_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'project_id' => ['sometimes', 'nullable', 'integer', Rule::exists('projects', 'id')->whereNull('deleted_at'), $this->projectOfClient()],
             'title' => [$required, 'string', 'max:255'],
             'introduction' => ['sometimes', 'nullable', 'string', 'max:10000'],

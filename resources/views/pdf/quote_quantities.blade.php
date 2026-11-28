@@ -19,7 +19,7 @@
 <h1>Quantitatif{{ $quantities->section ? ' — '.$quantities->section->title : '' }}</h1>
 <div class="muted">Devis {{ $quote->number }} · {{ $date($quote->issued_at) }} · sans les forfaits et la main-d'œuvre</div>
 <div style="margin-top:3mm"><strong>Objet :</strong> {{ $quote->title }}</div>
-@if ($quote->client)<div><strong>Client :</strong> {{ $quote->client->name }}</div>@endif
+@if ($quote->client)<div><strong>Client :</strong> {{ $quote->clientDisplayName() }}</div>@endif
 @if ($quote->project)<div><strong>Projet :</strong> {{ $quote->project->name }}</div>@endif
 
 @if ($sections->isEmpty())

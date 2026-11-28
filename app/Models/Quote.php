@@ -19,7 +19,7 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 #[Fillable([
-    'client_uuid', 'client_id', 'project_id', 'title', 'introduction', 'payment_terms', 'notes',
+    'client_uuid', 'client_id', 'client_name', 'project_id', 'title', 'introduction', 'payment_terms', 'notes',
     'issued_at', 'valid_until', 'tax_mode', 'vat_rate', 'brs_rate', 'discount_rate',
     'bank_account_id', 'show_signature', 'is_neutral', 'is_favorite', 'proposal_options',
 ])]
@@ -121,6 +121,12 @@ class Quote extends Model
     public function emails(): HasMany
     {
         return $this->hasMany(QuoteEmail::class)->latest('sent_at');
+    }
+
+    /** Nom du client imprimé sur les documents du devis : le nom propre au devis, sinon celui de la fiche. */
+    public function clientDisplayName(): ?string
+    {
+        return $this->client_name ?: $this->client?->name;
     }
 
     /** Options de la proposition technique (ce qui apparaît sur son PDF). */

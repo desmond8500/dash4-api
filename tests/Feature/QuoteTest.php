@@ -269,3 +269,26 @@ it('transforme une demande client en devis', function () {
         ->assertJsonPath('data.quote.client_id', $client->id)
         ->assertJsonPath('data.quote.status.value', 'draft');
 });
+
+it('change le client d’un devis et lui donne un nom propre, imprimé sur le PDF', function () {
+    Sanctum::actingAs(userWithRole('sales'));
+    $quote = newQuote();
+    $other = Client::factory()->create(['name' => 'Groupe Kër']);
+    $project = Project::factory()->create(['client_id' => $quote['client_id']]);
+    $this->patchJson("/api/v1/quotes/{$quote['id']}", ['project_id' => $project->id])->assertOk();
+
+    // Le projet de l'ancien client ne peut pas suivre : il faut le retirer en changeant de client
+    $this->patchJson("/api/v1/quotes/{$quote['id']}", ['client_id' => $other->id])->assertStatus(422);
+    $data = $this->patchJson("/api/v1/quotes/{$quote['id']}", ['client_id' => $other->id, 'project_id' => null, 'client_name' => 'Kër Immobilier — à l’attention de M. Ndiaye'])
+        ->assertOk()->json('data');
+    expect($data['client_id'])->toBe($other->id)
+        ->and($data['client']['name'])->toBe('Groupe Kër')
+        ->and($data['client_name'])->toBe('Kër Immobilier — à l’attention de M. Ndiaye');
+
+    $model = Quote::find($quote['id']);
+    expect($model->clientDisplayName())->toBe('Kër Immobilier — à l’attention de M. Ndiaye')
+        ->and(\App\Support\PdfName::quote($model))->toContain('Kër Immobilier');
+
+    $this->patchJson("/api/v1/quotes/{$quote['id']}", ['client_name' => null])->assertOk();
+    expect(Quote::find($quote['id'])->clientDisplayName())->toBe('Groupe Kër');
+});

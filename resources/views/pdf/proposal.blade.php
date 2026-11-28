@@ -3,7 +3,7 @@
     $qty = fn ($v) => rtrim(rtrim(number_format((float) $v, 2, ',', ' '), '0'), ',');
     $symbol = ['XOF' => 'F CFA', 'EUR' => '€', 'USD' => '$'][$currency] ?? $currency;
     $date = fn ($d) => $d?->format('d/m/Y');
-    $clientName = $options['client_label'] ?: $quote->client?->name;
+    $clientName = $options['client_label'] ?: $quote->clientDisplayName();
     $green = '#219c90';
 @endphp
 <!DOCTYPE html>
